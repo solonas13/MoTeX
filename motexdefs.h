@@ -1,5 +1,5 @@
 /**
-    MoTeX: MOTifs EXtraction
+    MoTeX: a tool for massively parallel MoTif eXtraction
     Copyright (C) 2012 Solon P. Pissis. 
 
     This program is free software: you can redistribute it and/or modify
@@ -67,8 +67,6 @@ inline void vec_allocation ( int rank, int P, unsigned int m, int *first, int* l
 inline void communication ( int P, int rank, unsigned int step, unsigned int n, unsigned int m, unsigned int* D, int first, int last, int first_n, int last_n );
 unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int*  v, int rank, int P );
 unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v, int rank, int P );
-unsigned int motifs_extraction_edmiston_hd ( const char* t, unsigned int n, unsigned int l, unsigned int e, unsigned int* v, int rank, int P );
-unsigned int motifs_extraction_edmiston_ed ( const char* t, unsigned int n, unsigned int l, unsigned int e, unsigned int* v, int rank, int P );
 #endif
 
 #ifdef _USE_CPU

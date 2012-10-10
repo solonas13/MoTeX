@@ -1,5 +1,5 @@
 /**
-    MoTeX: MOTifs EXtraction
+    MoTeX: a tool for massively parallel MoTif eXtraction
     Copyright (C) 2012 Solon P. Pissis. 
 
     This program is free software: you can redistribute it and/or modify
@@ -97,7 +97,7 @@ inline unsigned int elements( unsigned int step, unsigned int n, unsigned int m 
 }
 
 /*
-allocates the amount of cells for each processor at the diagonal step
+allocates the amount of cells for each processor per diagonal
 */
 inline void allocation ( int rank, int P, unsigned int n, unsigned int m, unsigned int step, int *first, int* last )
 {
@@ -117,7 +117,7 @@ inline void allocation ( int rank, int P, unsigned int n, unsigned int m, unsign
 }
 
 /*
-allocates the amount of cells for each processor 
+allocates the amount of cells for each processor per row
 */
 inline void vec_allocation ( int rank, int P, unsigned int m, int *first, int* last, int* count )
 {
@@ -220,6 +220,9 @@ inline void communication ( int P, int rank, unsigned int step, unsigned int n, 
 
 }
 
+/*
+the dynamic programming algorithm under the hamming distance model for MPI
+*/
 unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v, int rank, int P )
 {
 	unsigned int y; 
@@ -357,6 +360,9 @@ unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const 
 	return  ( 1 );
 }
 
+/*
+the dynamic programming algorithm under the edit distance model for MPI
+*/
 unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v, int rank, int P )
 {
 	unsigned int y; 
@@ -496,191 +502,12 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 
 	return  ( 1 );
 }
-
-unsigned int motifs_extraction_edmiston_hd ( const char* t, unsigned int n, unsigned int l, unsigned int e, unsigned int* v, int rank, int P )
-{
-	unsigned int** B; 		//sub-matrix B[n/P + 1, m/P + 1]
-	unsigned int x; 
-        unsigned int nn, mm;
-	unsigned int step;
-	unsigned int i, ii;
-	unsigned int j, jj;
-	unsigned int num_steps;
-	unsigned int num_blocks;
-	unsigned int* buf;
-
-	unsigned int m = n;
-
-	MPI_Status status;
-
-   	if ( ( n % P ) != 0 || ( m % P ) != 0 )
-    	{
-      		fprintf ( stderr, " Error: ( n mod P ) and ( m mod P ) should be equal to zero!\n" );
-      		return ( 0 );
-    	} 
-
-	num_blocks = P;
-	nn = ( unsigned int ) n / P;		//vertical block size
-	mm = ( unsigned int ) m / num_blocks;	//horizontal block size
-	num_steps = P + num_blocks - 1;		//number of phases (steps)
-	
-        /* Memory Allocation */
-	B = ( unsigned int ** ) malloc ( ( nn + 1 ) * sizeof ( unsigned int * ) );
-	buf =  (unsigned int * ) calloc ( ( (size_t) ( nn + 1 ) ) * ( (size_t) ( mm + 1 ) ), sizeof ( unsigned int ) ); 
-   	if ( buf == NULL )
-    	{
-      		fprintf ( stderr, " Error: DP matrix could not be allocated!\n" );
-      		return ( 0 );
-    	} 
-        for ( i = 0; i < nn + 1; ++ i )
- 	  B[i] = &buf[(size_t)i * (size_t) ( mm + 1 ) ]; 
-
-	j = 1;
-	jj = rank * mm;
-	ii = rank * nn;
-	x = (unsigned int) pow ( 2 , l - 1 ) - 1; 
-
-	/* Execute the steps */
-	for ( step = 0 ; step < num_steps ; step++ )
-	{
-		if ( rank <= step && step < rank + num_blocks )
-		{
-			/* Only the first proc initialises the first row */
-			if ( rank == 0 )
-				for ( j = 1; j < mm + 1; j++ )
-					B[0][j] = ( 2 << ( min ( j , l ) - 1 ) ) - 1;
-
-			/* All processors compute one block of their local sub-matrix*/
-			for ( i = 1; i < nn + 1; i++ )
-			{
-				for ( j = 1; j < mm + 1; j++ )
-				{
-					B[i][j] = shift ( B[i-1][j-1]) | delta( t[ii + i - 1], t[jj + j - 1] );
-				}
-			}
-
-			/* All processors send the last row of this block */
-			if ( rank != P - 1 )
-			{
-				MPI_Send( &B[nn][0], mm , MPI_UNSIGNED, rank + 1, 0 , MPI_COMM_WORLD );
-			}
-
-			/* All processors copy the last column to the first one for the next step*/
-			for ( i = 0; i < nn + 1; i++ )
-				B[i][0] = B[i][mm];
-
-		}
-
-		/* All processors receive the first row of the block to be computed on the next step */
-                if ( rank != 0 )
-			if ( ( rank - 1 ) <= step && step < ( rank - 1 ) + num_blocks )
-			{
-				MPI_Recv( &B[0][0], mm , MPI_UNSIGNED , rank - 1 , 0 , MPI_COMM_WORLD, &status);
-			}
-	}
-
-	/* Deallocation */
-	free ( buf );
-	free ( B );
-
-	return 1;
-}
-
-unsigned int motifs_extraction_edmiston_ed ( const char* t, unsigned int n, unsigned int l, unsigned int e, unsigned int* v, int rank, int P )
-{
-	unsigned int** B; 		//sub-matrix B[n/P + 1, m/P + 1]
-	unsigned int x; 
-        unsigned int nn, mm;
-	unsigned int step;
-	unsigned int i, ii;
-	unsigned int j, jj;
-	unsigned int num_steps;
-	unsigned int num_blocks;
-	unsigned int* buf;
-
-	unsigned int m = n;
-
-	MPI_Status status;
-
-   	if ( ( n % P ) != 0 || ( m % P ) != 0 )
-    	{
-      		fprintf ( stderr, " Error: ( n mod P )and ( m mod P ) should be equal to zero!\n" );
-      		return ( 0 );
-    	} 
-
-	num_blocks = P;
-	nn = ( unsigned int ) n / P;		//vertical block size
-	mm = ( unsigned int ) m / num_blocks;	//horizontal block size
-	num_steps = P + num_blocks - 1;		//number of phases (steps)
-	
-        /* Memory Allocation */
-	B = ( unsigned int ** ) malloc ( ( nn + 1 ) * sizeof ( unsigned int * ) );
-	buf =  (unsigned int * ) calloc ( ( (size_t) ( nn + 1 ) ) * ( (size_t) ( mm + 1 ) ), sizeof ( unsigned int ) ); 
-   	if ( buf == NULL )
-    	{
-      		fprintf ( stderr, " Error: DP matrix could not be allocated!\n" );
-      		return ( 0 );
-    	} 
-        for ( i = 0; i < nn + 1; ++ i )
- 	  B[i] = &buf[(size_t)i * (size_t) ( mm + 1 ) ]; 
-
-	j = 1;
-	jj = rank * mm;
-	ii = rank * nn;
-	x = (unsigned int) pow ( 2 , l - 1 ) - 1; 
-
-	/* Execute the steps */
-	for ( step = 0 ; step < num_steps ; step++ )
-	{
-		if ( rank <= step && step < rank + num_blocks )
-		{
-			/* Only the first proc initialises the first row */
-			if ( rank == 0 )
-				for ( j = 1; j < mm + 1; j++ )
-					B[0][j] = ( 2 << ( min ( j , l ) - 1 ) ) - 1;
-
-			/* All processors compute one block of their local sub-matrix*/
-			for ( i = 1; i < nn + 1; i++ )
-			{
-				for ( j = 1; j < mm + 1; j++ )
-				{
-					if( j <= l )		//Normal DP
-						B[i][j] = bitminmax ( shift ( B[i-1][j] ) | 1, shift ( B[i][j-1] ) | 1, shift ( B[i-1][j-1]) | delta( t[ii + i - 1], t[jj + j - 1] ) );
-					else			//Max-Shift
-						B[i][j] = bitminmax ( shiftc ( B[i][j-1], x ) | 1, shift ( B[i-1][j] ) | 1, shiftc ( B[i-1][j-1], x ) | delta( t[ii + i - 1], t[jj + j - 1] ) );
-				}
-			}
-
-			/* All processors send the last row of this block */
-			if ( rank != P - 1 )
-			{
-				MPI_Send( &B[nn][0], mm , MPI_UNSIGNED, rank + 1, 0 , MPI_COMM_WORLD );
-			}
-
-			/* All processors copy the last column to the first one for the next step*/
-			for ( i = 0; i < nn + 1; i++ )
-				B[i][0] = B[i][mm];
-
-		}
-
-		/* All processors receive the first row of the block to be computed on the next step */
-                if ( rank != 0 )
-			if ( ( rank - 1 ) <= step && step < ( rank - 1 ) + num_blocks )
-			{
-				MPI_Recv( &B[0][0], mm , MPI_UNSIGNED , rank - 1 , 0 , MPI_COMM_WORLD, &status);
-			}
-	}
-
-	/* Deallocation */
-	free ( buf );
-	free ( B );
-
-	return 1;
-}
 #endif
 
-
 #ifdef _USE_CPU
+/*
+the dynamic programming algorithm under the hamming distance model for CPU
+*/
 unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v )
 {
 	unsigned int y; 
@@ -771,6 +598,9 @@ unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char *
 	return  ( 1 );
 }
 
+/*
+the dynamic programming algorithm under the edit distance model for CPU
+*/
 unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v )
 {
 	unsigned int y; 
@@ -947,6 +777,9 @@ inline unsigned int popcount ( unsigned int x )
 	return __builtin_popcount( x );
 }
 
+/*
+write the output
+*/
 unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P )
 {
 	time_t               t;
@@ -1029,6 +862,9 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 	return ( 1 );
 }
 
+/*
+write the output considering a background file as input
+*/
 unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P )
 {
 	time_t               t;
@@ -1198,7 +1034,9 @@ static struct option long_options[] =
    { NULL,                 0,                 NULL, 0   }
  };
 
-/* Decode the input switches */
+/* 
+Decode the input switches 
+*/
 int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
  {
    int          oi;
@@ -1309,7 +1147,9 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
      return ( optind );
  }
 
-/* Usage of the tool */
+/* 
+Usage of the tool 
+*/
 void usage ( void )
  {
    fprintf ( stdout, "\nm    m       mmmmmmm        m    m\n" );
@@ -1340,6 +1180,9 @@ void usage ( void )
    fprintf ( stdout, "  -b, --background-file     <str>     MoTeX background filename for evaluation.\n" );
  }
 
+/*
+Timing function
+*/
 double gettime( void )
 {
     struct timeval ttime;
