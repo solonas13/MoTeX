@@ -1,0 +1,36 @@
+Basic Instructions
+==================
+
+   This installation requires the pre-installation of the ANSI C99 
+library implementation of the double-array trie data structure. It can 
+be found here:
+
+http://launchpad.net/ubuntu/+source/libdatrie
+
+   The shell command `make -f Makefile.CPU.gcc' should compile this 
+program. You may use `make -f Makefile.CPU.icc' in case you want to
+use the Intel C++ Compiler for the compilation. 
+
+After compilation the binary `motexCPU' will be created in the working 
+directory, e.g. you may call it from this directory via
+
+`./motexCPU -a DNA -i INPUT -o OUTPUT -d 1 -q 3 -l 5 -e 1'
+
+Use the command `./motexCPU -h' for the help output.
+   
+   The shell command `make -f Makefile.MPI.gcc' should compile this 
+program for MPI. You may use `make -f Makefile.MPI.icc' in case you 
+want to use the Intel C++ Compiler for the compilation.
+
+After compilation the binary `motexMPI' will be created in the working 
+directory, e.g. you may call it from this directory via
+
+`mpirun -np 64 ./motexMPI -a DNA -i INPUT -o OUTPUT -d 1 -q 3 -l 5 -e 1'
+
+to make use of 64 processes.
+
+Notice that the specifics of the MPI invocation, i.e. the exact form of 
+`mpirun' depends on your local cluster configuration.
+
+The best option is to contact your cluster administrator, or check if 
+there is any on-line documentation on how to invoke MPI programs.

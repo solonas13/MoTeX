@@ -1,0 +1,35 @@
+MF=	Makefile.MPI.gcc
+
+CC=	mpicc
+
+CFLAGS=	-g -D_USE_MPI
+
+LFLAGS=	-lz -lm -ldatrie -msse3 -O2 -fomit-frame-pointer -funroll-loops
+
+EXE=	motexMPI
+
+SRC= 	motex.c functions.c
+
+HD=     motexdefs.h triedefs.h trie.h alpha-map.h typedefs.h
+
+#
+# No need to edit below this line
+#
+
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+OBJ=	$(SRC:.c=.o)
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
+all:	$(EXE)
+
+$(EXE):	$(OBJ)
+	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LFLAGS)
+
+$(OBJ):	$(MF) $(HD)
+
+clean:
+	rm -f $(OBJ) $(EXE) core* script.sh.p* script.sh.o* script.sh.e*
