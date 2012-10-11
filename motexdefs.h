@@ -38,6 +38,7 @@ struct TSwitch
    unsigned int         d;
    unsigned int         e;
    unsigned int		n;
+   unsigned int		t;
  };
 
 struct Tbdata
@@ -69,7 +70,7 @@ unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const 
 unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v, int rank, int P );
 #endif
 
-#ifdef _USE_CPU
+#if defined _USE_CPU || _USE_OMP
 unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v );
 unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v );
 double gettime( void );

@@ -22,6 +22,10 @@
 #include <mpi.h>
 #endif
 
+#ifdef _USE_OMP
+#include <omp.h>
+#endif
+
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -67,6 +71,10 @@ int main ( int argc, char **argv )
 	int * disp;
 	#endif
 
+	#ifdef _USE_OMP
+	unsigned int threads;
+	#endif
+
 	/* decodes the arguments */
    	i = decode_switches ( argc, argv, &sw );
 
@@ -102,6 +110,12 @@ int main ( int argc, char **argv )
 		output_filename     = sw . output_filename;
 		background_filename = sw . background_filename;
     	}
+
+	#ifdef _USE_OMP
+	/* set the num of threads to be used */
+	threads = sw . t;
+   	omp_set_num_threads( threads );
+	#endif
 
 	#ifdef _USE_MPI
         MPI_Init( NULL, NULL );
@@ -242,7 +256,7 @@ int main ( int argc, char **argv )
 	if( rank == 0 )	start = MPI_Wtime(); 
 	#endif
 
-	#ifdef _USE_CPU
+	#if defined _USE_CPU || defined _USE_OMP
         start = gettime();
 	#endif
 
@@ -256,14 +270,14 @@ int main ( int argc, char **argv )
 		if ( ! g_all_occur[i] )
         	{
         		fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
-                	return ( 1 );
+                	exit ( 1 );
         	}
 
 		g_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
 		if ( ! g_occur[i] )
         	{
         		fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
-                	return ( 1 );
+                	exit ( 1 );
         	}
 
 		#ifdef _USE_MPI
@@ -302,19 +316,16 @@ int main ( int argc, char **argv )
 		MPI_Gather ( &first, 1, MPI_UNSIGNED, disp, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD ); 
 		#endif
 
+		#pragma omp parallel for private ( j )
 		for ( j = 0; j < num_seqs; j++ )
 		{
-			#if 0
-			if ( i == j )	continue;
-			#endif
-
 			n = strlen ( seqs[j] );
 
 			/* check if the length of the sequence satisfies the restrictions set by the algorithm */
 			if ( l > n || l > m )
 			{
         			fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-                		return ( 1 );
+                		exit ( 1 );
         		}
 
 			#ifdef _USE_MPI
@@ -358,13 +369,13 @@ int main ( int argc, char **argv )
 			free ( recv );
 			#endif
 
-			#ifdef _USE_CPU
+			#if defined _USE_CPU || defined _USE_OMP
 			if ( d == 0 )
 			{
 				if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
         			{
               				fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
-              				return ( 1 );
+              				exit ( 1 );
         			}
         		}	
 			else
@@ -372,7 +383,7 @@ int main ( int argc, char **argv )
 				if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
         			{
               				fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
-              				return ( 1 );
+              				exit ( 1 );
         			}
         		}
 			#endif
@@ -400,8 +411,12 @@ int main ( int argc, char **argv )
 	 	end = MPI_Wtime();
 	#endif
 
-	#ifdef _USE_CPU
+	#if defined _USE_CPU || defined _USE_OMP
         end = gettime();
+	#endif
+
+	#ifdef _USE_OMP
+	P = sw . t;
 	#endif
 
 		if ( background_filename == NULL )

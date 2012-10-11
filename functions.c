@@ -504,7 +504,7 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 }
 #endif
 
-#ifdef _USE_CPU
+#if defined _USE_CPU || _USE_OMP
 /*
 the dynamic programming algorithm under the hamming distance model for CPU
 */
@@ -806,6 +806,7 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 		return  ( 0 );
 	}
 
+
    	fprintf ( out_fd, "####################################\n" );
    	fprintf ( out_fd, "# Program: MOTifs EXtraction\n" );
    	fprintf ( out_fd, "# Rundate: %s", ctime ( &t ) );
@@ -1030,6 +1031,7 @@ static struct option long_options[] =
    { "distance",   	   required_argument, NULL, 'd' },
    { "errors",   	   required_argument, NULL, 'e' },
    { "num-of-occurrences", required_argument, NULL, 'n' },
+   { "num-of-threads",     required_argument, NULL, 't' },
    { "help",               no_argument,       NULL, 'h' },
    { NULL,                 0,                 NULL, 0   }
  };
@@ -1055,10 +1057,11 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
    sw -> d       		= 0;
    sw -> e       		= 0;
    sw -> n       		= 0;
+   sw -> t       		= 4;
 
    args = 0;
 
-   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:l:d:e:n:h", long_options, &oi ) ) != - 1 )
+   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:l:d:e:n:t:h", long_options, &oi ) ) != - 1 )
     {
       switch ( opt )
        {
@@ -1124,6 +1127,15 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
 	   args ++;
            break;
 
+         case 't':
+           val = strtol ( optarg, &ep, 10 );
+           if ( ! ep || ep == optarg )
+            {
+              return ( 0 );
+            }
+           sw -> t = val;
+           break;
+
          case 'e':
            val = strtol ( optarg, &ep, 10 );
            if ( optarg == ep )
@@ -1158,7 +1170,7 @@ void usage ( void )
    fprintf ( stdout, "# \"\" # #   #    #    #\"\"\"\"   m\"\"m\n" );
    fprintf ( stdout, "#    # \"#m#\"    #    \"#mm\"  m\"  \"m\n\n" );
 
-   fprintf ( stdout, " Usage: motexCPU|motexMPI <options>\n" );
+   fprintf ( stdout, " Usage: motexCPU|motexOMP|motexMPI <options>\n" );
    fprintf ( stdout, " Standard (Mandatory):\n" );
    fprintf ( stdout, "  -a, --alphabet            <str>     `DNA' for nucleotide  sequences or `PROT'\n"
                      "                                      for protein  sequences. You may use `USR'\n"
@@ -1178,6 +1190,8 @@ void usage ( void )
    fprintf ( stdout, "  -n, --num-of-occurrences  <int>     The minimum number of occurrences of a\n"
                      "                                      reported motif in any of the sequences.\n" );
    fprintf ( stdout, "  -b, --background-file     <str>     MoTeX background filename for evaluation.\n" );
+   fprintf ( stdout, "  -t, --threads             <int>     Number of threads to be used for the OMP\n"
+                     "                                      version (default: 4).\n" );
  }
 
 /*

@@ -1,0 +1,35 @@
+MF=	Makefile.OMP.gcc
+
+CC=	gcc
+
+CFLAGS=	-g -fopenmp -D_USE_OMP
+
+LFLAGS=	-lz -lm -ldatrie -msse3 -O2 -fomit-frame-pointer -funroll-loops
+
+EXE=	motexOMP
+
+SRC= 	motex.c functions.c
+
+HD=     motexdefs.h triedefs.h trie.h alpha-map.h typedefs.h
+
+#
+# No need to edit below this line
+#
+
+.SUFFIXES:
+.SUFFIXES: .c .o
+
+OBJ=	$(SRC:.c=.o)
+
+.c.o:
+	$(CC) $(CFLAGS) -c $<
+
+all:	$(EXE)
+
+$(EXE):	$(OBJ)
+	$(CC) $(CFLAGS) -o $@ $(OBJ) $(LFLAGS)
+
+$(OBJ):	$(MF) $(HD)
+
+clean:
+	rm -f $(OBJ) $(EXE)

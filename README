@@ -18,6 +18,17 @@ directory, e.g. you may call it from this directory via
 
 Use the command `./motexCPU -h' for the help output.
    
+   The shell command `make -f Makefile.OMP.gcc' should compile this 
+program for OMP. You may use `make -f Makefile.OMP.icc' in case you 
+want to use the Intel C++ Compiler for the compilation.
+
+After compilation the binary `motexOMP' will be created in the working 
+directory, e.g. you may call it from this directory via
+
+`./motexOMP -a DNA -i INPUT -o OUTPUT -d 1 -q 3 -l 5 -e 1 -t 8'
+
+to make use of 8 threads.
+   
    The shell command `make -f Makefile.MPI.gcc' should compile this 
 program for MPI. You may use `make -f Makefile.MPI.icc' in case you 
 want to use the Intel C++ Compiler for the compilation.
