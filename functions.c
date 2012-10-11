@@ -873,7 +873,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	FILE * 		out_fd;				// file with the motifs
 	FILE * 		in_fd;				// file with the bg motifs
 	unsigned int i, j, k;
-	char line[ALLOC_SIZE];
+	char line[LINE_SIZE];
 
 	unsigned int pvalid = 0;
 	unsigned int uvalid = 0;
