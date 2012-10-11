@@ -795,7 +795,7 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 	alphabet = alpha_map_new();
 
 	/* Define the alphabet's range */
-        alpha_map_add_range ( alphabet, 'A', 'Z' );
+        alpha_map_add_range ( alphabet, 0, 127 );
 
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
@@ -889,7 +889,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	alphabet = alpha_map_new();
 
 	/* Define the alphabet's range */
-        alpha_map_add_range ( alphabet, 'A', 'Z' );
+        alpha_map_add_range ( alphabet, 0, 127 );
 
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
