@@ -1056,7 +1056,7 @@ static struct option long_options[] =
    { "errors",   	   required_argument, NULL, 'e' },
    { "num-of-occurrences", required_argument, NULL, 'n' },
    { "num-of-threads",     required_argument, NULL, 't' },
-   { "long",     	   required_argument, NULL, 'L' },
+   { "long-sequences", 	   required_argument, NULL, 'L' },
    { "help",               no_argument,       NULL, 'h' },
    { NULL,                 0,                 NULL, 0   }
  };
@@ -1228,7 +1228,7 @@ void usage ( void )
    fprintf ( stdout, "  -b, --background-file     <str>     MoTeX background filename for evaluation.\n" );
    fprintf ( stdout, "  -t, --threads             <int>     Number of threads to be used by the OMP\n"
                      "                                      version (default: 4).\n" );
-   fprintf ( stdout, "  -L, --long                <int>     If the number of input sequences is less\n"
+   fprintf ( stdout, "  -L, --long-sequences      <int>     If the number of input sequences is less\n"
                      "                                      than  the number of  processors  used by\n" 
                      "                                      the MPI version, this should be set to 1\n"
                      "                                      (default: 0).\n" );
