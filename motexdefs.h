@@ -39,6 +39,7 @@ struct TSwitch
    unsigned int         e;
    unsigned int		n;
    unsigned int		t;
+   unsigned int		L;
  };
 
 struct Tbdata
@@ -70,11 +71,8 @@ unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const 
 unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v, int rank, int P );
 #endif
 
-#if defined _USE_CPU || _USE_OMP
 unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v );
 unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v );
 double gettime( void );
-#endif
-
 unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
 unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );

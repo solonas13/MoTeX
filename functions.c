@@ -22,6 +22,10 @@
 #include <mpi.h>
 #endif
 
+#ifdef _USE_OMP
+#include <omp.h>
+#endif
+
 #include <time.h>
 #include <math.h>
 #include <stdlib.h>
@@ -97,7 +101,7 @@ inline unsigned int elements( unsigned int step, unsigned int n, unsigned int m 
 }
 
 /*
-allocates the amount of cells for each processor per diagonal
+allocates the amount of cells for each processor at the diagonal step
 */
 inline void allocation ( int rank, int P, unsigned int n, unsigned int m, unsigned int step, int *first, int* last )
 {
@@ -117,7 +121,7 @@ inline void allocation ( int rank, int P, unsigned int n, unsigned int m, unsign
 }
 
 /*
-allocates the amount of cells for each processor per row
+allocates the workload for each processor given the total number of jobs m
 */
 inline void vec_allocation ( int rank, int P, unsigned int m, int *first, int* last, int* count )
 {
@@ -504,9 +508,8 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 }
 #endif
 
-#if defined _USE_CPU || _USE_OMP
 /*
-the dynamic programming algorithm under the hamming distance model for CPU
+the dynamic programming algorithm under the hamming distance model
 */
 unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v )
 {
@@ -556,9 +559,15 @@ unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char *
 				{
 					if ( occ[j - 1] == 0 )
 					{
+						#ifdef _USE_OMP
+						#pragma omp critical
+						#endif
 						u[j - 1] = u[j - 1] + 1;
 						occ[j - 1] = 1;
 					} 
+					#ifdef _USE_OMP
+					#pragma omp critical
+					#endif
 					v[j - 1] = v[j - 1] + 1; 
 				}
 
@@ -575,9 +584,15 @@ unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char *
 				{
 					if ( occ[j - 1] == 0 )
 					{
+						#ifdef _USE_OMP
+						#pragma omp critical
+						#endif
 						u[j - 1] = u[j - 1] + 1;
 						occ[j - 1] = 1;
 					} 
+					#ifdef _USE_OMP
+					#pragma omp critical
+					#endif
 					v[j - 1] = v[j - 1] + 1; 
 				}
 
@@ -599,7 +614,7 @@ unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char *
 }
 
 /*
-the dynamic programming algorithm under the edit distance model for CPU
+the dynamic programming algorithm under the edit distance model
 */
 unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v )
 {
@@ -650,13 +665,18 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
 				{
 					if ( occ[j - 1] == 0 )
 					{
+						#ifdef _USE_OMP
+						#pragma omp critical
+						#endif
 						u[j - 1] = u[j - 1] + 1;
 						occ[j - 1] = 1;
 					} 
+					#ifdef _USE_OMP
+					#pragma omp critical
+					#endif
 					v[j - 1] = v[j - 1] + 1; 
 				}
-				break;
-				
+				break;				
 				case 1 :
 
 				if ( i == 0 )
@@ -670,9 +690,15 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
 				{
 					if ( occ[j - 1] == 0 )
 					{
+						#ifdef _USE_OMP
+						#pragma omp critical
+						#endif
 						u[j - 1] = u[j - 1] + 1;
 						occ[j - 1] = 1;
 					} 
+					#ifdef _USE_OMP
+					#pragma omp critical
+					#endif
 					v[j - 1] = v[j - 1] + 1; 
 				}
 				break;
@@ -688,10 +714,8 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
 	free ( D0 );
 	free ( D1 );
 	free ( occ );
-
 	return  ( 1 );
 }
-#endif
 
 /*
 given integers a, b, c this function returns one of the integers a, b, c
@@ -1032,6 +1056,7 @@ static struct option long_options[] =
    { "errors",   	   required_argument, NULL, 'e' },
    { "num-of-occurrences", required_argument, NULL, 'n' },
    { "num-of-threads",     required_argument, NULL, 't' },
+   { "long",     	   required_argument, NULL, 'L' },
    { "help",               no_argument,       NULL, 'h' },
    { NULL,                 0,                 NULL, 0   }
  };
@@ -1058,10 +1083,11 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
    sw -> e       		= 0;
    sw -> n       		= 0;
    sw -> t       		= 4;
+   sw -> L       		= 0;
 
    args = 0;
 
-   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:l:d:e:n:t:h", long_options, &oi ) ) != - 1 )
+   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:l:d:e:n:t:L:h", long_options, &oi ) ) != - 1 )
     {
       switch ( opt )
        {
@@ -1136,6 +1162,15 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
            sw -> t = val;
            break;
 
+         case 'L':
+           val = strtol ( optarg, &ep, 10 );
+           if ( ! ep || ep == optarg )
+            {
+              return ( 0 );
+            }
+           sw -> L = val;
+           break;
+
          case 'e':
            val = strtol ( optarg, &ep, 10 );
            if ( optarg == ep )
@@ -1187,11 +1222,16 @@ void usage ( void )
                      "                                      sequences in which a motif must occur.\n" );
    fprintf ( stdout, "  -l, --motifs-length       <int>     The length of motifs.\n\n");
    fprintf ( stdout, " Optional:\n" );
-   fprintf ( stdout, "  -n, --num-of-occurrences  <int>     The minimum number of occurrences of a\n"
-                     "                                      reported motif in any of the sequences.\n" );
+   fprintf ( stdout, "  -n, --num-of-occurrences  <int>     The minimum  number of  occurrences of a\n"
+                     "                                      reported  motif in any  of the sequences\n"
+                     "                                      (default: 1).\n" );
    fprintf ( stdout, "  -b, --background-file     <str>     MoTeX background filename for evaluation.\n" );
-   fprintf ( stdout, "  -t, --threads             <int>     Number of threads to be used for the OMP\n"
+   fprintf ( stdout, "  -t, --threads             <int>     Number of threads to be used by the OMP\n"
                      "                                      version (default: 4).\n" );
+   fprintf ( stdout, "  -L, --long                <int>     If the number of input sequences is less\n"
+                     "                                      than  the number of  processors  used by\n" 
+                     "                                      the MPI version, this should be set to 1\n"
+                     "                                      (default: 0).\n" );
  }
 
 /*
