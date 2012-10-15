@@ -852,23 +852,24 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 
                 for ( j = sw . l - 1; j < m; j ++ )
 		{
-                        AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
-                        char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
                         if (  u[i][j] >= sw . q && v[i][j] >= sw . n )
                         {
-                                memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
+                        	AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
 				for ( k = 0; k < sw. l; k ++ )
 					ACmotif[k] = ( AlphaChar )seqs[i][k + j - ( sw . l ) + 1];
 				ACmotif [ k ] = 0;
 				if ( trie_retrieve ( trie, ACmotif, NULL ) != TRUE )
                                 {
 					trie_store ( trie, ACmotif, 0 );
+
+                        		char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+					memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
                                         fprintf ( out_fd, "%s %lf %d\n", motif, ( double ) u[i][j] / num_seqs, v[i][j] );
                                         valid ++;
+                        		free ( motif );
                                 }
+                        	free ( ACmotif );
                         }
-                        free ( ACmotif );
-                        free ( motif );
 		}
 	}
 
@@ -986,10 +987,10 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 
                 for ( j = sw . l - 1; j < m; j ++ )
 		{
-                        AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
-                        char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
                         if (  u[i][j] >= sw . q && v[i][j] >= sw . n )
                         {
+                        	AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
+                        	char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
                                 memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
 				for ( k = 0; k < sw. l; k ++ )
 					ACmotif[k] = ( AlphaChar )seqs[i][k + j - ( sw . l ) + 1];
@@ -1018,9 +1019,9 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 					}
 					//else as a fg motif	
 				}
+                        	free ( motif );
+                        	free ( ACmotif );
                         }
-                        free ( ACmotif );
-                        free ( motif );
 		}
 	}
 
