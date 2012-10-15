@@ -1225,13 +1225,15 @@ void usage ( void )
    fprintf ( stdout, "  -n, --num-of-occurrences  <int>     The minimum  number of  occurrences of a\n"
                      "                                      reported  motif in any  of the sequences\n"
                      "                                      (default: 1).\n" );
-   fprintf ( stdout, "  -b, --background-file     <str>     MoTeX background filename for evaluation.\n" );
+   fprintf ( stdout, "  -b, --background-file     <str>     MoTeX background filename for statistical\n"
+                     "                                      evaluation.\n" );
    fprintf ( stdout, "  -t, --threads             <int>     Number of threads to be used by the OMP\n"
                      "                                      version (default: 4).\n" );
    fprintf ( stdout, "  -L, --long-sequences      <int>     If the number of input sequences is less\n"
                      "                                      than  the number of  processors  used by\n" 
                      "                                      the MPI version, this should be set to 1\n"
-                     "                                      (default: 0).\n" );
+                     "                                      (default: 0); useful for a few very long\n"
+                     "                                      sequences.\n" );
  }
 
 /*
