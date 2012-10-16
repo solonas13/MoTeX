@@ -559,15 +559,9 @@ unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char *
 				{
 					if ( occ[j - 1] == 0 )
 					{
-						#ifdef _USE_OMP
-						#pragma omp critical
-						#endif
 						u[j - 1] = u[j - 1] + 1;
 						occ[j - 1] = 1;
 					} 
-					#ifdef _USE_OMP
-					#pragma omp critical
-					#endif
 					v[j - 1] = v[j - 1] + 1; 
 				}
 
@@ -584,15 +578,9 @@ unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char *
 				{
 					if ( occ[j - 1] == 0 )
 					{
-						#ifdef _USE_OMP
-						#pragma omp critical
-						#endif
 						u[j - 1] = u[j - 1] + 1;
 						occ[j - 1] = 1;
 					} 
-					#ifdef _USE_OMP
-					#pragma omp critical
-					#endif
 					v[j - 1] = v[j - 1] + 1; 
 				}
 
@@ -665,15 +653,9 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
 				{
 					if ( occ[j - 1] == 0 )
 					{
-						#ifdef _USE_OMP
-						#pragma omp critical
-						#endif
 						u[j - 1] = u[j - 1] + 1;
 						occ[j - 1] = 1;
 					} 
-					#ifdef _USE_OMP
-					#pragma omp critical
-					#endif
 					v[j - 1] = v[j - 1] + 1; 
 				}
 				break;				
@@ -690,15 +672,9 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
 				{
 					if ( occ[j - 1] == 0 )
 					{
-						#ifdef _USE_OMP
-						#pragma omp critical
-						#endif
 						u[j - 1] = u[j - 1] + 1;
 						occ[j - 1] = 1;
 					} 
-					#ifdef _USE_OMP
-					#pragma omp critical
-					#endif
 					v[j - 1] = v[j - 1] + 1; 
 				}
 				break;

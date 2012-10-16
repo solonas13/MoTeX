@@ -51,7 +51,6 @@ int main ( int argc, char **argv )
 	unsigned int 	num_seqs = 0;		// the total number of sequences
 	unsigned int 	total_length;		// the total length of the sequences
 
-	unsigned int 	n, m;			
 	unsigned int 	i, j;
 
 	unsigned int ** g_all_occur;		// global all-occurrences vector
@@ -257,31 +256,31 @@ int main ( int argc, char **argv )
         start = gettime();
 
 	/* The algorithm for motif extraction */
+	#ifdef _USE_OMP
+	#pragma omp parallel for private ( i, j )
+	#endif
 	for ( i = 0; i < num_seqs; i++ )
 	{
-		m = strlen ( seqs[i] );
+		unsigned int m = strlen ( seqs[i] );
 
 		/* allocate space for vectors lv and gv */
 		g_all_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
 		if ( ! g_all_occur[i] )
         	{
         		fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
-                	return ( 1 );
+                	exit ( 1 );
         	}
 
 		g_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
 		if ( ! g_occur[i] )
         	{
         		fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
-                	return ( 1 );
+                	exit ( 1 );
         	}
 
-		#ifdef _USE_OMP
-		#pragma omp parallel for private ( j )
-		#endif
 		for ( j = 0; j < num_seqs; j++ )
 		{
-			n = strlen ( seqs[j] );
+			unsigned int n = strlen ( seqs[j] );
 
 			/* check if the length of the sequence satisfies the restrictions set by the algorithm */
 			if ( l > n || l > m )
@@ -334,7 +333,7 @@ int main ( int argc, char **argv )
 		/* The algorithm for motif extraction */
 		for ( i = 0; i < num_seqs; i++ )
 		{
-			m = strlen ( seqs[i] );
+			unsigned int m = strlen ( seqs[i] );
 
 			/* allocate space for vectors lv and gv */
 			g_all_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
@@ -387,7 +386,7 @@ int main ( int argc, char **argv )
 
 			for ( j = 0; j < num_seqs; j++ )
 			{
-				n = strlen ( seqs[j] );
+				unsigned int n = strlen ( seqs[j] );
 
 				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
 				if ( l > n || l > m )
@@ -450,7 +449,7 @@ int main ( int argc, char **argv )
 	{
 		for ( i = 0; i < num_seqs; i++ )
 		{
-			m = strlen ( seqs[i] );
+			unsigned int m = strlen ( seqs[i] );
 
 			/* allocate space for vectors */
 			g_all_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
@@ -486,7 +485,7 @@ int main ( int argc, char **argv )
 
 			for ( j = first; j <= last; j++ )
 			{
-				n = strlen ( seqs[j] );
+				unsigned int n = strlen ( seqs[j] );
 
 				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
 				if ( l > n || l > m )
