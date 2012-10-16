@@ -828,7 +828,7 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 
                 for ( j = sw . l - 1; j < m; j ++ )
 		{
-                        if (  u[i][j] >= sw . q && v[i][j] >= sw . n )
+                        if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) >= sw . q && v[i][j] >= sw . n )
                         {
                         	AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
 				for ( k = 0; k < sw. l; k ++ )
@@ -840,7 +840,7 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 
                         		char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
 					memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
-                                        fprintf ( out_fd, "%s %lf %d\n", motif, ( double ) u[i][j] / num_seqs, v[i][j] );
+                                        fprintf ( out_fd, "%s %lf %d\n", motif, (  ( ( double ) u[i][j] / num_seqs ) * 100 ), v[i][j] );
                                         valid ++;
                         		free ( motif );
                                 }
@@ -963,7 +963,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 
                 for ( j = sw . l - 1; j < m; j ++ )
 		{
-                        if (  u[i][j] >= sw . q && v[i][j] >= sw . n )
+                        if (  ( ( double ) u[i][j] / num_seqs ) * 100  >= sw . q && v[i][j] >= sw . n )
                         {
                         	AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
                         	char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
@@ -976,7 +976,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
                                 {
 					data = -1;
 					trie_store ( trie, ACmotif, data );
-                                        fprintf ( out_fd, "%s %lf %d\n", motif, ( double ) u[i][j] / num_seqs, v[i][j] );
+                                        fprintf ( out_fd, "%s %lf %d\n", motif, (  ( ( double ) u[i][j] / num_seqs ) * 100 ), v[i][j] );
                                         uvalid ++;
                                 }
 				else 							//it already exists 
@@ -984,7 +984,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 					if ( data != -1 )				//as a bg motif
 					{
                                         	fprintf ( out_fd, "%s %lf %d %lf %d\n", motif, 
-											( double ) u[i][j] / num_seqs, 
+											(  ( ( double ) u[i][j] / num_seqs ) * 100 ), 
 											v[i][j], 
 											bdata[ data ]  . u, 
 											bdata [ data ] . v 
@@ -1195,8 +1195,8 @@ void usage ( void )
 	             "                                      distance) or 1 (for edit distance).\n"); 
    fprintf ( stdout, "  -e, --errors              <int>     Limit the  max number  of errors to this\n"
                      "                                      value.\n" );
-   fprintf ( stdout, "  -q, --quorum              <int>     The  quorum  is  the minimum  number  of\n"
-                     "                                      sequences in which a motif must occur.\n" );
+   fprintf ( stdout, "  -q, --quorum              <int>     The  quorum  is  the minimum  percentage\n"
+                     "                                      of sequences in which a motif must occur.\n" );
    fprintf ( stdout, "  -l, --motifs-length       <int>     The length of motifs.\n\n");
    fprintf ( stdout, " Optional:\n" );
    fprintf ( stdout, "  -n, --num-of-occurrences  <int>     The minimum  number of  occurrences of a\n"

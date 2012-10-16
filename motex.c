@@ -85,8 +85,20 @@ int main ( int argc, char **argv )
     	}
    	else 
     	{
-      		q   	= sw . q;	
-      		l   	= sw . l;	
+		if ( sw . q > 100 )
+       		{
+         		fprintf ( stderr, "Error: quorum argument q should be less or equal to 100!!!\n" );
+         		return ( 1 );
+       		}
+		else   q = sw . q;	
+
+		if ( sw . l > sizeof( unsigned int ) * CHAR_BIT - 1 )
+                {
+                        fprintf( stderr, " Error: the fixed-length of motifs must be less or equal than %d!\n", ( unsigned int ) ( sizeof( unsigned int ) * CHAR_BIT - 1 ) );
+                        return ( 1 );
+                }
+      		else 	l = sw . l;
+	
       		e   	= sw . e;	
 
       		if ( sw . d == 0 )       d = sw . d;
@@ -180,12 +192,6 @@ int main ( int argc, char **argv )
         	t[ len - 1 ] = '\0';
         	total_length = len - 1;
 
-		/* l should be less than sizeof( type ) * CHAR_BIT */
-		if ( l > sizeof( unsigned int ) * CHAR_BIT - 1 )
-                {
-                        fprintf( stderr, " Error: the fixed-length of motifs must be less or equal than %d!\n", ( unsigned int ) ( sizeof( unsigned int ) * CHAR_BIT - 1 ) );
-                        return ( 1 );
-                }
 
 	#ifdef _USE_MPI
 		/* broadcast the data */
