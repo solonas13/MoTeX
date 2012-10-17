@@ -462,14 +462,14 @@ int main ( int argc, char **argv )
 			if ( ! g_all_occur[i] )
         		{
         			fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
-                		exit ( 1 );
+                		return ( 1 );
         		}
 
 			g_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
 			if ( ! g_occur[i] )
         		{
         			fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
-                		exit ( 1 );
+                		return ( 1 );
         		}
 
 			l_all_occur = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
@@ -497,7 +497,7 @@ int main ( int argc, char **argv )
 				if ( l > n || l > m )
 				{
         				fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-                			exit ( 1 );
+                			return ( 1 );
         			}
 
 				if ( d == 0 )
@@ -505,7 +505,7 @@ int main ( int argc, char **argv )
 					if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
         				{
               					fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
-              					exit ( 1 );
+              					return ( 1 );
         				}
         			}	
 				else
