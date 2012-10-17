@@ -1195,7 +1195,7 @@ void usage ( void )
 	             "                                      distance) or 1 (for edit distance).\n"); 
    fprintf ( stdout, "  -e, --errors              <int>     Limit the  max number  of errors to this\n"
                      "                                      value.\n" );
-   fprintf ( stdout, "  -q, --quorum              <int>     The  quorum  is  the minimum  percentage\n"
+   fprintf ( stdout, "  -q, --quorum              <int>     The quorum is the minimum percentage (%%)\n"
                      "                                      of sequences in which a motif must occur.\n" );
    fprintf ( stdout, "  -l, --motifs-length       <int>     The length of motifs.\n\n");
    fprintf ( stdout, " Optional:\n" );
