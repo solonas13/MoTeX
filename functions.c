@@ -1209,8 +1209,8 @@ void usage ( void )
    fprintf ( stdout, "  -L, --long-sequences      <int>     If the number of input sequences is less\n"
                      "                                      than  the number of  processors  used by\n" 
                      "                                      the MPI version, this should be set to 1\n"
-                     "                                      (default: 0); useful for a few very long\n"
-                     "                                      sequences.\n" );
+                     "                                      (default: 0); useful  for a few (or one)\n"
+                     "                                      very long sequence(s), e.g. a chromosome.\n" );
  }
 
 /*
