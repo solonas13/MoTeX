@@ -27,6 +27,8 @@
 #define max(a,b) ((a) > (b)) ? (a) : (b)
 #define min(a,b) ((a) < (b)) ? (a) : (b)
 
+
+
 struct TSwitch
  {
    char               * alphabet;
@@ -76,3 +78,8 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
 unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
 unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
 double gettime( void );
+
+
+void fillTable (double * a, int n);
+double binomial_cdf_less_than(int x, int N, double p, double *LUT);
+

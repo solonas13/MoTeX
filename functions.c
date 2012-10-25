@@ -33,6 +33,7 @@
 #include <getopt.h>
 #include "motexdefs.h"
 #include "trie.h"
+#include <assert.h>
 
 #ifdef _USE_MPI
 /*
@@ -800,7 +801,7 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( out_fd = fopen( sw . output_filename, "a+") ) == NULL) 
+	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
@@ -840,7 +841,7 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 
                         		char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
 					memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
-                                        fprintf ( out_fd, "%s %lf %d\n", motif, (  ( ( double ) u[i][j] / num_seqs ) * 100 ), v[i][j] );
+                                        fprintf ( out_fd, "%s %d %d %lf %d\n", motif, u[i][j], num_seqs, (  ( ( double ) u[i][j] / num_seqs ) ), v[i][j] );
                                         valid ++;
                         		free ( motif );
                                 }
@@ -869,6 +870,9 @@ write the output considering a background file as input
 */
 unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P )
 {
+
+  
+
 	time_t               t;
    	time ( &t );
 	FILE * 		out_fd;				// file with the motifs
@@ -886,6 +890,17 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 
         struct Tbdata * bdata = NULL;
 
+	double bin_cdf = 0.;
+
+	double *log_factLUT = calloc( (num_seqs + 1), sizeof(double) );
+
+	char background_size_string[100];
+	char background_quorum_size_string[100];
+
+	int background_size = 0, background_quorum_size = 0;
+
+	fillTable( log_factLUT, num_seqs );
+
 	/* Create an empty alphabet */
 	alphabet = alpha_map_new();
 
@@ -895,7 +910,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( out_fd = fopen( sw . output_filename, "a+") ) == NULL) 
+	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
@@ -907,7 +922,44 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 		return  ( 0 );
 	}
 
-	while ( fgets ( line, LINE_SIZE, in_fd ) && line[0] != '\n' );
+	while ( fgets ( line, LINE_SIZE, in_fd ) && line[0] != '\n' )
+	  {
+	 
+	    if(strlen(line) > 10 && line[6] == 'N')
+	      {
+		for(i=10; i<strlen(line); ++i)
+		  {
+		    
+		    background_size_string[i-10] = line[i];
+		    
+		    if(line[i] == 32 || line[i] == 10 || line[i] == 13 || line[i] == 9)
+		      break;
+		  }
+		
+		background_size_string[i] = '\0';
+		
+	      }
+	    else if(strlen(line) > 10 && line[6] == 'q')
+	      {
+		for(i=10; i<strlen(line); ++i)
+		  {
+		    background_quorum_size_string[i-10] = line[i];
+		    if(line[i] == 32 || line[i] == 10 || line[i] == 13 || line[i] == 9)
+		      break;
+		  }
+		
+		background_quorum_size_string[i] = '\0';
+		
+	      }
+	      
+	  }
+
+	
+	background_size = atoi(background_size_string);
+	background_quorum_size = atoi(background_quorum_size_string);
+	
+	assert(background_size > 0 && background_quorum_size > 0);
+	
 	max_alloc = num_bseqs = 0;
  
 	while ( fgets ( line, LINE_SIZE, in_fd ) && line[0] != '\n' )
@@ -957,6 +1009,9 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	fprintf ( out_fd, "# Run on %d proc(s) in %lf secs\n", P, exectime );
    	fprintf ( out_fd, "####################################\n\n" );
 
+
+	
+
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
 		unsigned int m = strlen ( seqs[i] );
@@ -974,22 +1029,29 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 				TrieData data;
 				if ( trie_retrieve ( trie, ACmotif, &data ) != TRUE ) 	//it does not exist as bg motif; add it as a fg motif
                                 {
+
+				  
 					data = -1;
 					trie_store ( trie, ACmotif, data );
-                                        fprintf ( out_fd, "%s %lf %d\n", motif, (  ( ( double ) u[i][j] / num_seqs ) * 100 ), v[i][j] );
+					bin_cdf = binomial_cdf_less_than(u[i][j], num_seqs, (double)background_quorum_size/background_size, log_factLUT);
+					
+                                        fprintf ( out_fd, "%s %d %d %lf %d %d %d %e\n", motif, u[i][j], num_seqs, (  ( ( double ) u[i][j] / num_seqs ) ), v[i][j], 0, 0, 1. - bin_cdf  );
                                         uvalid ++;
                                 }
 				else 							//it already exists 
 				{
 					if ( data != -1 )				//as a bg motif
 					{
-                                        	fprintf ( out_fd, "%s %lf %d %lf %d\n", motif, 
-											(  ( ( double ) u[i][j] / num_seqs ) * 100 ), 
-											v[i][j], 
-											bdata[ data ]  . u, 
-											bdata [ data ] . v 
-							);
-						data = -1;
+					  bin_cdf = binomial_cdf_less_than(u[i][j], num_seqs, bdata[ data ].u, log_factLUT);
+					  
+					  fprintf ( out_fd, "%s %d %d %lf %d %lf %d %e\n", motif, u[i][j], num_seqs,
+						    (  ( ( double ) u[i][j] / num_seqs ) ), 
+						    v[i][j], 
+						    bdata[ data ]  . u, 
+						    bdata [ data ] . v,
+						    1. - bin_cdf
+						    );
+					  data = -1;
 						trie_store ( trie, ACmotif, data );
                                         	pvalid ++;
 					}
@@ -1005,7 +1067,9 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	fprintf ( out_fd, "A total of %d valid motifs were extracted:\n", pvalid + uvalid );
 	fprintf ( out_fd, "  %d of them were matched with background motifs\n", pvalid );
 	fprintf ( out_fd, "  %d of them were not matched with any background motif.\n\n", uvalid );
-                
+	
+	free(log_factLUT);
+
 	trie_free ( trie );    
         trie = NULL;
         alpha_map_free ( alphabet );
@@ -1222,3 +1286,51 @@ double gettime( void )
     gettimeofday(&ttime , 0);
     return ttime.tv_sec + ttime.tv_usec * 0.000001;
 };
+
+
+
+void fillTable (double * a, int n)
+{
+  
+  int i=0;
+
+  a[0] = 0;
+  
+  for(i=1; i<=n; ++i)
+    {
+      a[i] = a[i-1] + log(i);
+    }
+}
+
+
+double binomial_cdf_less_than(int x, int N, double p, double *LUT)
+{
+  int i = 0;
+
+  double prob = 0.;
+
+  double ln_pr = 0.;
+
+  if( p >= 1.0)
+    {
+      return 0.;
+    }
+  
+  for(i=0; i < x; ++i)
+    {
+      ///fprintf(stderr, "%e %e %e %e %e\n", LUT[N], LUT[x], LUT[N-x], log(p), log(1. - p));
+
+      ln_pr = LUT[N] - LUT[i] - LUT[N-i] + i * log(p) + (N-i) * log(1. - p);
+      
+      prob += exp(ln_pr);
+            
+      //      fprintf(stderr, "i: %d\tp: %e\tln_pr: %e\tprob: %e\n", i, p, ln_pr, prob);
+
+      if(x > N)
+	break;
+    }
+
+  //  fprintf(stderr, " *** %e\n", prob);
+
+  return prob;
+}
