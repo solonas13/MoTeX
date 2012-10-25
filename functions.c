@@ -923,37 +923,28 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	}
 
 	while ( fgets ( line, LINE_SIZE, in_fd ) && line[0] != '\n' )
-	  {
-	 
-	    if(strlen(line) > 10 && line[6] == 'N')
-	      {
-		for(i=10; i<strlen(line); ++i)
-		  {
+	{
+		if ( strlen( line ) > 10 && line[6] == 'N' )
+	      	{
+			for ( i = 10; i < strlen(line); ++i )
+		  	{
+		    		background_size_string[i - 10] = line[i];
 		    
-		    background_size_string[i-10] = line[i];
-		    
-		    if(line[i] == 32 || line[i] == 10 || line[i] == 13 || line[i] == 9)
-		      break;
-		  }
+		    		if(line[i] == 32 || line[i] == 10 || line[i] == 13 || line[i] == 9)	break;
+		  	}
+			background_size_string[i] = '\0';
 		
-		background_size_string[i] = '\0';
-		
-	      }
-	    else if(strlen(line) > 10 && line[6] == 'q')
-	      {
-		for(i=10; i<strlen(line); ++i)
-		  {
-		    background_quorum_size_string[i-10] = line[i];
-		    if(line[i] == 32 || line[i] == 10 || line[i] == 13 || line[i] == 9)
-		      break;
-		  }
-		
-		background_quorum_size_string[i] = '\0';
-		
-	      }
-	      
-	  }
-
+	      	}
+	    	else if( strlen( line ) > 10 && line[6] == 'q')
+	      	{
+			for( i = 10; i < strlen(line); ++i )
+		  	{
+		    		background_quorum_size_string[i - 10] = line[i];
+		    		if(line[i] == 32 || line[i] == 10 || line[i] == 13 || line[i] == 9)	break;
+		  	}
+			background_quorum_size_string[i] = '\0';
+	      	}
+	}
 	
 	background_size = atoi(background_size_string);
 	background_quorum_size = atoi(background_quorum_size_string);
@@ -1009,9 +1000,6 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	fprintf ( out_fd, "# Run on %d proc(s) in %lf secs\n", P, exectime );
    	fprintf ( out_fd, "####################################\n\n" );
 
-
-	
-
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
 		unsigned int m = strlen ( seqs[i] );
@@ -1035,23 +1023,34 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 					trie_store ( trie, ACmotif, data );
 					bin_cdf = binomial_cdf_less_than(u[i][j], num_seqs, (double)background_quorum_size/background_size, log_factLUT);
 					
-                                        fprintf ( out_fd, "%s %d %d %lf %d %d %d %e\n", motif, u[i][j], num_seqs, (  ( ( double ) u[i][j] / num_seqs ) ), v[i][j], 0, 0, 1. - bin_cdf  );
+                                        fprintf ( out_fd, "%s %d %d %lf %d %d %d %e\n", 
+							motif, 
+							u[i][j], 
+							num_seqs, 
+							(  ( ( double ) u[i][j] / num_seqs ) ), 
+							v[i][j], 
+							0, 
+							0, 
+							1. - bin_cdf  );
                                         uvalid ++;
                                 }
 				else 							//it already exists 
 				{
 					if ( data != -1 )				//as a bg motif
 					{
-					  bin_cdf = binomial_cdf_less_than(u[i][j], num_seqs, bdata[ data ].u, log_factLUT);
+						bin_cdf = binomial_cdf_less_than(u[i][j], num_seqs, bdata[ data ].u, log_factLUT);
 					  
-					  fprintf ( out_fd, "%s %d %d %lf %d %lf %d %e\n", motif, u[i][j], num_seqs,
-						    (  ( ( double ) u[i][j] / num_seqs ) ), 
-						    v[i][j], 
-						    bdata[ data ]  . u, 
-						    bdata [ data ] . v,
-						    1. - bin_cdf
+					  	fprintf ( out_fd, "%s %d %d %lf %d %d %d %e\n", 
+								motif, 
+								u[i][j], 
+								num_seqs,
+						    		(  ( ( double ) u[i][j] / num_seqs ) ), 
+						    		v[i][j], 
+						    		bdata[ data ]  . u, 
+						    		bdata [ data ] . v,
+						    		1. - bin_cdf
 						    );
-					  data = -1;
+					  	data = -1;
 						trie_store ( trie, ACmotif, data );
                                         	pvalid ++;
 					}
@@ -1287,50 +1286,38 @@ double gettime( void )
     return ttime.tv_sec + ttime.tv_usec * 0.000001;
 };
 
-
-
-void fillTable (double * a, int n)
-{
+void fillTable ( double * a, int n )
+{ 
+	int i=0;
+  	a[0] = 0;
   
-  int i=0;
-
-  a[0] = 0;
-  
-  for(i=1; i<=n; ++i)
-    {
-      a[i] = a[i-1] + log(i);
-    }
+  	for(i=1; i<=n; ++i)
+    	{
+      		a[i] = a[i-1] + log(i);
+    	}
 }
 
-
-double binomial_cdf_less_than(int x, int N, double p, double *LUT)
+double binomial_cdf_less_than( int x, int N, double p, double *LUT )
 {
-  int i = 0;
+	int i = 0;
+  	double prob = 0.;
+  	double ln_pr = 0.;
 
-  double prob = 0.;
-
-  double ln_pr = 0.;
-
-  if( p >= 1.0)
-    {
-      return 0.;
-    }
+  	if ( p >= 1.0 )
+    	{
+      		return 0.;
+    	}
   
-  for(i=0; i < x; ++i)
-    {
-      ///fprintf(stderr, "%e %e %e %e %e\n", LUT[N], LUT[x], LUT[N-x], log(p), log(1. - p));
+  	for ( i = 0; i < x; ++i )
+    	{
+      		//fprintf(stderr, "%e %e %e %e %e\n", LUT[N], LUT[x], LUT[N-x], log(p), log(1. - p));
+      		ln_pr = LUT[N] - LUT[i] - LUT[N-i] + i * log(p) + (N-i) * log(1. - p);
+            	prob += exp(ln_pr);
+                //fprintf(stderr, "i: %d\tp: %e\tln_pr: %e\tprob: %e\n", i, p, ln_pr, prob);
 
-      ln_pr = LUT[N] - LUT[i] - LUT[N-i] + i * log(p) + (N-i) * log(1. - p);
-      
-      prob += exp(ln_pr);
-            
-      //      fprintf(stderr, "i: %d\tp: %e\tln_pr: %e\tprob: %e\n", i, p, ln_pr, prob);
+      		if(x > N)	break;
+    	}
 
-      if(x > N)
-	break;
-    }
-
-  //  fprintf(stderr, " *** %e\n", prob);
-
-  return prob;
+  	//  fprintf(stderr, " *** %e\n", prob);
+  	return ( prob );
 }

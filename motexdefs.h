@@ -46,7 +46,7 @@ struct TSwitch
 
 struct Tbdata
  {
-   double	        u;
+   unsigned int	        u;
    unsigned int         v;
  };
 
