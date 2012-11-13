@@ -870,9 +870,6 @@ write the output considering a background file as input
 */
 unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P )
 {
-
-  
-
 	time_t               t;
    	time ( &t );
 	FILE * 		out_fd;				// file with the motifs
@@ -1017,8 +1014,6 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 				TrieData data;
 				if ( trie_retrieve ( trie, ACmotif, &data ) != TRUE ) 	//it does not exist as bg motif; add it as a fg motif
                                 {
-
-				  
 					data = -1;
 					trie_store ( trie, ACmotif, data );
 					bin_cdf = binomial_cdf_less_than(u[i][j], num_seqs, (double)background_quorum_size/background_size, log_factLUT);
@@ -1036,7 +1031,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
                                 }
 				else 							//it already exists 
 				{
-					if ( data != -1 )				//as a bg motif
+					if ( data != -1 )				//as a bg motif; add it as a fg motif matching this bg motif
 					{
 						bin_cdf = binomial_cdf_less_than(u[i][j], num_seqs, bdata[ data ].u, log_factLUT);
 					  
@@ -1054,7 +1049,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 						trie_store ( trie, ACmotif, data );
                                         	pvalid ++;
 					}
-					//else as a fg motif	
+					//as a fg motif; do nothing as it is a duplicate	
 				}
                         	free ( motif );
                         	free ( ACmotif );
