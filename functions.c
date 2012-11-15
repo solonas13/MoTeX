@@ -943,10 +943,10 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	      	}
 	}
 	
-	background_size = atoi(background_size_string);
-	background_quorum_size = atoi(background_quorum_size_string);
+	background_size = atoi( background_size_string );
+	background_quorum_size = atoi( background_quorum_size_string );
 	
-	assert(background_size > 0 && background_quorum_size > 0);
+	assert( background_size > 0 && background_quorum_size > 0 );
 	
 	max_alloc = num_bseqs = 0;
  
@@ -1016,7 +1016,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
                                 {
 					data = -1;
 					trie_store ( trie, ACmotif, data );
-					bin_cdf = binomial_cdf_less_than(u[i][j], num_seqs, (double)background_quorum_size/background_size, log_factLUT);
+					bin_cdf = binomial_cdf_less_than(u[i][j], num_seqs, ( double ) background_quorum_size/background_size, log_factLUT);
 					
                                         fprintf ( out_fd, "%s %d %d %lf %d %d %d %e\n", 
 							motif, 

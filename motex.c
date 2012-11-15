@@ -517,12 +517,12 @@ int main ( int argc, char **argv )
         				}
         			}
 			}
+
 			/* Collective communication */
 			MPI_Reduce ( l_all_occur, g_all_occur[i], m, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
 			MPI_Reduce ( l_occur, g_occur[i], m, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
 			free ( l_all_occur );
 			free ( l_occur );
-		
 		}
 	}
 
