@@ -866,6 +866,74 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 }
 
 /*
+write the output considering a foreground file of previously unmatched motifs as input
+*/
+unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char const ** fseqs, unsigned int ** u, unsigned int ** v, double exectime, int P, unsigned int num_seqs, struct Tdata * fdata )
+{
+	time_t               t;
+   	time ( &t );
+	FILE * 		out_fd;				// file with the motifs
+	unsigned int i, j, k;
+	unsigned int valid = 0;
+
+	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file!\n");
+		return  ( 0 );
+	}
+
+   	fprintf ( out_fd, "####################################\n" );
+   	fprintf ( out_fd, "# Program: MOTifs EXtraction\n" );
+   	fprintf ( out_fd, "# Rundate: %s", ctime ( &t ) );
+   	fprintf ( out_fd, "# Input file: %s\n", sw . input_filename );
+   	fprintf ( out_fd, "# Output file: %s\n", sw . output_filename );
+	fprintf ( out_fd, "# For N = %d input sequences\n", num_seqs );
+	fprintf ( out_fd, "#     l = %d\n", sw . l ) ;
+	fprintf ( out_fd, "#     d = %d\n", sw . d );
+	fprintf ( out_fd, "#     e = %d\n", sw . e );
+	fprintf ( out_fd, "#     q = %d\n", sw . q );
+	if ( sw . n )
+	fprintf ( out_fd, "#     n = %d\n", sw . n );
+	fprintf ( out_fd, "# Run on %d proc(s) in %lf secs\n", P, exectime );
+   	fprintf ( out_fd, "####################################\n\n" );
+
+	for ( i = 0; i < num_fseqs; i ++ ) 
+	{
+		unsigned int m = strlen ( fseqs[i] );
+
+                for ( j = m - 1; j < m; j ++ )
+		{
+                        if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) >= sw . q && v[i][j] >= sw . n )
+                        {
+                        	char      * motif   = calloc ( ( m + 1 ) , sizeof( char ) );
+				memcpy ( motif, &fseqs[i][j - ( m ) + 1 ], m );
+				fprintf ( out_fd, "%s %d %d %lf %d %d %d %d\n", 
+								motif, 
+								u[i][j], 
+								num_seqs,
+						    		(  ( ( double ) u[i][j] / num_seqs ) ), 
+						    		v[i][j], 
+						    		fdata[ i ]  . u, 
+						    		fdata [ i ] . v,
+						    		0  //Pavlo this is something you have to do
+						    );
+                                valid ++;
+                        	free ( motif );
+                        }
+		}
+	}
+
+	fprintf ( out_fd, "\nA total of %d valid motifs were extracted.\n\n", valid );
+                
+	if ( fclose ( out_fd ) ) 
+	{
+      		fprintf( stderr, "Error: file close error!\n");				      
+		return ( 0 );
+	}
+	return ( 1 );
+}
+
+/*
 write the output considering a background file as input
 */
 unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P )
@@ -873,6 +941,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	time_t               t;
    	time ( &t );
 	FILE * 		out_fd;				// file with the motifs
+	FILE * 		un_out_fd;			// file with the unmatched fg motifs
 	FILE * 		in_fd;				// file with the bg motifs
 	unsigned int i, j, k;
 	char line[LINE_SIZE];
@@ -885,7 +954,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	AlphaMap *	alphabet = NULL;
         Trie *      	trie = NULL;
 
-        struct Tbdata * bdata = NULL;
+        struct Tdata * bdata = NULL;
 
 	double bin_cdf = 0.;
 
@@ -908,6 +977,12 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
         trie = trie_new ( alphabet );
 
 	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file!\n");
+		return  ( 0 );
+	}
+
+	if ( ( un_out_fd = fopen( sw . unmatched_out_filename, "w") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
@@ -954,7 +1029,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	{
 		if ( num_bseqs >= max_alloc )
                 {
-                	bdata = ( struct Tbdata * ) realloc ( bdata,   ( max_alloc + ALLOC_SIZE ) * sizeof ( struct Tbdata ) );
+                	bdata = ( struct Tdata * ) realloc ( bdata,   ( max_alloc + ALLOC_SIZE ) * sizeof ( struct Tdata ) );
                         max_alloc += ALLOC_SIZE;
                	}
                 AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
@@ -962,9 +1037,10 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 		pch = strtok ( line, " " );
 		for ( k = 0; k < sw. l; k ++ )
 			ACmotif[k] = ( AlphaChar ) pch[k];
-    		pch = strtok ( NULL, " " );
 
-    		bdata[ num_bseqs ] . u = atof( pch );
+    		pch = strtok ( NULL, " " );
+    		bdata[ num_bseqs ] . u = atoi( pch );
+
     		pch = strtok ( NULL, " ");
     		bdata[ num_bseqs ] . v = atoi( pch );
 
@@ -1027,6 +1103,13 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 							0, 
 							0, 
 							1. - bin_cdf  );
+
+                                        fprintf ( un_out_fd, "%s %d %d %lf %d\n", 	//write it out as an unmatched fg motif
+							motif, 
+							u[i][j], 
+							num_seqs, 
+							(  ( ( double ) u[i][j] / num_seqs ) ), 
+							v[i][j] );
                                         uvalid ++;
                                 }
 				else 							//it already exists 
@@ -1073,7 +1156,12 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 
 	if ( fclose ( out_fd ) ) 
 	{
-      		fprintf( stderr, "Error: file close error!\n");				      
+      		fprintf( stderr, "error: file close error!\n");				      
+		return ( 0 );
+	}
+	if ( fclose ( un_out_fd ) ) 
+	{
+      		fprintf( stderr, "error: file close error!\n");				      
 		return ( 0 );
 	}
 	return ( 1 );
@@ -1081,19 +1169,21 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 
 static struct option long_options[] =
  {
-   { "alphabet",           required_argument, NULL, 'a' },
-   { "background-file",    required_argument, NULL, 'b' },
-   { "input-file",         required_argument, NULL, 'i' },
-   { "output-file",        required_argument, NULL, 'o' },
-   { "quorum",         	   required_argument, NULL, 'q' },
-   { "motifs-length",      required_argument, NULL, 'l' },
-   { "distance",   	   required_argument, NULL, 'd' },
-   { "errors",   	   required_argument, NULL, 'e' },
-   { "num-of-occurrences", required_argument, NULL, 'n' },
-   { "num-of-threads",     required_argument, NULL, 't' },
-   { "long-sequences", 	   required_argument, NULL, 'L' },
-   { "help",               no_argument,       NULL, 'h' },
-   { NULL,                 0,                 NULL, 0   }
+   { "alphabet",           	required_argument, NULL, 'a' },
+   { "background-file",    	required_argument, NULL, 'b' },
+   { "input-file",         	required_argument, NULL, 'i' },
+   { "output-file",        	required_argument, NULL, 'o' },
+   { "quorum",         	   	required_argument, NULL, 'q' },
+   { "motifs-length",      	required_argument, NULL, 'l' },
+   { "distance",   	   	required_argument, NULL, 'd' },
+   { "errors",   	   	required_argument, NULL, 'e' },
+   { "num-of-occurrences", 	required_argument, NULL, 'n' },
+   { "num-of-threads",     	required_argument, NULL, 't' },
+   { "long-sequences", 	  	required_argument, NULL, 'L' },
+   { "unmatched-in-file",	required_argument, NULL, 'I' },
+   { "unmatched-out-file",	required_argument, NULL, 'u' },
+   { "help",               	no_argument,       NULL, 'h' },
+   { NULL,                 	0,                 NULL, 0   }
  };
 
 /* 
@@ -1108,21 +1198,23 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
    int          args;
 
    /* initialisation */
-   sw -> alphabet		= NULL;
-   sw -> background_filename	= NULL;
-   sw -> input_filename 	= NULL;
-   sw -> output_filename	= NULL;
-   sw -> q 			= 0;
-   sw -> l        		= 0;
-   sw -> d       		= 0;
-   sw -> e       		= 0;
-   sw -> n       		= 0;
-   sw -> t       		= 4;
-   sw -> L       		= 0;
+   sw -> alphabet			= NULL;
+   sw -> background_filename		= NULL;
+   sw -> input_filename 		= NULL;
+   sw -> output_filename		= NULL;
+   sw -> unmatched_in_filename 	= NULL;
+   sw -> unmatched_out_filename	= NULL;
+   sw -> q 				= 0;
+   sw -> l        			= 0;
+   sw -> d       			= 0;
+   sw -> e       			= 0;
+   sw -> n       			= 0;
+   sw -> t       			= 4;
+   sw -> L       			= 0;
 
    args = 0;
 
-   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:l:d:e:n:t:L:h", long_options, &oi ) ) != - 1 )
+   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:l:d:e:n:t:L:I:u:h", long_options, &oi ) ) != - 1 )
     {
       switch ( opt )
        {
@@ -1141,6 +1233,16 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
          case 'b':
            sw -> background_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
            strcpy ( sw -> background_filename, optarg );
+           break;
+
+         case 'I':
+           sw -> unmatched_in_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
+           strcpy ( sw -> unmatched_in_filename, optarg );
+           break;
+
+         case 'u':
+           sw -> unmatched_out_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
+           strcpy ( sw -> unmatched_out_filename, optarg );
            break;
 
          case 'o':
@@ -1261,7 +1363,7 @@ void usage ( void )
                      "                                      reported  motif in any  of the sequences\n"
                      "                                      (default: 1).\n" );
    fprintf ( stdout, "  -b, --background-file     <str>     MoTeX background filename for statistical\n"
-                     "                                      evaluation.\n" );
+                     "                                      evaluation passed as input.\n" );
    fprintf ( stdout, "  -t, --threads             <int>     Number of threads to be used by the OMP\n"
                      "                                      version (default: 4).\n" );
    fprintf ( stdout, "  -L, --long-sequences      <int>     If the number of input sequences is less\n"
@@ -1269,6 +1371,13 @@ void usage ( void )
                      "                                      the MPI version, this should be set to 1\n"
                      "                                      (default: 0); useful  for a few (or one)\n"
                      "                                      very long sequence(s), e.g. a chromosome.\n" );
+   fprintf ( stdout, "  -u, --unmatched-out-file  <str>     Output filename for foreground motifs not\n"
+                     "                                      matched  exactly   with   any  background \n"
+                     "                                      motif; used only with `-b' option.\n" );
+   fprintf ( stdout, "  -I, --unmatched-in-file  <str>      Input filename of the aforementioned file\n"
+                     "                                      with the unmatched  motifs. These  motifs\n"
+                     "                                      will be approximately searched  as motifs\n"
+                     "                                      in the file inputted via the `-i' option.\n" );
  }
 
 /*

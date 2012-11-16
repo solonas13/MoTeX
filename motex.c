@@ -44,7 +44,10 @@ int main ( int argc, char **argv )
 	char * 		input_filename;		// the input file
 	char * 		output_filename;	// the output file
 	char * 		background_filename;	// the background file
+	char * 		unmatched_in_filename;	// the input file of the unmatched motifs
+	char * 		unmatched_out_filename;	// the output file of the unmatched motifs
 	FILE *		in_fd;			// the input file descriptor
+	FILE *		un_in_fd;		// the input file descriptor for the unmatched motifs
 
         char* 		t	= NULL;		// the sequences concatenated for broadcast and checking 
         char const ** 	seqs    = NULL; 	// the sequences in memory
@@ -118,11 +121,26 @@ int main ( int argc, char **argv )
          		return ( 1 );
        		}
 
-		input_filename      = sw . input_filename;
-		output_filename     = sw . output_filename;
+		input_filename      	= sw . input_filename;
+		output_filename     	= sw . output_filename;
     	}
 
-	background_filename = sw . background_filename;
+	background_filename     = sw . background_filename;
+	unmatched_in_filename   = sw . unmatched_in_filename;
+	unmatched_out_filename  = sw . unmatched_out_filename;
+	
+	if ( background_filename == NULL && unmatched_out_filename != NULL )
+       	{
+        	fprintf ( stderr, "Error: `-u' option must be used with `-b' option!!!\n" );
+        	return ( 1 );
+       	}
+
+	if ( background_filename != NULL && unmatched_in_filename != NULL )
+       	{
+        	fprintf ( stderr, "Error: `-I' option cannot be used with `-b' option!!!\n" );
+        	return ( 1 );
+       	}
+
         
 	#ifdef _USE_OMP
 	/* set the num of threads to be used */
@@ -135,6 +153,12 @@ int main ( int argc, char **argv )
 	MPI_Comm_size( MPI_COMM_WORLD, &P );
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 	long_seq = sw . L;
+
+	if ( long_seq && unmatched_in_filename != NULL )
+       	{
+        	fprintf ( stderr, "Error: `-I' option cannot be used with `-L' option!!!\n" );
+        	return ( 1 );
+       	}
 
 	/* The master processor reads and broadcasts the input data as concatenated text t */
 	if ( rank == 0 )
@@ -244,6 +268,13 @@ int main ( int argc, char **argv )
 	}
 	free ( t );
 
+
+	/* The algorithm for motif extraction */
+
+	if ( unmatched_in_filename == NULL ){
+
+        start = gettime();
+
 	#if defined _USE_CPU || defined _USE_OMP
 	g_all_occur   = ( unsigned int ** ) calloc ( ( num_seqs ) , sizeof ( unsigned int * ) ); 
 	if ( ! g_all_occur )
@@ -259,9 +290,6 @@ int main ( int argc, char **argv )
                	return ( 1 );
         }
 
-        start = gettime();
-
-	/* The algorithm for motif extraction */
 	#ifdef _USE_OMP
 	#pragma omp parallel for private ( i, j )
 	#endif
@@ -552,20 +580,280 @@ int main ( int argc, char **argv )
 	}
 	#endif
 
-	/* Deallocate & Finalize */
+	/* Deallocate */
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
 		free ( ( void * ) g_all_occur[i] );
 		free ( ( void * ) g_occur[i] );
-		free ( ( void * ) seqs[i] );
 	}
 	free ( g_all_occur );	
 	free ( g_occur );	
-	free ( seqs );	
 
+	}
+	else
+	{
+		/* open the file with the unmatched motifs for reading */
+        	if ( ! ( un_in_fd = fopen ( unmatched_in_filename, "r") ) ) 
+        	{
+                	fprintf ( stderr, "Cannot open file %s\n", unmatched_in_filename );
+                	return ( 1 ); 
+        	}
+
+                struct 		Tdata * fdata = NULL;
+		unsigned int 	num_fseqs;
+		char 		line[LINE_SIZE];
+		char const	** fseqs      = NULL;
+
+		/* read the motifs in memory */
+		max_alloc = num_fseqs = 0;
+ 
+		while ( fgets ( line, LINE_SIZE, un_in_fd ) && line[0] != '\n' )
+		{
+			if ( num_fseqs >= max_alloc )
+                	{
+                		fdata   = ( struct Tdata * ) realloc ( fdata,   ( max_alloc + ALLOC_SIZE ) * sizeof ( struct Tdata ) );
+             			fseqs   = ( char const ** ) realloc ( fseqs,   ( max_alloc + ALLOC_SIZE ) * sizeof ( char * ) ); 
+                        	max_alloc += ALLOC_SIZE;
+               		}
+			
+			char * pch;
+			pch = strtok ( line, " " );
+    			fseqs[ num_fseqs  ]   = strdup ( pch );
+
+			pch = strtok ( NULL, " " );
+    			fdata[ num_fseqs ] . u = atoi( pch );
+
+			pch = strtok ( NULL, " " );
+    			fdata[ num_fseqs ] . n = atoi( pch );
+
+			pch = strtok ( NULL, " " );
+    			fdata[ num_fseqs ] . r = atof( pch );
+
+    			pch = strtok ( NULL, " ");
+    			fdata[ num_fseqs ] . v = atoi( pch );
+
+			num_fseqs++;
+		}
+
+		if ( fclose ( un_in_fd ) ) 
+		{
+      			fprintf( stderr, "Error: file close error!\n");				      
+			return ( 0 );
+		}
+
+        	start = gettime();
+		
+		/* find the motifs */
+		#if defined _USE_CPU || defined _USE_OMP
+		g_all_occur   = ( unsigned int ** ) calloc ( ( num_fseqs ) , sizeof ( unsigned int * ) ); 
+		if ( ! g_all_occur )
+        	{
+        		fprintf( stderr, " Error: the global vector could not be allocated!\n");
+               		return ( 1 );
+        	}
+
+		g_occur   = ( unsigned int ** ) calloc ( ( num_fseqs ) , sizeof ( unsigned int * ) ); 
+		if ( ! g_occur )
+        	{
+        		fprintf( stderr, " Error: the global vector could not be allocated!\n");
+               		return ( 1 );
+        	}
+
+		#ifdef _USE_OMP
+		#pragma omp parallel for private ( i, j )
+		#endif
+		for ( i = 0; i < num_fseqs; i++ )
+		{
+			unsigned int m = strlen ( fseqs[i] );
+			l = m;
+
+			/* allocate space for vectors lv and gv */
+			g_all_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+			if ( ! g_all_occur[i] )
+        		{
+        			fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
+                		exit ( 1 );
+        		}
+
+			g_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+			if ( ! g_occur[i] )
+        		{
+        			fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
+                		exit ( 1 );
+        		}
+
+			for ( j = 0; j < num_seqs; j++ )
+			{
+				unsigned int n = strlen ( seqs[j] );
+
+				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
+				if ( l > n || l > m )
+				{
+        				fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
+                			exit ( 1 );
+        			}
+
+				if ( d == 0 )
+				{
+					if ( ! motifs_extraction_hd ( fseqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
+        				{
+              					fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
+              					exit ( 1 );
+        				}
+        			}	
+				else
+				{
+					if ( ! motifs_extraction_ed ( fseqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
+        				{
+              					fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
+              					exit ( 1 );
+        				}
+        			}
+			}
+		}
+		#endif
+
+		#ifdef _USE_MPI
+		g_all_occur   = ( unsigned int ** ) calloc ( ( num_fseqs ) , sizeof ( unsigned int * ) ); 
+		if ( ! g_all_occur )
+        	{
+        		fprintf( stderr, " Error: the global vector could not be allocated!\n");
+            		return ( 1 );
+        	}
+
+		g_occur   = ( unsigned int ** ) calloc ( ( num_fseqs ) , sizeof ( unsigned int * ) ); 
+		if ( ! g_occur )
+        	{
+        		fprintf( stderr, " Error: the global vector could not be allocated!\n");
+         		return ( 1 );
+        	}
+
+		MPI_Barrier( MPI_COMM_WORLD );
+
+		if( rank == 0 )	start = MPI_Wtime();
+
+		for ( i = 0; i < num_fseqs; i++ )
+		{
+			unsigned int m = strlen ( fseqs[i] );
+			l = m;
+
+			/* allocate space for vectors */
+			g_all_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+			if ( ! g_all_occur[i] )
+        		{
+        			fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
+                		return ( 1 );
+        		}
+
+			g_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+			if ( ! g_occur[i] )
+        		{
+        			fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
+                		return ( 1 );
+        		}
+
+			l_all_occur = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+			if ( ! l_all_occur )
+        		{
+        			fprintf( stderr, " Error: the local all-occurrences vector could not be allocated!\n");
+                		return ( 1 );
+        		}
+
+			l_occur = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+			if ( ! l_occur )
+        		{
+        			fprintf( stderr, " Error: the local occurrences vector could not be allocated!\n");
+                		return ( 1 );
+        		}
+
+			int first, last, lonum_seqs;
+			vec_allocation ( rank, P, num_fseqs, &first, &last, &lonum_seqs );
+
+			for ( j = first; j <= last; j++ )
+			{
+				unsigned int n = strlen ( seqs[j] );
+
+				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
+				if ( l > n || l > m )
+				{
+        				fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
+                			return ( 1 );
+        			}
+
+				if ( d == 0 )
+				{
+					if ( ! motifs_extraction_hd ( fseqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
+        				{
+              					fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
+              					return ( 1 );
+        				}
+        			}	
+				else
+				{
+					if ( ! motifs_extraction_ed ( fseqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
+        				{
+              					fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
+              					exit ( 1 );
+        				}
+        			}
+			}
+
+			/* Collective communication */
+			MPI_Reduce ( l_all_occur, g_all_occur[i], m, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
+			MPI_Reduce ( l_occur, g_occur[i], m, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
+			free ( l_all_occur );
+			free ( l_occur );
+		}
+
+		MPI_Barrier( MPI_COMM_WORLD );
+		#endif
+ 
+		/* write the output */
+		#ifdef _USE_MPI
+		if( rank == 0 )
+		{
+	 		end = MPI_Wtime();
+		#endif
+
+		#if defined _USE_CPU || defined _USE_OMP
+        	end = gettime();
+		#endif
+
+		#ifdef _USE_OMP
+		P = sw . t;
+		#endif
+
+                write_motifs_fore ( sw, num_fseqs, fseqs, g_occur, g_all_occur, end - start, P, num_seqs, fdata );
+		#ifdef _USE_MPI
+		}
+		#endif   	
+
+		/* Deallocate */
+		for ( i = 0; i < num_fseqs; i ++ ) 
+		{
+			free ( ( void * ) fseqs[i] );
+			free ( ( void * ) g_all_occur[i] );
+			free ( ( void * ) g_occur[i] );
+		}
+		free ( fseqs );	
+		free ( g_all_occur );	
+		free ( g_occur );	
+		free ( fdata );
+        	fdata = NULL;
+	}
+
+	/* Deallocate & Finalize */
+	for ( i = 0; i < num_seqs; i ++ ) 
+	{
+		free ( ( void * ) seqs[i] );
+	}
+	free ( seqs );	
 	free ( sw . input_filename );
    	free ( sw . output_filename );
    	free ( sw . alphabet );
+	if ( background_filename )    free ( sw . background_filename );
+	if ( unmatched_in_filename )  free ( sw . unmatched_in_filename );
+	if ( unmatched_out_filename ) free ( sw . unmatched_out_filename );
 
 	#ifdef _USE_MPI
 	 MPI_Finalize();
