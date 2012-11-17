@@ -601,6 +601,7 @@ int main ( int argc, char **argv )
 
                 struct 		Tdata * fdata = NULL;
 		unsigned int 	num_fseqs;
+		unsigned int 	max_alloc;
 		char 		line[LINE_SIZE];
 		char const	** fseqs      = NULL;
 
