@@ -2,9 +2,9 @@ MF=	Makefile.CPU.gcc
 
 CC=	gcc
 
-CFLAGS=	-g -D_USE_CPU
+CFLAGS=	-g -D_USE_CPU -O3 -msse3 -fomit-frame-pointer -funroll-loops
 
-LFLAGS=	-lz -lm -ldatrie -msse3 -O2 -fomit-frame-pointer -funroll-loops
+LFLAGS=	-lz -lm -ldatrie
 
 EXE=	motexCPU
 

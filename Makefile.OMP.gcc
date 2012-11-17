@@ -2,9 +2,9 @@ MF=	Makefile.OMP.gcc
 
 CC=	gcc
 
-CFLAGS=	-g -fopenmp -D_USE_OMP
+CFLAGS=	-g -fopenmp -D_USE_OMP -msse3 -O3 -fomit-frame-pointer -funroll-loops
 
-LFLAGS=	-lz -lm -ldatrie -msse3 -O2 -fomit-frame-pointer -funroll-loops
+LFLAGS=	-lz -lm -ldatrie
 
 EXE=	motexOMP
 

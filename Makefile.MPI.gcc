@@ -2,9 +2,9 @@ MF=	Makefile.MPI.gcc
 
 CC=	mpicc
 
-CFLAGS=	-g -D_USE_MPI
+CFLAGS=	-g -D_USE_MPI -O3 -msse3 -fomit-frame-pointer -funroll-loops
 
-LFLAGS=	-lz -lm -ldatrie -msse3 -O2 -fomit-frame-pointer -funroll-loops
+LFLAGS=	-lz -lm -ldatrie
 
 EXE=	motexMPI
 
