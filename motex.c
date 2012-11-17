@@ -212,7 +212,12 @@ int main ( int argc, char **argv )
 
 		} while( c != EOF );
 
-        	fclose ( in_fd );
+		if ( fclose ( in_fd ) )
+        	{
+                	fprintf( stderr, " Error: file close error!\n");
+                	return ( 1 );
+        	}
+
         	t[ len - 1 ] = '\0';
         	total_length = len - 1;
 
@@ -638,8 +643,8 @@ int main ( int argc, char **argv )
 
 		if ( fclose ( un_in_fd ) ) 
 		{
-      			fprintf( stderr, "Error: file close error!\n");				      
-			return ( 0 );
+      			fprintf( stderr, " Error: file close error!\n");				      
+			return ( 1 );
 		}
 
         	start = gettime();

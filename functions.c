@@ -859,7 +859,7 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 
 	if ( fclose ( out_fd ) ) 
 	{
-      		fprintf( stderr, "Error: file close error!\n");				      
+      		fprintf( stderr, " Error: file close error!\n");				      
 		return ( 0 );
 	}
 	return ( 1 );
@@ -927,7 +927,7 @@ unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char
                 
 	if ( fclose ( out_fd ) ) 
 	{
-      		fprintf( stderr, "Error: file close error!\n");				      
+      		fprintf( stderr, " Error: file close error!\n");				      
 		return ( 0 );
 	}
 	return ( 1 );
@@ -1053,7 +1053,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
         
 	if ( fclose ( in_fd ) ) 
 	{
-      		fprintf( stderr, "Error: file close error!\n");				      
+      		fprintf( stderr, " Error: file close error!\n");				      
 		return ( 0 );
 	}
 
@@ -1156,12 +1156,12 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 
 	if ( fclose ( out_fd ) ) 
 	{
-      		fprintf( stderr, "error: file close error!\n");				      
+      		fprintf( stderr, " Error: file close error!\n");				      
 		return ( 0 );
 	}
 	if ( fclose ( un_out_fd ) ) 
 	{
-      		fprintf( stderr, "error: file close error!\n");				      
+      		fprintf( stderr, " Error: file close error!\n");				      
 		return ( 0 );
 	}
 	return ( 1 );
