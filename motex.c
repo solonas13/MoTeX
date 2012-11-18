@@ -275,101 +275,28 @@ int main ( int argc, char **argv )
 
 
 	/* The algorithm for motif extraction */
-
-	if ( unmatched_in_filename == NULL ){
-
-        start = gettime();
-
-	#if defined _USE_CPU || defined _USE_OMP
-	g_all_occur   = ( unsigned int ** ) calloc ( ( num_seqs ) , sizeof ( unsigned int * ) ); 
-	if ( ! g_all_occur )
-        {
-        	fprintf( stderr, " Error: the global vector could not be allocated!\n");
-               	return ( 1 );
-        }
-
-	g_occur   = ( unsigned int ** ) calloc ( ( num_seqs ) , sizeof ( unsigned int * ) ); 
-	if ( ! g_occur )
-        {
-        	fprintf( stderr, " Error: the global vector could not be allocated!\n");
-               	return ( 1 );
-        }
-
-	#ifdef _USE_OMP
-	#pragma omp parallel for private ( i, j )
-	#endif
-	for ( i = 0; i < num_seqs; i++ )
+	if ( unmatched_in_filename == NULL )	//This is in the normal case when we search for motifs in a MultiFASTA dataset
 	{
-		unsigned int m = strlen ( seqs[i] );
+		start = gettime();
 
-		/* allocate space for vectors lv and gv */
-		g_all_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
-		if ( ! g_all_occur[i] )
-        	{
-        		fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
-                	exit ( 1 );
-        	}
-
-		g_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
-		if ( ! g_occur[i] )
-        	{
-        		fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
-                	exit ( 1 );
-        	}
-
-		for ( j = 0; j < num_seqs; j++ )
+		#if defined _USE_CPU || defined _USE_OMP
+		g_all_occur   = ( unsigned int ** ) calloc ( ( num_seqs ) , sizeof ( unsigned int * ) ); 
+		if ( ! g_all_occur )
 		{
-			unsigned int n = strlen ( seqs[j] );
-
-			/* check if the length of the sequence satisfies the restrictions set by the algorithm */
-			if ( l > n || l > m )
-			{
-        			fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-                		exit ( 1 );
-        		}
-
-			if ( d == 0 )
-			{
-				if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
-        			{
-              				fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
-              				exit ( 1 );
-        			}
-        		}	
-			else
-			{
-				if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
-        			{
-              				fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
-              				exit ( 1 );
-        			}
-        		}
+			fprintf( stderr, " Error: the global vector could not be allocated!\n");
+			return ( 1 );
 		}
-	}
-	#endif
 
-	#ifdef _USE_MPI
-	g_all_occur   = ( unsigned int ** ) calloc ( ( num_seqs ) , sizeof ( unsigned int * ) ); 
-	if ( ! g_all_occur )
-        {
-        	fprintf( stderr, " Error: the global vector could not be allocated!\n");
-            	return ( 1 );
-        }
+		g_occur   = ( unsigned int ** ) calloc ( ( num_seqs ) , sizeof ( unsigned int * ) ); 
+		if ( ! g_occur )
+		{
+			fprintf( stderr, " Error: the global vector could not be allocated!\n");
+			return ( 1 );
+		}
 
-	g_occur   = ( unsigned int ** ) calloc ( ( num_seqs ) , sizeof ( unsigned int * ) ); 
-	if ( ! g_occur )
-        {
-        	fprintf( stderr, " Error: the global vector could not be allocated!\n");
-         	return ( 1 );
-        }
-
-	MPI_Barrier( MPI_COMM_WORLD );
-
-	if( rank == 0 )	start = MPI_Wtime();
- 
-	if ( long_seq )
-	{
-		/* The algorithm for motif extraction */
+		#ifdef _USE_OMP
+		#pragma omp parallel for private ( i, j )
+		#endif
 		for ( i = 0; i < num_seqs; i++ )
 		{
 			unsigned int m = strlen ( seqs[i] );
@@ -377,51 +304,17 @@ int main ( int argc, char **argv )
 			/* allocate space for vectors lv and gv */
 			g_all_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
 			if ( ! g_all_occur[i] )
-        		{
-        			fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
-                		exit ( 1 );
-        		}
+			{
+				fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
+				exit ( 1 );
+			}
 
 			g_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
 			if ( ! g_occur[i] )
-        		{
-        			fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
-                		exit ( 1 );
-        		}
-
-			int first, last, lovcnt;
-		
-			vec_allocation ( rank, P, m, &first, &last, &lovcnt );
-
-			l_all_occur = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
-			if ( ! l_all_occur )
-        		{
-        			fprintf( stderr, " Error: the local all-occurrences vector could not be allocated!\n");
-                		return ( 1 );
-        		}
-
-			l_occur = ( unsigned int * ) calloc ( lovcnt , sizeof( unsigned int ) );
-			if ( ! l_occur )
-        		{
-        			fprintf( stderr, " Error: the local occurrences vector could not be allocated!\n");
-                		return ( 1 );
-        		}
-
-			nb_elements = ( int * ) calloc ( P , sizeof( int ) );
-			if ( ! nb_elements )
-        		{
-        			fprintf( stderr, " Error: the nb_elements vector could not be allocated!\n");
-                		return ( 1 );
-        		}
-			MPI_Gather ( &lovcnt, 1, MPI_UNSIGNED, nb_elements, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD ); 
-
-			disp = ( int * ) calloc ( P , sizeof( int ) );
-			if ( ! disp )
-        		{
-        			fprintf( stderr, " Error: the nb_elements vector could not be allocated!\n");
-                		return ( 1 );
-        		}
-			MPI_Gather ( &first, 1, MPI_UNSIGNED, disp, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD ); 
+			{
+				fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
+				exit ( 1 );
+			}
 
 			for ( j = 0; j < num_seqs; j++ )
 			{
@@ -430,172 +323,278 @@ int main ( int argc, char **argv )
 				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
 				if ( l > n || l > m )
 				{
-        				fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-                			exit ( 1 );
-        			}
-
-				sendv = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
-				if ( ! sendv )
-        			{
-        				fprintf( stderr, " Error: the local vector could not be allocated!\n");
-                			return ( 1 );
-        			}
-
-				recv = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
-				if ( ! recv )
-        			{
-        				fprintf( stderr, " Error: the local vector could not be allocated!\n");
-                			return ( 1 );
-        			}
+					fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
+					exit ( 1 );
+				}
 
 				if ( d == 0 )
 				{
-					if ( ! motifs_extraction_opasm_hd ( seqs[i], m, seqs[j], n, l, e, l_all_occur, sendv, rank, P ) )
-        				{
-              					fprintf( stderr, " Error: motifs_extraction_opasm_hd() failed!\n");                        
-              					return ( 1 );
-        				}
-        			}	
+					if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
+					{
+						fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
+						exit ( 1 );
+					}
+				}	
 				else
 				{
-					if ( ! motifs_extraction_opasm_ed ( seqs[i], m, seqs[j], n, l, e, l_all_occur, sendv, rank, P ) )
-        				{
-              					fprintf( stderr, " Error: motifs_extraction_opasm_ed() failed!\n");                        
-              					return ( 1 );
-        				}
-        			}
-			
-				MPI_Allreduce( sendv, recv, m, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD ); 
-
-				int ii, jj; 
-				for ( ii = first, jj = 0; ii <= last; ii++, jj++ )	if ( recv[ii] > 0 ) l_occur[jj] = l_occur [jj] + 1;
-
-				free ( sendv );
-				free ( recv );
-
+					if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
+					{
+						fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
+						exit ( 1 );
+					}
+				}
 			}
-
-			/* Collective communication */
-			MPI_Reduce ( l_all_occur, g_all_occur[i], m, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
-			MPI_Gatherv ( l_occur, lovcnt, MPI_UNSIGNED, g_occur[i], nb_elements, disp, MPI_UNSIGNED, 0, MPI_COMM_WORLD ); 
-			free ( l_all_occur );
-			free ( l_occur );
-			free ( nb_elements );
-			free ( disp );
 		}
-	}
-	else
-	{
-		for ( i = 0; i < num_seqs; i++ )
+		#endif
+
+		#ifdef _USE_MPI
+		g_all_occur   = ( unsigned int ** ) calloc ( ( num_seqs ) , sizeof ( unsigned int * ) ); 
+		if ( ! g_all_occur )
 		{
-			unsigned int m = strlen ( seqs[i] );
-
-			/* allocate space for vectors */
-			g_all_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
-			if ( ! g_all_occur[i] )
-        		{
-        			fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
-                		return ( 1 );
-        		}
-
-			g_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
-			if ( ! g_occur[i] )
-        		{
-        			fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
-                		return ( 1 );
-        		}
-
-			l_all_occur = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
-			if ( ! l_all_occur )
-        		{
-        			fprintf( stderr, " Error: the local all-occurrences vector could not be allocated!\n");
-                		return ( 1 );
-        		}
-
-			l_occur = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
-			if ( ! l_occur )
-        		{
-        			fprintf( stderr, " Error: the local occurrences vector could not be allocated!\n");
-                		return ( 1 );
-        		}
-
-			int first, last, lonum_seqs;
-			vec_allocation ( rank, P, num_seqs, &first, &last, &lonum_seqs );
-
-			for ( j = first; j <= last; j++ )
-			{
-				unsigned int n = strlen ( seqs[j] );
-
-				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
-				if ( l > n || l > m )
-				{
-        				fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-                			return ( 1 );
-        			}
-
-				if ( d == 0 )
-				{
-					if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
-        				{
-              					fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
-              					return ( 1 );
-        				}
-        			}	
-				else
-				{
-					if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
-        				{
-              					fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
-              					exit ( 1 );
-        				}
-        			}
-			}
-
-			/* Collective communication */
-			MPI_Reduce ( l_all_occur, g_all_occur[i], m, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
-			MPI_Reduce ( l_occur, g_occur[i], m, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
-			free ( l_all_occur );
-			free ( l_occur );
+			fprintf( stderr, " Error: the global vector could not be allocated!\n");
+			return ( 1 );
 		}
-	}
 
-	MPI_Barrier( MPI_COMM_WORLD );
-	#endif
+		g_occur   = ( unsigned int ** ) calloc ( ( num_seqs ) , sizeof ( unsigned int * ) ); 
+		if ( ! g_occur )
+		{
+			fprintf( stderr, " Error: the global vector could not be allocated!\n");
+			return ( 1 );
+		}
 
-	#ifdef _USE_MPI
-	/* write the motifs */
-	if( rank == 0 )
-	{
-	 	end = MPI_Wtime();
-	#endif
+		MPI_Barrier( MPI_COMM_WORLD );
 
-	#if defined _USE_CPU || defined _USE_OMP
-        end = gettime();
-	#endif
+		if( rank == 0 )	start = MPI_Wtime();
+	 
+		if ( long_seq )
+		{
+			/* The algorithm for motif extraction */
+			for ( i = 0; i < num_seqs; i++ )
+			{
+				unsigned int m = strlen ( seqs[i] );
 
-	#ifdef _USE_OMP
-	P = sw . t;
-	#endif
+				/* allocate space for vectors lv and gv */
+				g_all_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+				if ( ! g_all_occur[i] )
+				{
+					fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
+					exit ( 1 );
+				}
 
-		if ( background_filename == NULL )
-                	write_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+				g_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+				if ( ! g_occur[i] )
+				{
+					fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
+					exit ( 1 );
+				}
+
+				int first, last, lovcnt;
+			
+				vec_allocation ( rank, P, m, &first, &last, &lovcnt );
+
+				l_all_occur = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+				if ( ! l_all_occur )
+				{
+					fprintf( stderr, " Error: the local all-occurrences vector could not be allocated!\n");
+					return ( 1 );
+				}
+
+				l_occur = ( unsigned int * ) calloc ( lovcnt , sizeof( unsigned int ) );
+				if ( ! l_occur )
+				{
+					fprintf( stderr, " Error: the local occurrences vector could not be allocated!\n");
+					return ( 1 );
+				}
+
+				nb_elements = ( int * ) calloc ( P , sizeof( int ) );
+				if ( ! nb_elements )
+				{
+					fprintf( stderr, " Error: the nb_elements vector could not be allocated!\n");
+					return ( 1 );
+				}
+				MPI_Gather ( &lovcnt, 1, MPI_UNSIGNED, nb_elements, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD ); 
+
+				disp = ( int * ) calloc ( P , sizeof( int ) );
+				if ( ! disp )
+				{
+					fprintf( stderr, " Error: the nb_elements vector could not be allocated!\n");
+					return ( 1 );
+				}
+				MPI_Gather ( &first, 1, MPI_UNSIGNED, disp, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD ); 
+
+				for ( j = 0; j < num_seqs; j++ )
+				{
+					unsigned int n = strlen ( seqs[j] );
+
+					/* check if the length of the sequence satisfies the restrictions set by the algorithm */
+					if ( l > n || l > m )
+					{
+						fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
+						exit ( 1 );
+					}
+
+					sendv = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+					if ( ! sendv )
+					{
+						fprintf( stderr, " Error: the local vector could not be allocated!\n");
+						return ( 1 );
+					}
+
+					recv = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+					if ( ! recv )
+					{
+						fprintf( stderr, " Error: the local vector could not be allocated!\n");
+						return ( 1 );
+					}
+
+					if ( d == 0 )
+					{
+						if ( ! motifs_extraction_opasm_hd ( seqs[i], m, seqs[j], n, l, e, l_all_occur, sendv, rank, P ) )
+						{
+							fprintf( stderr, " Error: motifs_extraction_opasm_hd() failed!\n");                        
+							return ( 1 );
+						}
+					}	
+					else
+					{
+						if ( ! motifs_extraction_opasm_ed ( seqs[i], m, seqs[j], n, l, e, l_all_occur, sendv, rank, P ) )
+						{
+							fprintf( stderr, " Error: motifs_extraction_opasm_ed() failed!\n");                        
+							return ( 1 );
+						}
+					}
+				
+					MPI_Allreduce( sendv, recv, m, MPI_UNSIGNED, MPI_SUM, MPI_COMM_WORLD ); 
+
+					int ii, jj; 
+					for ( ii = first, jj = 0; ii <= last; ii++, jj++ )	if ( recv[ii] > 0 ) l_occur[jj] = l_occur [jj] + 1;
+
+					free ( sendv );
+					free ( recv );
+
+				}
+
+				/* Collective communication */
+				MPI_Reduce ( l_all_occur, g_all_occur[i], m, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
+				MPI_Gatherv ( l_occur, lovcnt, MPI_UNSIGNED, g_occur[i], nb_elements, disp, MPI_UNSIGNED, 0, MPI_COMM_WORLD ); 
+				free ( l_all_occur );
+				free ( l_occur );
+				free ( nb_elements );
+				free ( disp );
+			}
+		}
 		else
-                	write_motifs_back ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
-	#ifdef _USE_MPI
-	}
-	#endif
+		{
+			for ( i = 0; i < num_seqs; i++ )
+			{
+				unsigned int m = strlen ( seqs[i] );
 
-	/* Deallocate */
-	for ( i = 0; i < num_seqs; i ++ ) 
-	{
-		free ( ( void * ) g_all_occur[i] );
-		free ( ( void * ) g_occur[i] );
-	}
-	free ( g_all_occur );	
-	free ( g_occur );	
+				/* allocate space for vectors */
+				g_all_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+				if ( ! g_all_occur[i] )
+				{
+					fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
+					return ( 1 );
+				}
+
+				g_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+				if ( ! g_occur[i] )
+				{
+					fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
+					return ( 1 );
+				}
+
+				l_all_occur = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+				if ( ! l_all_occur )
+				{
+					fprintf( stderr, " Error: the local all-occurrences vector could not be allocated!\n");
+					return ( 1 );
+				}
+
+				l_occur = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+				if ( ! l_occur )
+				{
+					fprintf( stderr, " Error: the local occurrences vector could not be allocated!\n");
+					return ( 1 );
+				}
+
+				int first, last, lonum_seqs;
+				vec_allocation ( rank, P, num_seqs, &first, &last, &lonum_seqs );
+
+				for ( j = first; j <= last; j++ )
+				{
+					unsigned int n = strlen ( seqs[j] );
+
+					/* check if the length of the sequence satisfies the restrictions set by the algorithm */
+					if ( l > n || l > m )
+					{
+						fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
+						return ( 1 );
+					}
+
+					if ( d == 0 )
+					{
+						if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
+						{
+							fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
+							return ( 1 );
+						}
+					}	
+					else
+					{
+						if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
+						{
+							fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
+							exit ( 1 );
+						}
+					}
+				}
+
+				/* Collective communication */
+				MPI_Reduce ( l_all_occur, g_all_occur[i], m, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
+				MPI_Reduce ( l_occur, g_occur[i], m, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
+				free ( l_all_occur );
+				free ( l_occur );
+			}
+		}
+
+		MPI_Barrier( MPI_COMM_WORLD );
+		#endif
+
+		#ifdef _USE_MPI
+		/* write the motifs */
+		if( rank == 0 )
+		{
+			end = MPI_Wtime();
+		#endif
+
+		#if defined _USE_CPU || defined _USE_OMP
+		end = gettime();
+		#endif
+
+		#ifdef _USE_OMP
+		P = sw . t;
+		#endif
+
+			if ( background_filename == NULL )
+				write_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+			else
+				write_motifs_back ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+		#ifdef _USE_MPI
+		}
+		#endif
+
+		/* Deallocate */
+		for ( i = 0; i < num_seqs; i ++ ) 
+		{
+			free ( ( void * ) g_all_occur[i] );
+			free ( ( void * ) g_occur[i] );
+		}
+		free ( g_all_occur );	
+		free ( g_occur );	
 
 	}
-	else
+	else //This is in the case when we search for foreground motifs not exactly matched with background motifs of a MultiFASTA dataset
 	{
 		/* open the file with the unmatched motifs for reading */
         	if ( ! ( un_in_fd = fopen ( unmatched_in_filename, "r") ) ) 
@@ -693,7 +692,7 @@ int main ( int argc, char **argv )
 				unsigned int n = strlen ( seqs[j] );
 
 				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
-				if ( l > n || l > m )
+				if ( l > n )
 				{
         				fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
                 			exit ( 1 );
@@ -780,7 +779,7 @@ int main ( int argc, char **argv )
 				unsigned int n = strlen ( seqs[j] );
 
 				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
-				if ( l > n || l > m )
+				if ( l > n )
 				{
         				fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
                 			return ( 1 );
