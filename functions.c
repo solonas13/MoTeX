@@ -1372,12 +1372,12 @@ void usage ( void )
                      "                                      (default: 0); useful  for a few (or one)\n"
                      "                                      very long sequence(s), e.g. a chromosome.\n" );
    fprintf ( stdout, "  -u, --unmatched-out-file  <str>     Output filename for foreground motifs not\n"
-                     "                                      matched  exactly   with   any  background \n"
-                     "                                      motif; used only with `-b' option.\n" );
+                     "                                      matched exactly with any background motif \n"
+                     "                                      in the file passed with the `-b' option.\n" );
    fprintf ( stdout, "  -I, --unmatched-in-file  <str>      Input filename of the aforementioned file\n"
                      "                                      with the unmatched  motifs. These  motifs\n"
                      "                                      will be approximately searched  as motifs\n"
-                     "                                      in the file inputted via the `-i' option.\n" );
+                     "                                      in the file passed with the `-i' option.\n" );
  }
 
 /*

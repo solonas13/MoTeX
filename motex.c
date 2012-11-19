@@ -275,7 +275,7 @@ int main ( int argc, char **argv )
 
 
 	/* The algorithm for motif extraction */
-	if ( unmatched_in_filename == NULL )	//This is in the normal case when we search for motifs in a MultiFASTA dataset
+	if ( unmatched_in_filename == NULL )	//This is, in the normal case, when we search for motifs in a set of sequences (MultiFASTA file)
 	{
 		start = gettime();
 
@@ -594,7 +594,7 @@ int main ( int argc, char **argv )
 		free ( g_occur );	
 
 	}
-	else //This is in the case when we search for foreground motifs not exactly matched with background motifs of a MultiFASTA dataset
+	else //This is in the case when we search for foreground motifs, which were previously not exactly matched with background motifs, in a set of sequences (MultiFASTA file)
 	{
 		/* open the file with the unmatched motifs for reading */
         	if ( ! ( un_in_fd = fopen ( unmatched_in_filename, "r") ) ) 
@@ -648,7 +648,7 @@ int main ( int argc, char **argv )
 
         	start = gettime();
 		
-		/* find the motifs */
+		/* find whether the above read sequences are motifs in the set of sequences (MultiFASTA file)*/
 		#if defined _USE_CPU || defined _USE_OMP
 		g_all_occur   = ( unsigned int ** ) calloc ( ( num_fseqs ) , sizeof ( unsigned int * ) ); 
 		if ( ! g_all_occur )
@@ -849,9 +849,7 @@ int main ( int argc, char **argv )
 
 	/* Deallocate & Finalize */
 	for ( i = 0; i < num_seqs; i ++ ) 
-	{
 		free ( ( void * ) seqs[i] );
-	}
 	free ( seqs );	
 	free ( sw . input_filename );
    	free ( sw . output_filename );
@@ -861,7 +859,7 @@ int main ( int argc, char **argv )
 	if ( unmatched_out_filename ) free ( sw . unmatched_out_filename );
 
 	#ifdef _USE_MPI
-	 MPI_Finalize();
+	MPI_Finalize();
 	#endif
 
 	return ( 0 );
