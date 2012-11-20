@@ -1,11 +1,11 @@
 Pavlos's pipeline
 -----------------
 
-1. First, run your bg dataset --- output it to bg.motex
+1. First, run the background (bg) dataset & output it to bg.motex
 ./motexOMP -a DNA -i bg.dataset -o bg.motex -d 0 -q 1 -l 10 -e 1 -t 43
 
-2. Second, run your fg dataset --- output it to fg1.motex & output the unmatched fg motifs to un.motex 
+2. Second, run the foreground (fg) dataset & output the fg motifs to fg1.motex and the fg motifs, which are not matched with any bg motif, to un.motex 
 ./motexOMP -a DNA -i fg.dataset -b bg.motex -o fg1.motex -u un.motex -d 0 -q 1 -l 10 -e 1 -t 43 
 
-3. Third, check whether the motifs in un.motex are motifs in the bg dataset --- output it to fg2.motex
+3. Third, check whether the fg motifs in un.motex are motifs in the bg dataset & if yes, output them to fg2.motex
 ./motexOMP -a DNA -i bg.dataset -I un.motex -o fg2.motex -d 0 -q 1 -l 10 -e 1 -t 43
