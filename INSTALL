@@ -7,6 +7,10 @@ be found here:
 
 http://launchpad.net/ubuntu/+source/libdatrie
 
+For Ubuntu 12.04 LTS, you may install the latest version by typing
+
+`sudo apt-get install libdatrie-dev' 
+
    The shell command `make -f Makefile.CPU.gcc' should compile this 
 program. You may use `make -f Makefile.CPU.icc' in case you want to
 use the Intel C++ Compiler for the compilation. 

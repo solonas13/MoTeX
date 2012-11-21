@@ -245,19 +245,19 @@ unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const 
   	/* Memory Allocation */
 	if ( ( D0 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
 	{
-		fprintf( stderr, "Error: D0 could not be allocated\n");
+		fprintf( stderr, " Error: D0 could not be allocated!\n");
 		return ( 0 );
 	}
 
 	if ( ( D1 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
 	{
-		fprintf( stderr, "Error: D1 could not be allocated\n");
+		fprintf( stderr, " Error: D1 could not be allocated!\n");
 		return ( 0 );
 	}
 
 	if ( ( D2 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
 	{
-		fprintf( stderr, "Error: D2 could not be allocated\n");
+		fprintf( stderr, " Error: D2 could not be allocated!\n");
 		return ( 0 );
 	}
 
@@ -388,19 +388,19 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
   	// Memory Allocation 
 	if ( ( D0 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
 	{
-		fprintf( stderr, "Error: D0 could not be allocated\n");
+		fprintf( stderr, " Error: D0 could not be allocated!\n");
 		return ( 0 );
 	}
 
 	if ( ( D1 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
 	{
-		fprintf( stderr, "Error: D1 could not be allocated\n");
+		fprintf( stderr, " Error: D1 could not be allocated!\n");
 		return ( 0 );
 	}
 
 	if ( ( D2 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
 	{
-		fprintf( stderr, "Error: D2 could not be allocated\n");
+		fprintf( stderr, " Error: D2 could not be allocated!\n");
 		return ( 0 );
 	}
 
@@ -523,19 +523,19 @@ unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char *
   	/* Memory Allocation */
 	if ( ( D0 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
 	{
-		fprintf( stderr, "Error: D0 could not be allocated\n");
+		fprintf( stderr, " Error: D0 could not be allocated!\n");
 		return ( 0 );
 	}
 
 	if ( ( D1 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
 	{
-		fprintf( stderr, "Error: D1 could not be allocated\n");
+		fprintf( stderr, " Error: D1 could not be allocated!\n");
 		return ( 0 );
 	}
 
 	if ( ( occ = ( unsigned int* ) calloc ( ( m ) , sizeof( unsigned int ) ) ) == NULL )
 	{
-		fprintf( stderr, "Error: occ could not be allocated\n");
+		fprintf( stderr, " Error: occ could not be allocated!\n");
 		return ( 0 );
 	}
 
@@ -616,19 +616,19 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
   	// Memory Allocation 
 	if ( ( D0 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
 	{
-		fprintf( stderr, "Error: D0 could not be allocated\n");
+		fprintf( stderr, " Error: D0 could not be allocated!\n");
 		return ( 0 );
 	}
 
 	if ( ( D1 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
 	{
-		fprintf( stderr, "Error: D1 could not be allocated\n");
+		fprintf( stderr, " Error: D1 could not be allocated!\n");
 		return ( 0 );
 	}
 
 	if ( ( occ = ( unsigned int* ) calloc ( ( m ) , sizeof( unsigned int ) ) ) == NULL )
 	{
-		fprintf( stderr, "Error: occ could not be allocated\n");
+		fprintf( stderr, " Error: occ could not be allocated!\n");
 		return ( 0 );
 	}
 

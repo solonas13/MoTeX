@@ -90,7 +90,7 @@ int main ( int argc, char **argv )
     	{
 		if ( sw . q > 100 )
        		{
-         		fprintf ( stderr, "Error: quorum argument q should be less or equal to 100!!!\n" );
+         		fprintf ( stderr, " Error: quorum argument q should be less or equal to 100!\n" );
          		return ( 1 );
        		}
 		else   q = sw . q;	
@@ -108,7 +108,7 @@ int main ( int argc, char **argv )
       		else if ( sw . d == 1 )  d = sw . d;
       		else
        		{
-         		fprintf ( stderr, "Error: distance argument d should be `0' for Hamming distance or `1' for edit distance!!!\n" );
+         		fprintf ( stderr, " Error: distance argument d should be `0' for Hamming distance or `1' for edit distance!\n" );
          		return ( 1 );
        		}
 
@@ -117,7 +117,7 @@ int main ( int argc, char **argv )
       		else if ( ! strcmp ( "USR", sw . alphabet ) )  	alphabet = USR;
       		else
        		{
-         		fprintf ( stderr, "Error: alphabet argument a should be `DNA' for nucleotide sequences or `PROT' for protein sequences or `USR' for sequences over a user-defined alphabet!!!\n" );
+         		fprintf ( stderr, " Error: alphabet argument a should be `DNA' for nucleotide sequences or `PROT' for protein sequences or `USR' for sequences over a user-defined alphabet!\n" );
          		return ( 1 );
        		}
 
@@ -131,13 +131,13 @@ int main ( int argc, char **argv )
 	
 	if ( background_filename == NULL && unmatched_out_filename != NULL )
        	{
-        	fprintf ( stderr, "Error: `-u' option must be used with `-b' option!!!\n" );
+        	fprintf ( stderr, " Error: `-u' option must be used with `-b' option!\n" );
         	return ( 1 );
        	}
 
 	if ( background_filename != NULL && unmatched_in_filename != NULL )
        	{
-        	fprintf ( stderr, "Error: `-I' option cannot be used with `-b' option!!!\n" );
+        	fprintf ( stderr, " Error: `-I' option cannot be used with `-b' option!\n" );
         	return ( 1 );
        	}
 
@@ -156,7 +156,7 @@ int main ( int argc, char **argv )
 
 	if ( long_seq && unmatched_in_filename != NULL )
        	{
-        	fprintf ( stderr, "Error: `-I' option cannot be used with `-L' option!!!\n" );
+        	fprintf ( stderr, " Error: `-I' option cannot be used with `-L' option!\n" );
         	return ( 1 );
        	}
 
