@@ -2,13 +2,13 @@ MF=	Makefile.MPI.gcc
 
 CC=	mpicc
 
-CFLAGS=	-g -D_USE_MPI -O3 -msse3 -fomit-frame-pointer -funroll-loops
+CFLAGS=	-g -D_USE_MPI -D_USE_MPFR -O3 -msse3 -fomit-frame-pointer -funroll-loops
 
-LFLAGS=	-lz -lm -ldatrie
+LFLAGS=	-lz -lm -ldatrie -lgmp -lmpfr
 
 EXE=	motexMPI
 
-SRC= 	motex.c functions.c
+SRC= 	motex.c functions.c binomial.c
 
 HD=     motexdefs.h triedefs.h trie.h alpha-map.h typedefs.h
 

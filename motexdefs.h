@@ -20,7 +20,7 @@
 #define LINE_SIZE 		512
 #define DEL 			'$' 
 
-#define DNA			"ACGT"				//DNA alphabet
+#define DNA			"ACGTN"				//DNA alphabet
 #define PROT			"ARNDCQEGHILKMFPSTWYV"		//Proteins alphabet
 #define USR			"0123456789"			//User-defined alphabet, e.g. integer alphabet
 
@@ -61,6 +61,12 @@ inline unsigned int shiftc ( unsigned int a, unsigned int x );
 inline unsigned int delta ( char a, char b );
 inline unsigned int popcount ( unsigned int x );
 
+#ifdef _USE_MPFR
+#define ACC 200
+#include <mpfr.h>
+#endif
+
+
 #ifdef _USE_MPI
 inline unsigned int i_coord ( unsigned int step, unsigned int n, unsigned int m, unsigned int x );
 inline unsigned int j_coord ( unsigned int step, unsigned int n, unsigned int m, unsigned int x );
@@ -84,6 +90,10 @@ unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char
 
 double gettime( void );
 
-void fillTable( double * a, int n );
-double binomial_cdf_less_than( int x, int N, double p, double * LUT );
-
+#ifdef _USE_MPFR
+void mpfr_fillTable(mpfr_t * a, unsigned long int n);
+void mpfr_binomial_cdf_less_than( mpfr_t t, unsigned long int x, unsigned long int N, long double p, mpfr_t *LUT );
+#else
+void fillTable( long double * a, int n );
+long double binomial_cdf_less_than( int x, int N, long double p, long double * LUT );
+#endif

@@ -2,13 +2,13 @@ MF=	Makefile.CPU.icc
 
 CC=	icc
 
-CFLAGS=	-g -ipo -D_USE_CPU
+CFLAGS=	-g -ipo -D_USE_CPU -D_USE_MPFR
 
-LFLAGS=	-limf -lz -lm -ldatrie   
+LFLAGS=	-limf -lz -lm -ldatrie -lgmp -lmpfr
 
 EXE=	motexCPU
 
-SRC= 	motex.c functions.c
+SRC= 	motex.c functions.c binomial.c
 
 HD=     motexdefs.h triedefs.h trie.h alpha-map.h typedefs.h
 

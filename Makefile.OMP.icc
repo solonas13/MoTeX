@@ -2,9 +2,9 @@ MF=	Makefile.OMP.icc
 
 CC=	icc
 
-CFLAGS=	-g -ipo -openmp -D_USE_OMP
+CFLAGS=	-g -ipo -openmp -D_USE_OMP -D_USE_MPFR
 
-LFLAGS=	-limf -lz -lm -ldatrie
+LFLAGS=	-limf -lz -lm -ldatrie -lgmp -lmpfr
 
 EXE=	motexOMP
 

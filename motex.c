@@ -90,7 +90,7 @@ int main ( int argc, char **argv )
     	{
 		if ( sw . q > 100 )
        		{
-         		fprintf ( stderr, " Error: quorum argument q should be less or equal to 100!\n" );
+         		fprintf ( stderr, " Error: quorum argument q (%%) should be less or equal to 100!\n" );
          		return ( 1 );
        		}
 		else   q = sw . q;	
@@ -140,7 +140,6 @@ int main ( int argc, char **argv )
         	fprintf ( stderr, " Error: `-I' option cannot be used with `-b' option!\n" );
         	return ( 1 );
        	}
-
         
 	#ifdef _USE_OMP
 	/* set the num of threads to be used */
@@ -324,7 +323,8 @@ int main ( int argc, char **argv )
 				if ( l > n || l > m )
 				{
 					fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-					exit ( 1 );
+					fprintf( stderr, " Error: omitting sequence %d!\n", j );
+					continue;
 				}
 
 				if ( d == 0 )
@@ -430,7 +430,8 @@ int main ( int argc, char **argv )
 					if ( l > n || l > m )
 					{
 						fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-						exit ( 1 );
+						fprintf( stderr, " Error: omitting sequence %d!\n", j );
+						continue;
 					}
 
 					sendv = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
@@ -529,7 +530,8 @@ int main ( int argc, char **argv )
 					if ( l > n || l > m )
 					{
 						fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-						return ( 1 );
+						fprintf( stderr, " Error: omitting sequence %d!\n", j );
+						continue;
 					}
 
 					if ( d == 0 )
@@ -694,8 +696,9 @@ int main ( int argc, char **argv )
 				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
 				if ( l > n )
 				{
-        				fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-                			exit ( 1 );
+					fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
+					fprintf( stderr, " Error: omitting sequence %d!\n", j );
+					continue;
         			}
 
 				if ( d == 0 )
@@ -781,8 +784,9 @@ int main ( int argc, char **argv )
 				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
 				if ( l > n )
 				{
-        				fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-                			return ( 1 );
+					fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
+					fprintf( stderr, " Error: omitting sequence %d!\n", j );
+					continue;
         			}
 
 				if ( d == 0 )

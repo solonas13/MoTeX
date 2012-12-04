@@ -807,7 +807,6 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 		return  ( 0 );
 	}
 
-
    	fprintf ( out_fd, "####################################\n" );
    	fprintf ( out_fd, "# Program: MOTifs EXtraction\n" );
    	fprintf ( out_fd, "# Rundate: %s", ctime ( &t ) );
@@ -850,81 +849,13 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 		}
 	}
 
-	fprintf ( out_fd, "\nA total of %d valid motifs were extracted.\n\n", valid );
+	fprintf ( out_fd, "\n#A total of %d valid motifs were extracted.\n\n", valid );
                 
 	trie_free ( trie );    
         trie = NULL;
         alpha_map_free ( alphabet );
         alphabet = NULL;
 
-	if ( fclose ( out_fd ) ) 
-	{
-      		fprintf( stderr, " Error: file close error!\n");				      
-		return ( 0 );
-	}
-	return ( 1 );
-}
-
-/*
-write the output considering a foreground file of previously unmatched motifs as input
-*/
-unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char const ** fseqs, unsigned int ** u, unsigned int ** v, double exectime, int P, unsigned int num_seqs, struct Tdata * fdata )
-{
-	time_t               t;
-   	time ( &t );
-	FILE * 		out_fd;				// file with the motifs
-	unsigned int i, j, k;
-	unsigned int valid = 0;
-
-	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
-	{	 
-		fprintf( stderr, " Error: cannot open file!\n");
-		return  ( 0 );
-	}
-
-   	fprintf ( out_fd, "####################################\n" );
-   	fprintf ( out_fd, "# Program: MOTifs EXtraction\n" );
-   	fprintf ( out_fd, "# Rundate: %s", ctime ( &t ) );
-   	fprintf ( out_fd, "# Input file: %s\n", sw . input_filename );
-   	fprintf ( out_fd, "# Output file: %s\n", sw . output_filename );
-	fprintf ( out_fd, "# For N = %d input sequences\n", num_seqs );
-	fprintf ( out_fd, "#     l = %d\n", sw . l ) ;
-	fprintf ( out_fd, "#     d = %d\n", sw . d );
-	fprintf ( out_fd, "#     e = %d\n", sw . e );
-	fprintf ( out_fd, "#     q = %d\n", sw . q );
-	if ( sw . n )
-	fprintf ( out_fd, "#     n = %d\n", sw . n );
-	fprintf ( out_fd, "# Run on %d proc(s) in %lf secs\n", P, exectime );
-   	fprintf ( out_fd, "####################################\n\n" );
-
-	for ( i = 0; i < num_fseqs; i ++ ) 
-	{
-		unsigned int m = strlen ( fseqs[i] );
-
-                for ( j = m - 1; j < m; j ++ )
-		{
-                        if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) >= sw . q && v[i][j] >= sw . n )
-                        {
-                        	char      * motif   = calloc ( ( m + 1 ) , sizeof( char ) );
-				memcpy ( motif, &fseqs[i][j - ( m ) + 1 ], m );
-				fprintf ( out_fd, "%s %d %d %lf %d %d %d %d\n", 
-								motif, 
-								u[i][j], 
-								num_seqs,
-						    		(  ( ( double ) u[i][j] / num_seqs ) ), 
-						    		v[i][j], 
-						    		fdata[ i ]  . u, 
-						    		fdata [ i ] . v,
-						    		0  //Pavlo this is something you have to do
-						    );
-                                valid ++;
-                        	free ( motif );
-                        }
-		}
-	}
-
-	fprintf ( out_fd, "\nA total of %d valid motifs were extracted.\n\n", valid );
-                
 	if ( fclose ( out_fd ) ) 
 	{
       		fprintf( stderr, " Error: file close error!\n");				      
@@ -955,17 +886,23 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
         Trie *      	trie = NULL;
 
         struct Tdata * bdata = NULL;
+	
+#ifdef _USE_MPFR
+	mpfr_t mpfr_bin;
+	mpfr_init2(mpfr_bin, ACC);
 
-	double bin_cdf = 0.;
-
-	double *log_factLUT = calloc( (num_seqs + 1), sizeof(double) );
+	mpfr_t * mpfr_factLUT = malloc( (num_seqs + 1 ) * sizeof(mpfr_t));
+	mpfr_fillTable(mpfr_factLUT, (unsigned long int)num_seqs);
+#else
+	long double bin_cdf = 0.;
+	long double *log_factLUT = calloc( (num_seqs + 1 ), sizeof(long double) );
+	fillTable ( log_factLUT, num_seqs );
+#endif
 
 	char background_size_string[100];
 	char background_quorum_size_string[100];
 
 	int background_size = 0, background_quorum_size = 0;
-
-	fillTable( log_factLUT, num_seqs );
 
 	/* Create an empty alphabet */
 	alphabet = alpha_map_new();
@@ -1019,6 +956,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	}
 	
 	background_size = atoi( background_size_string );
+	
 	background_quorum_size = atoi( background_quorum_size_string );
 	
 	assert( background_size > 0 && background_quorum_size > 0 );
@@ -1040,6 +978,12 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 
     		pch = strtok ( NULL, " " );
     		bdata[ num_bseqs ] . u = atoi( pch );
+
+    		pch = strtok ( NULL, " " );
+    		bdata[ num_bseqs ] . n = atoi( pch );
+
+    		pch = strtok ( NULL, " " );
+    		bdata[ num_bseqs ] . r = atof( pch );
 
     		pch = strtok ( NULL, " ");
     		bdata[ num_bseqs ] . v = atoi( pch );
@@ -1092,9 +1036,30 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
                                 {
 					data = -1;
 					trie_store ( trie, ACmotif, data );
-					bin_cdf = binomial_cdf_less_than(u[i][j], num_seqs, ( double ) background_quorum_size/background_size, log_factLUT);
+									
+#ifdef _USE_MPFR
+				mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int)u[i][j], (unsigned long int)num_seqs, (long double)background_quorum_size/background_size, mpfr_factLUT);
+				
+				mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
+				
+				fprintf ( out_fd, "%s %d %d %lf %d %d %d ", 
+					  motif, 
+					  u[i][j],
+					  num_seqs,
+					  (double) u[i][j]/num_seqs,
+					  v[i][j],
+					  0,
+					  0
+					  );
+				
+				mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
+				
+				fprintf( out_fd, "\n");
+				
+#else
+					bin_cdf = binomial_cdf_less_than (u[i][j], num_seqs, ( long double ) background_quorum_size/background_size, log_factLUT );
 					
-                                        fprintf ( out_fd, "%s %d %d %lf %d %d %d %e\n", 
+                                        fprintf ( out_fd, "%s %d %d %lf %d %d %d %Le\n", 
 							motif, 
 							u[i][j], 
 							num_seqs, 
@@ -1103,6 +1068,9 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 							0, 
 							0, 
 							1. - bin_cdf  );
+					
+#endif
+					
 
                                         fprintf ( un_out_fd, "%s %d %d %lf %d\n", 	//write it out as an unmatched fg motif
 							motif, 
@@ -1110,24 +1078,53 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 							num_seqs, 
 							(  ( ( double ) u[i][j] / num_seqs ) ), 
 							v[i][j] );
+					
                                         uvalid ++;
                                 }
 				else 							//it already exists 
 				{
 					if ( data != -1 )				//as a bg motif; add it as a fg motif matching this bg motif
-					{
-						bin_cdf = binomial_cdf_less_than(u[i][j], num_seqs, bdata[ data ].u, log_factLUT);
+					  {
+					    
+					    
+					    
+#ifdef _USE_MPFR
+					    mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int)u[i][j], (unsigned long int) num_seqs, ( long double ) bdata[ data ] . r , mpfr_factLUT);
+					    
+					    mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
+					    
+					    fprintf ( out_fd, "%s %d %d %lf %d %lf %d ", 
+						      motif, 
+						      u[i][j],
+						      num_seqs,
+						      (double) u[i][j]/num_seqs,
+						      v[i][j],						      
+						      bdata[data] . r,
+						      bdata[data] . v
+						      );
+					    
+					    mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
+					    fprintf(out_fd, "\n");
+					    
+#else
+					    
 					  
-					  	fprintf ( out_fd, "%s %d %d %lf %d %d %d %e\n", 
+
+
+						bin_cdf = binomial_cdf_less_than ( u[i][j], num_seqs, bdata[ data ].u, log_factLUT);
+					  
+
+					  	fprintf ( out_fd, "%s %d %d %lf %d %lf %d %Le\n", 
 								motif, 
 								u[i][j], 
 								num_seqs,
 						    		(  ( ( double ) u[i][j] / num_seqs ) ), 
 						    		v[i][j], 
-						    		bdata[ data ]  . u, 
+						    		bdata[ data ]  . r, 
 						    		bdata [ data ] . v,
 						    		1. - bin_cdf
 						    );
+#endif
 					  	data = -1;
 						trie_store ( trie, ACmotif, data );
                                         	pvalid ++;
@@ -1140,13 +1137,18 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 		}
 	}
 
-	fprintf ( out_fd, "\nA total of %d background motifs were read.\n", num_bseqs );
-	fprintf ( out_fd, "A total of %d valid motifs were extracted:\n", pvalid + uvalid );
-	fprintf ( out_fd, "  %d of them were matched with background motifs\n", pvalid );
-	fprintf ( out_fd, "  %d of them were not matched with any background motif.\n\n", uvalid );
+	fprintf ( out_fd, "\n#A total of %d background motifs were read.\n", num_bseqs );
+	fprintf ( out_fd, "#A total of %d valid motifs were extracted:\n", pvalid + uvalid );
+	fprintf ( out_fd, "#  %d of them were matched with background motifs\n", pvalid );
+	fprintf ( out_fd, "#  %d of them were not matched with any background motif.\n\n", uvalid );
 	
-	free(log_factLUT);
 
+#ifdef _USE_MPFR
+	
+#else
+	free(log_factLUT);
+#endif
+	
 	trie_free ( trie );    
         trie = NULL;
         alpha_map_free ( alphabet );
@@ -1166,6 +1168,108 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	}
 	return ( 1 );
 }
+
+/*
+write the output considering a foreground file of previously unmatched motifs as input
+*/
+unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char const ** fseqs, unsigned int ** u, unsigned int ** v, double exectime, int P, unsigned int num_seqs, struct Tdata * fdata )
+{
+	time_t               t;
+   	time ( &t );
+	FILE * 		out_fd;				// file with the motifs
+	unsigned int i, j, k;
+	unsigned int valid = 0;
+
+#ifdef _USE_MPFR
+	mpfr_t mpfr_bin;
+	mpfr_init2(mpfr_bin, ACC);
+
+	mpfr_t * mpfr_factLUT = malloc( (num_seqs +1) * sizeof(mpfr_t));
+	mpfr_fillTable(mpfr_factLUT, (unsigned long int)num_seqs);
+#else
+	long double *log_factLUT = calloc( (num_seqs + 1), sizeof(long double) );
+	fillTable ( log_factLUT, num_seqs );
+#endif
+
+	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file!\n");
+		return  ( 0 );
+	}
+
+   	fprintf ( out_fd, "####################################\n" );
+   	fprintf ( out_fd, "# Program: MOTifs EXtraction\n" );
+   	fprintf ( out_fd, "# Rundate: %s", ctime ( &t ) );
+   	fprintf ( out_fd, "# Input file: %s\n", sw . input_filename );
+   	fprintf ( out_fd, "# Output file: %s\n", sw . output_filename );
+	fprintf ( out_fd, "# For N = %d input sequences\n", num_seqs );
+	fprintf ( out_fd, "#     l = %d\n", sw . l ) ;
+	fprintf ( out_fd, "#     d = %d\n", sw . d );
+	fprintf ( out_fd, "#     e = %d\n", sw . e );
+	fprintf ( out_fd, "#     q = %d\n", sw . q );
+	if ( sw . n )
+	fprintf ( out_fd, "#     n = %d\n", sw . n );
+	fprintf ( out_fd, "# Run on %d proc(s) in %lf secs\n", P, exectime );
+   	fprintf ( out_fd, "####################################\n\n" );
+
+	for ( i = 0; i < num_fseqs; i ++ ) 
+	{
+		unsigned int m = strlen ( fseqs[i] );
+
+                for ( j = m - 1; j < m; j ++ )
+		{
+                        if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) >= sw . q && v[i][j] >= sw . n )
+                        {
+                        	char      * motif   = calloc ( ( m + 1 ) , sizeof( char ) );
+				memcpy ( motif, &fseqs[i][j - ( m ) + 1 ], m );
+				
+#ifdef _USE_MPFR
+				mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int) fdata[i] . u, (unsigned long int) fdata[i] . n, (long double) u[i][j] / num_seqs, mpfr_factLUT);
+				
+				mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
+				
+				fprintf ( out_fd, "%s %d %d %lf %d %lf %d ", 
+					  motif, 
+					  fdata[i] . u,
+					  fdata[i] . n,
+					  fdata[i] . r,
+					  fdata[i] . v,
+					  (double) u[i][j]/ num_seqs,
+					  v[i][j]
+					  );
+				mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
+				fprintf( out_fd, "\n");
+#else
+				
+				long double bin_cdf = binomial_cdf_less_than ( fdata[i] . u, fdata[i] . n, ( long double ) u[i][j] / num_seqs, log_factLUT );
+
+				fprintf ( out_fd, "%s %d %d %lf %d %lf %d %Le\n", 
+					  motif, 
+					  fdata[i] . u,
+					  fdata[i] . n,
+					  fdata[i] . r,
+					  fdata[i] . v,
+					  (double) u[i][j] /num_seqs,
+					  v[i][j],
+					  1. - bin_cdf
+					  );
+#endif
+                                valid ++;
+                        	free ( motif );
+                        }
+		}
+	}
+
+	fprintf ( out_fd, "\n#A total of %d valid motifs were extracted.\n\n", valid );
+                
+	if ( fclose ( out_fd ) ) 
+	{
+      		fprintf( stderr, " Error: file close error!\n");				      
+		return ( 0 );
+	}
+	return ( 1 );
+}
+
 
 static struct option long_options[] =
  {
@@ -1389,39 +1493,3 @@ double gettime( void )
     gettimeofday(&ttime , 0);
     return ttime.tv_sec + ttime.tv_usec * 0.000001;
 };
-
-void fillTable ( double * a, int n )
-{ 
-	int i=0;
-  	a[0] = 0;
-  
-  	for(i=1; i<=n; ++i)
-    	{
-      		a[i] = a[i-1] + log(i);
-    	}
-}
-
-double binomial_cdf_less_than( int x, int N, double p, double *LUT )
-{
-	int i = 0;
-  	double prob = 0.;
-  	double ln_pr = 0.;
-
-  	if ( p >= 1.0 )
-    	{
-      		return 0.;
-    	}
-  
-  	for ( i = 0; i < x; ++i )
-    	{
-      		//fprintf(stderr, "%e %e %e %e %e\n", LUT[N], LUT[x], LUT[N-x], log(p), log(1. - p));
-      		ln_pr = LUT[N] - LUT[i] - LUT[N-i] + i * log(p) + (N-i) * log(1. - p);
-            	prob += exp(ln_pr);
-                //fprintf(stderr, "i: %d\tp: %e\tln_pr: %e\tprob: %e\n", i, p, ln_pr, prob);
-
-      		if(x > N)	break;
-    	}
-
-  	//  fprintf(stderr, " *** %e\n", prob);
-  	return ( prob );
-}
