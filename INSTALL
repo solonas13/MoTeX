@@ -8,7 +8,7 @@ found here:
 
 http://launchpad.net/ubuntu/+source/libdatrie
 
-For Ubuntu 12.04 LTS, you may install the latest version by typing
+For Ubuntu Linux, you may simply install the latest version by typing
 
 `sudo apt-get install libdatrie-dev' 
 
@@ -19,7 +19,7 @@ correct rounding. It can be found here:
 
 http://launchpad.net/ubuntu/+source/mpfr
 
-For Ubuntu 12.04 LTS, you may install the latest version by typing
+For Ubuntu Linux, you may simply install the latest version by typing
 
 `sudo apt-get install libmpfr-dev' 
 
