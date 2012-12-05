@@ -16,7 +16,7 @@ source /etc/profile.d/modules.sh
 module load sge
 
 #  For icc
-module load hydra intel/compiler/64/12.1/2011_sp1.11.339 mvapich2/intel/64/1.6-qlc libraries libdatrie
+module load hydra intel/compiler/64/12.1/2011_sp1.11.339 mvapich2/intel/64/1.6-qlc libraries libdatrie mpfr/3.1.1/icc/12.1
 #  For gcc
 #  module load hydra gcc mpich2/ge/gcc/64/1.4.1p1 libraries libdatrie
 

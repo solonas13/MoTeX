@@ -31,9 +31,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
+#include <assert.h>
 #include "motexdefs.h"
 #include "trie.h"
-#include <assert.h>
 
 #ifdef _USE_MPI
 /*
@@ -891,8 +891,8 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	mpfr_t mpfr_bin;
 	mpfr_init2(mpfr_bin, ACC);
 
-	mpfr_t * mpfr_factLUT = malloc( (num_seqs + 1 ) * sizeof(mpfr_t));
-	mpfr_fillTable(mpfr_factLUT, (unsigned long int)num_seqs);
+	mpfr_t * mpfr_factLUT = malloc( ( num_seqs + 1 ) * sizeof( mpfr_t ) );
+	mpfr_fillTable( mpfr_factLUT, ( unsigned long int ) num_seqs );
 #else
 	long double bin_cdf = 0.;
 	long double *log_factLUT = calloc( (num_seqs + 1 ), sizeof(long double) );

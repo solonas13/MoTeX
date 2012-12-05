@@ -8,14 +8,14 @@
 # select parallel enviroment
 #$ -pe mvapich 48
 #$ -q maxmem.q,standard.q 
-#$ -l h_rt=2:00:00
+#$ -l h_rt=1:00:00
 #$ -binding linear:48
 # load needed modules
 source /etc/profile.d/modules.sh
 module load sge
 #  For icc
-module load intel/compiler/64/12.1/2011_sp1.11.339 libraries libdatrie
+ module load intel/compiler/64/12.1/2011_sp1.11.339 libraries libdatrie mpfr/3.1.1/icc/12.1
 #  For gcc
-#  module load gcc libraries libdatrie
+# module load gcc libraries libdatrie
 # launch job, hostfile and number of cores are set automagicaly
-./motexOMP -a DNA -i ../data/dnc_subtilis_330-30.seq -o output.motex -d 1 -q 10 -l 13 -e 2 -n 100 -t 48
+time ./motexOMP -a DNA -i ./dnc_subtilis_330-30.seq -o bg.motex -d 0 -q 20 -l 10 -e 2 -t 48

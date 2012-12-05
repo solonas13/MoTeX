@@ -64,6 +64,11 @@ inline unsigned int popcount ( unsigned int x );
 #ifdef _USE_MPFR
 #define ACC 200
 #include <mpfr.h>
+void mpfr_fillTable(mpfr_t * a, unsigned long int n);
+void mpfr_binomial_cdf_less_than( mpfr_t t, unsigned long int x, unsigned long int N, long double p, mpfr_t *LUT );
+#else
+void fillTable( long double * a, int n );
+long double binomial_cdf_less_than( int x, int N, long double p, long double * LUT );
 #endif
 
 
@@ -87,13 +92,4 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
 unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
 unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
 unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char const ** fseqs, unsigned int ** u, unsigned int ** v, double exectime, int P, unsigned int num_seqs, struct Tdata * fdata );
-
 double gettime( void );
-
-#ifdef _USE_MPFR
-void mpfr_fillTable(mpfr_t * a, unsigned long int n);
-void mpfr_binomial_cdf_less_than( mpfr_t t, unsigned long int x, unsigned long int N, long double p, mpfr_t *LUT );
-#else
-void fillTable( long double * a, int n );
-long double binomial_cdf_less_than( int x, int N, long double p, long double * LUT );
-#endif
