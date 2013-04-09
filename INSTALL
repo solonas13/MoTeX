@@ -33,7 +33,7 @@ use the Intel C++ Compiler for the compilation.
 After compilation the binary `motexCPU' will be created in the working 
 directory, e.g. you may call it from this directory via
 
-`./motexCPU -a DNA -i INPUT -o OUTPUT -d 1 -q 3 -l 5 -e 1'
+`./motexCPU -a DNA -i INPUT -o OUTPUT -d 1 -q 3 -k 5 -e 1'
 
 Use the command `./motexCPU -h' for the help output.
    
@@ -44,7 +44,7 @@ want to use the Intel C++ Compiler for the compilation.
 After compilation the binary `motexOMP' will be created in the working 
 directory, e.g. you may call it from this directory via
 
-`./motexOMP -a DNA -i INPUT -o OUTPUT -d 1 -q 3 -l 5 -e 1 -t 8'
+`./motexOMP -a DNA -i INPUT -o OUTPUT -d 1 -q 3 -k 5 -e 1 -t 8'
 
 to make use of 8 threads.
    
@@ -55,7 +55,7 @@ want to use the Intel C++ Compiler for the compilation.
 After compilation the binary `motexMPI' will be created in the working 
 directory, e.g. you may call it from this directory via
 
-`mpirun -np 64 ./motexMPI -a DNA -i INPUT -o OUTPUT -d 1 -q 3 -l 5 -e 1'
+`mpirun -np 64 ./motexMPI -a DNA -i INPUT -o OUTPUT -d 1 -q 3 -k 5 -e 1'
 
 to make use of 64 processes.
 
