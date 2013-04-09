@@ -12,7 +12,7 @@ $ gcc -o motif_sim motif_sim.c
 2. Uncompress the basic input dataset
 $ bunzip2 hsapiens.1200_genes.fa.bz2
 
-3. Create the modified input dataset <8, 2, 1>, using the basic input dataset, and the motifs
+3. Generate the motifs and the modified input dataset <8, 2, 1>, using the basic input dataset
 $ ./motif_sim hsapiens.1200_genes.fa 8 2 1 100 hsapiens.1200_genes_mod.fa motifs.txt
 
 4. Go up one directory
