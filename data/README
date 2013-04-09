@@ -1,0 +1,34 @@
+In order to reproduce the results on the accuracy of MoTeX presented in
+
+Solon P. Pissis and Pavlos Pavlides. MoTeX: an HPC word-tool for MoTif eXtraction. 
+Submitted to the Fourth ACM International Conference on Bioinformatics and 
+Computational Biology (ACM-BCB 2013),
+
+execute the following series of steps from this directory:
+
+1. Compile the programme for the simulation of motifs
+$ gcc -o motif_sim motif_sim.c
+
+2. Uncompress the basic input dataset
+$ hsapiens.1200_genes.fa.bz2
+
+3. Create the modified input dataset <8, 2, 1>, using the basic input dataset, and the motifs
+$ ./motif_sim hsapiens.1200_genes.fa 8 2 1 100 hsapiens.1200_genes_mod.fa motifs.txt
+
+4. Go up one directory
+$ cd ..
+
+5. Compile MoTeX
+$ make -f Makefile.OMP.gcc
+
+6. Run MoTeX with 8 threads (it requires less than one hour)
+$ ./motexOMP -a DNA -i ./data/hsapiens.1200_genes_mod.fa -o output.motex -d 0 -k 8 -e 2 -q 1 -t 8
+
+7. Call the data directory
+$ cd data
+
+8. Compile the programme for the accuracy of MoTeX
+$ gcc -o motex_acc motex_acc.c
+
+9. Check the accuracy of MoTeX using the motifs and the output of MoTeX
+$ ./motex_acc motifs.txt ../output.motex

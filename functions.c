@@ -1278,7 +1278,7 @@ static struct option long_options[] =
    { "input-file",         	required_argument, NULL, 'i' },
    { "output-file",        	required_argument, NULL, 'o' },
    { "quorum",         	   	required_argument, NULL, 'q' },
-   { "motifs-length",      	required_argument, NULL, 'l' },
+   { "motifs-length",      	required_argument, NULL, 'k' },
    { "distance",   	   	required_argument, NULL, 'd' },
    { "errors",   	   	required_argument, NULL, 'e' },
    { "num-of-occurrences", 	required_argument, NULL, 'n' },
@@ -1318,7 +1318,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
 
    args = 0;
 
-   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:l:d:e:n:t:L:I:u:h", long_options, &oi ) ) != - 1 )
+   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:k:d:e:n:t:L:I:u:h", long_options, &oi ) ) != - 1 )
     {
       switch ( opt )
        {
@@ -1365,7 +1365,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
 	   args ++;
            break;
 
-         case 'l':
+         case 'k':
            val = strtol ( optarg, &ep, 10 );
            if ( optarg == ep )
             {
@@ -1457,11 +1457,11 @@ void usage ( void )
    fprintf ( stdout, "  -d, --distance            <int>     The  distance  used  for extracting  the\n"
                      "                                      motifs. It can be  either 0 (for Hamming\n" 
 	             "                                      distance) or 1 (for edit distance).\n"); 
+   fprintf ( stdout, "  -k, --motifs-length       <int>     The length for motifs.\n");
    fprintf ( stdout, "  -e, --errors              <int>     Limit the  max number  of errors to this\n"
                      "                                      value.\n" );
    fprintf ( stdout, "  -q, --quorum              <int>     The quorum is the minimum percentage (%%)\n"
-                     "                                      of sequences in which a motif must occur.\n" );
-   fprintf ( stdout, "  -l, --motifs-length       <int>     The length of motifs.\n\n");
+                     "                                      of sequences in which a motif must occur.\n\n" );
    fprintf ( stdout, " Optional:\n" );
    fprintf ( stdout, "  -n, --num-of-occurrences  <int>     The minimum  number of  occurrences of a\n"
                      "                                      reported  motif in any  of the sequences\n"
