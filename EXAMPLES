@@ -1,10 +1,28 @@
+Example 1.
+----------
+
+In order to reproduce the results on the accuracy of MoTeX presented in
+
+Solon P. Pissis and Pavlos Pavlides. MoTeX: an HPC word-tool for MoTif eXtraction. 
+Submitted to the Fourth ACM International Conference on Bioinformatics and 
+Computational Biology (ACM-BCB 2013),
+
+call directory `data' and follow the instructions in file README.
+
+
+Example 2.
+----------
 
 Here is a series of steps which could potentially be used as a biological pipeline:
-   1. Run the background (bg) dataset, and output it to `bg.motex'.
-   ./motexOMP -a DNA -i bg.dataset -o bg.motex -d 0 -q 1 -k 10 -e 1 -t 43
 
-   2. Run the foreground (fg) dataset, and output the fg motifs to `fg1.motex'; output the fg motifs that are not matched with any bg motif to `un.motex'.
-   ./motexOMP -a DNA -i fg.dataset -b bg.motex -o fg1.motex -u un.motex -d 0 -q 1 -k 10 -e 1 -t 43
+1. Run the background (bg) dataset, and output it to `bg.motex'.
 
-   3. Check whether the fg motifs in `un.motex' are motifs in the bg dataset, and, if yes, output them to `fg2.motex'.
-   ./motexOMP -a DNA -i bg.dataset -I un.motex -o fg2.motex -d 0 -q 1 -k 10 -e 1 -t 43
+  ./motexOMP -a DNA -i bg.dataset -o bg.motex -d 0 -q 1 -k 10 -e 1 -t 48
+
+2. Run the foreground (fg) dataset, and output the fg motifs to `fg1.motex'; output the fg motifs that are not matched with any bg motif to `un.motex'.
+
+  ./motexOMP -a DNA -i fg.dataset -b bg.motex -o fg1.motex -u un.motex -d 0 -q 1 -k 10 -e 1 -t 48
+
+3. Check whether the fg motifs in `un.motex' are motifs in the bg dataset, and, if yes, output them to `fg2.motex'.
+
+  ./motexOMP -a DNA -i bg.dataset -I un.motex -o fg2.motex -d 0 -q 1 -k 10 -e 1 -t 48

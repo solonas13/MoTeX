@@ -50,21 +50,29 @@ int main ( int argc, char **argv )
 	FILE *          out2_fd;                  // the input file descriptor
         char *          output2_filename;         // the input file
 
-	if ( argc != 8 )
+	if ( argc != 9 )
 	{
 		fprintf ( stderr, " Error: wrong number of arguments!\n" );
-		fprintf ( stderr, " %s <input> <k> <e> <q> <# motifs> <sequences FASTA output> <implanted motifs output>\n", argv[0] );
+		fprintf ( stderr, " %s <input> <k> <e_min> <e_max> <q> <# motifs> <sequences FASTA output> <implanted motifs output>\n", argv[0] );
 		return ( 1 );
 	}
         
 	alphabet = DNA;
         input_filename = argv[1];	          // input
         unsigned int k = atoi ( argv[2] );        // motif length         
-	unsigned int eMAX = atoi ( argv[3] );     // (unsigned int)(rand())%( eMAX + 1 );        // number of errors
-	unsigned int q = atoi ( argv[4] );	  // proportion of sequences into which we will insert the motif
-        unsigned int num_mot = atoi ( argv[5] );  // number of motifs to be inserted         
-        output1_filename = argv[6];		  // output
-        output2_filename = argv[7];		  // output
+	unsigned int eMIN = atoi ( argv[3] );     // (unsigned int)(rand())%( eMIN + 1 );        // number of errors
+	unsigned int eMAX = atoi ( argv[4] );     // (unsigned int)(rand())%( eMAX + 1 );        // number of errors
+	unsigned int q = atoi ( argv[5] );	  // proportion of sequences into which we will insert the motif
+        unsigned int num_mot = atoi ( argv[6] );  // number of motifs to be inserted         
+        output1_filename = argv[7];		  // output
+        output2_filename = argv[8];		  // output
+
+	if ( eMIN > eMAX )
+	{
+		fprintf ( stderr, " Error: e_min MUST be <= e_max!\n" );
+		fprintf ( stderr, " %s <input> <k> <e_min> <e_max> <q> <# motifs> <sequences FASTA output> <implanted motifs output>\n", argv[0] );
+		return ( 1 );
+	}
 
 	/* read the (multi)FASTA file with the sequences to t -- record the number num_seq of sequences */
 	if ( ! ( in_fd = fopen ( input_filename, "r") ) )
@@ -196,6 +204,8 @@ int main ( int argc, char **argv )
                 		char * motif_cpy = ( char * ) calloc ( ( k + 1) , sizeof ( char ) );
 				strcpy ( motif_cpy, motif);
 				unsigned int e = ( unsigned int ) ( rand() ) % ( eMAX + 1 );
+				while ( e < eMIN )
+					e = ( unsigned int ) ( rand() ) % ( eMAX + 1 );
 				unsigned int jj;
 				for ( jj = 0; jj < e; jj++ )
 				{
