@@ -22,7 +22,7 @@
 
   $ ./motexOMP -a DNA -i ./data/hsapiens.1200_genes_mod.fa -o output.motex -d 0 -k 8 -e 2 -q 1 -t <int>
 
-7. Call directory `data'
+7. Change to directory `data'
 
   $ cd data
 

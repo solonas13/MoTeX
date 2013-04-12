@@ -7,7 +7,7 @@ Solon P. Pissis and Pavlos Pavlides. MoTeX: an HPC word-tool for MoTif eXtractio
 Submitted to the Fourth ACM International Conference on Bioinformatics and 
 Computational Biology (ACM-BCB 2013),
 
-call directory `data' and follow the instructions in file README.
+change to directory `data' and follow the instructions in file README.
 
 
 Example 2.
