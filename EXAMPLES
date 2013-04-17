@@ -3,9 +3,9 @@ Example 1.
 
 In order to reproduce the results on the accuracy of MoTeX presented in
 
-Solon P. Pissis and Pavlos Pavlides. MoTeX: an HPC word-tool for MoTif eXtraction. 
-Submitted to the Fourth ACM International Conference on Bioinformatics and 
-Computational Biology (ACM-BCB 2013),
+Solon P. Pissis, Alexandros Stamatakis, and Pavlos Pavlides. MoTeX: an 
+HPC word-tool for MoTif eXtraction. Submitted to the Fourth ACM International 
+Conference on Bioinformatics and Computational Biology (ACM-BCB 2013),
 
 change to directory `data' and follow the instructions in file README.
 
