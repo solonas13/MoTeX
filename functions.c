@@ -865,7 +865,7 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 }
 
 /*
-write the output a la RISOTTO
+write the output a la RISOTTO/SMILE
 */
 unsigned int write_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime )
 {
@@ -900,10 +900,26 @@ unsigned int write_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, ch
 	}
 
 	// %%% 1 120/1200 1200000 8 8 1 alphabet ACGT$
-   	fprintf ( out_fd, "%%%%%% 1 %d/%d %d %d %d %d %s$\n", ( sw . q * num_seqs ) / 100, num_seqs, sw . total_length, sw . l, sw . l, sw . e, alphabet_str );
-   	fprintf ( out_fd, "\n\n");
-   	fprintf ( out_fd, "===============================================================================\n");
-                                       
+	char line1[80];
+   	sprintf ( line1, "%%%%%% 1 %d/%d %d %d %d %d alphabet %s$", ( sw . q * num_seqs ) / 100, num_seqs, sw . total_length, sw . l, sw . l, sw . e, alphabet_str );
+   	
+     	fprintf ( out_fd, "%s", line1 );
+	
+        for( i = strlen ( line1 ); i < 79; i++ ) 
+     		fprintf ( out_fd, " " );
+
+	// two empty lines
+	fprintf ( out_fd, "\n" );
+        for( i = 0; i != 2; i++ ) 
+    	{ 
+    		fprintf( out_fd, "                                        " ); 
+    		fprintf( out_fd, "                                       \n" ); 
+    	} 
+
+	// one line with `='
+	fprintf( out_fd, "========================================" ); 
+	fprintf( out_fd, "=======================================\n" );
+                               
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
 		unsigned int m = strlen ( seqs[i] );
@@ -1591,7 +1607,7 @@ void usage ( void )
    fprintf ( stdout, "  -u, --unmatched-out-file  <str>     Output filename for foreground motifs not\n"
                      "                                      matched exactly with any background motif \n"
                      "                                      in the file passed with the `-b' option.\n" );
-   fprintf ( stdout, "  -I, --unmatched-in-file  <str>      Input filename of the aforementioned file\n"
+   fprintf ( stdout, "  -I, --unmatched-in-file   <str>     Input filename of the aforementioned file\n"
                      "                                      with the unmatched  motifs. These  motifs\n"
                      "                                      will be approximately searched  as motifs\n"
                      "                                      in the file passed with the `-i' option.\n" );
