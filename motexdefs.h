@@ -35,6 +35,7 @@ struct TSwitch
    char               * background_filename;
    char               * unmatched_in_filename;  			
    char               * unmatched_out_filename;  			
+   char               * risotto_out_filename;  			
    unsigned int         q;
    unsigned int         l;
    unsigned int         d;
@@ -42,6 +43,7 @@ struct TSwitch
    unsigned int		n;
    unsigned int		t;
    unsigned int		L;
+   unsigned int         total_length;
  };
 
 struct Tdata
@@ -90,6 +92,7 @@ unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char *
 unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v );
 
 unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
+unsigned int write_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime );
 unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
 unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char const ** fseqs, unsigned int ** u, unsigned int ** v, double exectime, int P, unsigned int num_seqs, struct Tdata * fdata );
 double gettime( void );

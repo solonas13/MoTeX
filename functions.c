@@ -865,6 +865,111 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 }
 
 /*
+write the output a la RISOTTO
+*/
+unsigned int write_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime )
+{
+	time_t               t;
+   	time ( &t );
+	FILE * 		out_fd;				// file with the motifs
+	unsigned int i, j, k;
+	unsigned int valid = 0;
+
+        char * alphabet_str = NULL;
+
+	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = DNA;
+        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
+        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
+
+	AlphaMap *	alphabet = NULL;
+        Trie *      	trie = NULL;
+
+	/* Create an empty alphabet */
+	alphabet = alpha_map_new();
+
+	/* Define the alphabet's range */
+        alpha_map_add_range ( alphabet, 0, 127 );
+
+	/* Create an empty trie based on the alphabet */
+        trie = trie_new ( alphabet );
+
+	if ( ( out_fd = fopen( sw . risotto_out_filename, "w") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file!\n");
+		return  ( 0 );
+	}
+
+	// %%% 1 120/1200 1200000 8 8 1 alphabet ACGT$
+   	fprintf ( out_fd, "%%%%%% 1 %d/%d %d %d %d %d %s$\n", ( sw . q * num_seqs ) / 100, num_seqs, sw . total_length, sw . l, sw . l, sw . e, alphabet_str );
+   	fprintf ( out_fd, "\n\n");
+   	fprintf ( out_fd, "===============================================================================\n");
+                                       
+	for ( i = 0; i < num_seqs; i ++ ) 
+	{
+		unsigned int m = strlen ( seqs[i] );
+
+                for ( j = sw . l - 1; j < m; j ++ )
+		{
+                        if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) >= sw . q && v[i][j] >= sw . n )
+                        {
+                        	AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
+				for ( k = 0; k < sw. l; k ++ )
+					ACmotif[k] = ( AlphaChar )seqs[i][k + j - ( sw . l ) + 1];
+				ACmotif [ k ] = 0;
+				if ( trie_retrieve ( trie, ACmotif, NULL ) != TRUE )
+                                {
+					trie_store ( trie, ACmotif, 0 );
+
+                        		char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+					memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
+
+                        		char      * id   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+
+					//TODO: this should be implemented in a clearer way.
+					unsigned int ii, jj;
+					for ( ii = 0; ii < sw . l; ii++ )
+					{
+						for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
+							if ( motif[ii] == alphabet_str[jj] ) break;
+
+                        			char * s   = calloc ( ( sw . l ) , sizeof( char ) );
+						sprintf( s, "%d", jj); 
+						id[ii] = s[0] ;
+						free ( s );
+					}
+					id[sw . l] = '\0';
+
+                                        fprintf ( out_fd, "%s %s %d\t%d\n", motif, id, u[i][j], v[i][j] );
+
+                                        valid ++;
+                        		free ( motif );
+                        		free ( id );
+                                }
+                        	free ( ACmotif );
+                        }
+		}
+	}
+
+        //Nb models: 63002
+        //User time: 2.78 sec.
+
+	fprintf ( out_fd, "Nb models: %d\n", valid );
+	fprintf ( out_fd, "User time: %lf sec.\n", exectime );
+                
+	trie_free ( trie );    
+        trie = NULL;
+        alpha_map_free ( alphabet );
+        alphabet = NULL;
+
+	if ( fclose ( out_fd ) ) 
+	{
+      		fprintf( stderr, " Error: file close error!\n");				      
+		return ( 0 );
+	}
+	return ( 1 );
+}
+
+/*
 write the output considering a background file as input
 */
 unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P )
@@ -1286,6 +1391,7 @@ static struct option long_options[] =
    { "long-sequences", 	  	required_argument, NULL, 'L' },
    { "unmatched-in-file",	required_argument, NULL, 'I' },
    { "unmatched-out-file",	required_argument, NULL, 'u' },
+   { "RISOTTO-out-file",	required_argument, NULL, 'R' },
    { "help",               	no_argument,       NULL, 'h' },
    { NULL,                 	0,                 NULL, 0   }
  };
@@ -1306,8 +1412,9 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
    sw -> background_filename		= NULL;
    sw -> input_filename 		= NULL;
    sw -> output_filename		= NULL;
-   sw -> unmatched_in_filename 	= NULL;
-   sw -> unmatched_out_filename	= NULL;
+   sw -> unmatched_in_filename 		= NULL;
+   sw -> unmatched_out_filename		= NULL;
+   sw -> risotto_out_filename		= NULL;
    sw -> q 				= 0;
    sw -> l        			= 0;
    sw -> d       			= 0;
@@ -1318,7 +1425,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
 
    args = 0;
 
-   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:k:d:e:n:t:L:I:u:h", long_options, &oi ) ) != - 1 )
+   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:k:d:e:n:t:L:I:R:u:h", long_options, &oi ) ) != - 1 )
     {
       switch ( opt )
        {
@@ -1347,6 +1454,11 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
          case 'u':
            sw -> unmatched_out_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
            strcpy ( sw -> unmatched_out_filename, optarg );
+           break;
+
+         case 'R':
+           sw -> risotto_out_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
+           strcpy ( sw -> risotto_out_filename, optarg );
            break;
 
          case 'o':
@@ -1466,6 +1578,7 @@ void usage ( void )
    fprintf ( stdout, "  -n, --num-of-occurrences  <int>     The minimum  number of  occurrences of a\n"
                      "                                      reported  motif in any  of the sequences\n"
                      "                                      (default: 1).\n" );
+   fprintf ( stdout, "  -R, --RISOTTO-out-file    <str>     Output RISOTTO filename.\n" );
    fprintf ( stdout, "  -b, --background-file     <str>     MoTeX background filename for statistical\n"
                      "                                      evaluation passed as input.\n" );
    fprintf ( stdout, "  -t, --threads             <int>     Number of threads to be used by the OMP\n"

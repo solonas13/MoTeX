@@ -46,6 +46,7 @@ int main ( int argc, char **argv )
 	char * 		background_filename;	// the background file
 	char * 		unmatched_in_filename;	// the input file of the unmatched motifs
 	char * 		unmatched_out_filename;	// the output file of the unmatched motifs
+	char * 		risotto_out_filename;	// the output file of the reported motifs a la RISOTTO
 	FILE *		in_fd;			// the input file descriptor
 	FILE *		un_in_fd;		// the input file descriptor for the unmatched motifs
 
@@ -121,6 +122,7 @@ int main ( int argc, char **argv )
          		return ( 1 );
        		}
 
+		//sw . alphabet = alphabet;
 		input_filename      	= sw . input_filename;
 		output_filename     	= sw . output_filename;
     	}
@@ -128,6 +130,7 @@ int main ( int argc, char **argv )
 	background_filename     = sw . background_filename;
 	unmatched_in_filename   = sw . unmatched_in_filename;
 	unmatched_out_filename  = sw . unmatched_out_filename;
+	risotto_out_filename    = sw . risotto_out_filename;
 	
 	if ( background_filename == NULL && unmatched_out_filename != NULL )
        	{
@@ -247,6 +250,7 @@ int main ( int argc, char **argv )
 	#endif
 	
 	/* Each processor splits the concatenated text into the respective sequences */
+        total_length = 0;
 	seqs   = ( char const ** ) calloc ( ( num_seqs ) , sizeof ( char * ) ); 
 	for ( i = 0, j = 0; i < num_seqs; i++ )
 	{
@@ -263,6 +267,7 @@ int main ( int argc, char **argv )
                        		max_alloc += ALLOC_SIZE;
                 	}
                 	seq[ len++ ] = c;
+			total_length++;	
            	}
 
                 seq[ len++ ] = '\0';
@@ -272,6 +277,7 @@ int main ( int argc, char **argv )
 	}
 	free ( t );
 
+	sw . total_length = total_length;
 
 	/* The algorithm for motif extraction */
 	if ( unmatched_in_filename == NULL )	//This is, in the normal case, when we search for motifs in a set of sequences (MultiFASTA file)
@@ -582,6 +588,9 @@ int main ( int argc, char **argv )
 				write_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
 			else
 				write_motifs_back ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+
+			if ( risotto_out_filename != NULL )
+				write_motifs_risotto ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
 		#ifdef _USE_MPI
 		}
 		#endif
@@ -861,6 +870,7 @@ int main ( int argc, char **argv )
 	if ( background_filename )    free ( sw . background_filename );
 	if ( unmatched_in_filename )  free ( sw . unmatched_in_filename );
 	if ( unmatched_out_filename ) free ( sw . unmatched_out_filename );
+	if ( risotto_out_filename )    free ( sw . risotto_out_filename );
 
 	#ifdef _USE_MPI
 	MPI_Finalize();
