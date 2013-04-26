@@ -1594,7 +1594,8 @@ void usage ( void )
    fprintf ( stdout, "  -n, --num-of-occurrences  <int>     The minimum  number of  occurrences of a\n"
                      "                                      reported  motif in any  of the sequences\n"
                      "                                      (default: 1).\n" );
-   fprintf ( stdout, "  -R, --RISOTTO-out-file    <str>     Output RISOTTO filename.\n" );
+   fprintf ( stdout, "  -R, --RISOTTO-out-file    <str>     RISOTTO-like output filename to be used by\n"
+                     "                                      SMILE.\n" );
    fprintf ( stdout, "  -b, --background-file     <str>     MoTeX background filename for statistical\n"
                      "                                      evaluation passed as input.\n" );
    fprintf ( stdout, "  -t, --threads             <int>     Number of threads to be used by the OMP\n"
