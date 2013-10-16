@@ -1,0 +1,16 @@
+####################################
+# Program: MOTifs EXtraction
+# Rundate: Wed Oct 16 19:18:13 2013
+# Input file: ./data/mpla.fa
+# Output file: mpla.motex
+# For N = 2 input sequences
+# Boxes input file: ./data/mpla.txt
+# Number of boxes: 2
+# Run on 1 proc(s) in 12.461310 secs
+####################################
+
+GGG_TTTG_AAA 2 2 1.000000 6
+GGG_TTTC_AAAGA_ 2 2 1.000000 6
+
+#A total of 2 valid motifs were extracted.
+

@@ -47,8 +47,14 @@ int main ( int argc, char **argv )
 	char * 		unmatched_in_filename;	// the input file of the unmatched motifs
 	char * 		unmatched_out_filename;	// the output file of the unmatched motifs
 	char * 		risotto_out_filename;	// the output file of the reported motifs a la RISOTTO
+	char * 		boxes_in_filename;	// the input file for the boxes
 	FILE *		in_fd;			// the input file descriptor
 	FILE *		un_in_fd;		// the input file descriptor for the unmatched motifs
+	FILE *		boxes_in_fd;		// the input file descriptor for the boxes
+	unsigned int 	nb_boxes;		// the number of boxes
+   	unsigned int  * bgaps;
+   	unsigned int  * blens;
+   	unsigned int  * berrs;
 
         char* 		t	= NULL;		// the sequences concatenated for broadcast and checking 
         char const ** 	seqs    = NULL; 	// the sequences in memory
@@ -131,6 +137,7 @@ int main ( int argc, char **argv )
 	unmatched_in_filename   = sw . unmatched_in_filename;
 	unmatched_out_filename  = sw . unmatched_out_filename;
 	risotto_out_filename    = sw . risotto_out_filename;
+	boxes_in_filename       = sw . boxes_in_filename;
 	
 	if ( background_filename == NULL && unmatched_out_filename != NULL )
        	{
@@ -143,6 +150,21 @@ int main ( int argc, char **argv )
         	fprintf ( stderr, " Error: `-I' option cannot be used with `-b' option!\n" );
         	return ( 1 );
        	}
+
+	if ( boxes_in_filename != NULL )
+       	{
+		if ( unmatched_out_filename != NULL )
+		{
+			fprintf ( stderr, " Error: `-u' option cannot be used with `-s' option!\n" );
+			return ( 1 );
+		}
+
+		if ( unmatched_in_filename != NULL )
+		{
+			fprintf ( stderr, " Error: `-I' option cannot be used with `-s' option!\n" );
+			return ( 1 );
+		}
+	}
         
 	#ifdef _USE_OMP
 	/* set the num of threads to be used */
@@ -223,17 +245,70 @@ int main ( int argc, char **argv )
         	t[ len - 1 ] = '\0';
         	total_length = len - 1;
 
+		/* read the structure of the boxes */
+		if ( boxes_in_filename != NULL )
+		{
+			/* read the boxes file in memory */
+			if ( ! ( boxes_in_fd = fopen ( boxes_in_filename, "r") ) ) 
+			{
+				fprintf ( stderr, "Cannot open file %s\n", boxes_in_filename );
+				return ( 1 ); 
+			}
+
+			if ( fscanf ( boxes_in_fd, "%d", &nb_boxes ) != 1 )
+			{
+				fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
+				return ( 1 ); 
+			}
+
+			bgaps = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
+			blens = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
+			berrs = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
+
+			for ( i = 0; i < nb_boxes; i ++ )
+    			{  
+				if ( fscanf ( boxes_in_fd, "%d", &bgaps[i] ) != 1 )
+				{
+					fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
+					return ( 1 ); 
+				}
+				if ( fscanf ( boxes_in_fd, "%d", &blens[i] ) != 1 )
+				{
+					fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
+					return ( 1 ); 
+				}
+				if ( fscanf ( boxes_in_fd, "%d", &berrs[i] ) != 1 )
+				{
+					fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
+					return ( 1 ); 
+				}
+    			}
+
+			if ( fclose ( boxes_in_fd ) )
+			{
+				fprintf( stderr, " Error: file close error!\n");
+				return ( 1 );
+			}
+		}
+		else
+			nb_boxes = 0;
+
 
 	#ifdef _USE_MPI
 		/* broadcast the data */
 		MPI_Bcast ( &total_length, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the total length
+		MPI_Bcast ( &nb_boxes, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the total number of boxes
     		MPI_Bcast ( &t[0], total_length + 1, MPI_CHAR, 0, MPI_COMM_WORLD); 	//send the actual (concatenated) text
 		MPI_Bcast ( &num_seqs, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send num_seqs
+		MPI_Bcast ( &bgaps, nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the boxes structure
+		MPI_Bcast ( &blens, nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
+		MPI_Bcast ( &berrs, nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
 	}
 	else
 	{
 		/* receive the data */
 		MPI_Bcast ( &total_length, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the total length of data
+		MPI_Bcast ( &nb_boxes, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the total number of boxes
 
 		/* allocate space for the data */
 		t = ( char * ) calloc ( total_length + 1 , sizeof( char ) );
@@ -242,10 +317,17 @@ int main ( int argc, char **argv )
         		fprintf( stderr, " Error: the text could not be allocated!\n" );
                 	return ( 1 );
         	}
+
+		bgaps = ( int * ) calloc ( nb_boxes , sizeof( int ) );
+		blens = ( int * ) calloc ( nb_boxes , sizeof( int ) );
+		berrs = ( int * ) calloc ( nb_boxes , sizeof( int ) );
 		
 		/* receive the data into t */
     		MPI_Bcast ( &t[0], total_length + 1, MPI_CHAR, 0, MPI_COMM_WORLD ); 	//receive the actual text
 		MPI_Bcast ( &num_seqs, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive num_seqs
+		MPI_Bcast ( &bgaps, nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the boxes structure
+		MPI_Bcast ( &blens, nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
+		MPI_Bcast ( &berrs, nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
 	}
 	#endif
 	
@@ -278,6 +360,14 @@ int main ( int argc, char **argv )
 	free ( t );
 
 	sw . total_length = total_length;
+
+	if ( nb_boxes )
+	{
+		sw . nb_boxes = nb_boxes;
+		sw . bgaps = bgaps;
+		sw . blens = blens;
+		sw . berrs = berrs;
+	}
 
 	/* The algorithm for motif extraction */
 	if ( unmatched_in_filename == NULL )	//This is, in the normal case, when we search for motifs in a set of sequences (MultiFASTA file)
@@ -333,20 +423,42 @@ int main ( int argc, char **argv )
 					continue;
 				}
 
-				if ( d == 0 )
+				if ( nb_boxes == 0 )
 				{
-					if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
+					if ( d == 0 )
 					{
-						fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
-						exit ( 1 );
+						if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
+						{
+							fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
+							exit ( 1 );
+						}
+					}	
+					else
+					{
+						if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
+						{
+							fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
+							exit ( 1 );
+						}
 					}
-				}	
+				}
 				else
 				{
-					if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
+					if ( d == 0 )
 					{
-						fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
-						exit ( 1 );
+						if ( ! structured_motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, bgaps, blens, berrs, nb_boxes, g_occur[i], g_all_occur[i] ) )
+						{
+							fprintf( stderr, " Error: structured_motifs_extraction_hd() failed!\n");                        
+							exit ( 1 );
+						}
+					}	
+					else
+					{
+						if ( ! structured_motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, bgaps, blens, berrs, nb_boxes, g_occur[i], g_all_occur[i] ) )
+						{
+							fprintf( stderr, " Error: structured_motifs_extraction_ed() failed!\n");                        
+							exit ( 1 );
+						}
 					}
 				}
 			}
@@ -583,14 +695,23 @@ int main ( int argc, char **argv )
 		#ifdef _USE_OMP
 		P = sw . t;
 		#endif
+			if ( nb_boxes == 0 )
+			{
+				if ( background_filename == NULL )
+					write_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+				else
+					write_motifs_back ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
 
-			if ( background_filename == NULL )
-				write_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+				if ( risotto_out_filename != NULL )
+					write_motifs_risotto ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
+			}
 			else
-				write_motifs_back ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
-
-			if ( risotto_out_filename != NULL )
-				write_motifs_risotto ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
+			{
+				write_structured_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+				//if ( risotto_out_filename != NULL )
+				//	write_motifs_risotto ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
+			}
+				
 		#ifdef _USE_MPI
 		}
 		#endif
@@ -871,6 +992,13 @@ int main ( int argc, char **argv )
 	if ( unmatched_in_filename )  free ( sw . unmatched_in_filename );
 	if ( unmatched_out_filename ) free ( sw . unmatched_out_filename );
 	if ( risotto_out_filename )    free ( sw . risotto_out_filename );
+	if ( nb_boxes )
+	{ 
+		free ( sw . risotto_out_filename );
+		free ( sw . bgaps );
+		free ( sw . blens );
+		free ( sw . berrs );
+	}
 
 	#ifdef _USE_MPI
 	MPI_Finalize();
