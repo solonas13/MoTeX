@@ -36,7 +36,7 @@ int main ( int argc, char **argv )
 {
 	struct TSwitch  sw;
 
-	unsigned int 	l;			// the length of motifs
+	unsigned int 	l;			// the length for motifs
 	unsigned int 	q;			// the quorum
 	unsigned int 	e;			// the max number of errors
 	unsigned int 	d;			// the distance
@@ -51,15 +51,16 @@ int main ( int argc, char **argv )
 	FILE *		in_fd;			// the input file descriptor
 	FILE *		un_in_fd;		// the input file descriptor for the unmatched motifs
 	FILE *		boxes_in_fd;		// the input file descriptor for the boxes
-	unsigned int 	nb_boxes;		// the number of boxes
-   	unsigned int  * bgaps;
-   	unsigned int  * blens;
-   	unsigned int  * berrs;
 
         char* 		t	= NULL;		// the sequences concatenated for broadcast and checking 
         char const ** 	seqs    = NULL; 	// the sequences in memory
 	unsigned int 	num_seqs = 0;		// the total number of sequences
 	unsigned int 	total_length;		// the total length of the sequences
+
+	unsigned int 	nb_boxes;		// the number of boxes
+   	unsigned int  * bgaps;			//   the gaps
+   	unsigned int  * blens;			//   the lengths
+   	unsigned int  * berrs;			//   the errors	
 
 	unsigned int 	i, j;
 

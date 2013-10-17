@@ -807,6 +807,109 @@ the dynamic programming algorithm under the edit distance model for structured m
 */
 unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * bgaps, unsigned int * blens, unsigned int * berrs, unsigned int nb_boxes, unsigned int * u, unsigned int * v )
 {
+	unsigned int ** B, **R; 		//matrices B and R
+	unsigned int * occ;
+	unsigned int * succ;
+	unsigned int i;
+	unsigned int j;
+	unsigned int b;
+
+  	/* 2d Memory Allocation */
+	if ( ( B = ( unsigned int ** ) malloc ( ( n + 1 ) * sizeof ( unsigned int * ) ) ) == NULL )
+	{
+		fprintf( stderr, " Error: B could not be allocated!\n");
+		return ( 0 );
+	}
+        if ( ( B[0] = ( unsigned int * ) calloc ( ( n + 1 ) * ( m + 1 ), sizeof ( unsigned int) ) ) == NULL )
+	{
+		fprintf( stderr, " Error: B could not be allocated!\n");
+		return ( 0 );
+	}
+        for ( j = 1; j < n + 1; ++ j )
+        	B[j] = ( void * ) B[0] + j * ( m + 1 ) * sizeof ( unsigned int );
+
+	if ( ( R = ( unsigned int ** ) malloc ( ( n + 1 ) * sizeof ( unsigned int * ) ) ) == NULL )
+	{
+		fprintf( stderr, " Error: R could not be allocated!\n");
+		return ( 0 );
+	}
+        if ( ( R[0] = ( unsigned int * ) calloc ( ( n + 1 ) * ( m + 1 ), sizeof ( unsigned int ) ) ) == NULL )
+	{
+		fprintf( stderr, " Error: R could not be allocated!\n");
+		return ( 0 );
+	}
+        for ( j = 1; j < n + 1; ++ j )
+        	R[j] = ( void * ) R[0] + j * ( m + 1 ) * sizeof ( unsigned int );
+
+	if ( ( occ = ( unsigned int* ) calloc ( ( m ) , sizeof( unsigned int ) ) ) == NULL )
+	{
+		fprintf( stderr, " Error: occ could not be allocated!\n");
+		return ( 0 );
+	}
+
+	unsigned int offset;
+	for ( b = 0; b <= nb_boxes; b++ ) 
+	{
+		unsigned int ell;
+		unsigned int err;
+		if ( b != 0 )	
+		{
+			offset += ( bgaps[b - 1] + blens[b - 1] );
+			ell = blens[b - 1];
+			err = berrs[b - 1];
+		}
+		else
+		{
+			offset = 0;
+			ell = l;
+			err = e;
+		}
+
+		unsigned int y = ( unsigned int ) pow ( 2 , ell - 1 ) - 1; 
+
+		for ( i = 0; i < n + 1; i ++ ) 
+		{
+			int ii = i - offset;
+  
+			for( j = 0; j < m + 1 ; j++ )			
+			{
+				int jj = j - offset;
+  
+				if( j == 0 ) continue;
+
+				if ( i == 0 )
+					B[i][j] = ( 2 << ( min ( j , ell ) - 1 ) ) - 1;
+				else if ( j <= ell )
+					B[i][j] = bitminmax ( shift ( B[i - 1][j] ) | 1, shift( B[i][j - 1] ) | 1, shift( B[i - 1][j - 1] ) | delta ( t[i - 1], p[j - 1] ) );
+				else
+					B[i][j] = bitminmax ( shiftc( B[i][j - 1] , y ) | 1, shift ( B[i - 1][j] ) | 1, shiftc ( B[i - 1][j - 1], y ) | delta ( t[i - 1], p[j - 1] ) );
+				
+				if ( jj < ( int ) l || ii < ( int ) l  ) continue;
+				
+				if ( popcount ( B[i][j] ) <= err )
+				{
+					R[ii][jj]++;
+					if (  R[ii][jj] == nb_boxes + 1 )
+					{
+						if ( occ[jj - 1] == 0 )
+						{
+							u[jj - 1] = u[jj - 1] + 1;
+							occ[jj - 1] = 1;
+						} 
+						v[jj - 1] = v[jj - 1] + 1; 
+					}
+				}
+			}
+		}
+	}
+
+	free ( B[0] );
+	free ( R[0] );
+	free ( B );
+	free ( R );
+	free ( occ );
+
+	return  ( 1 );
 	return  ( 1 );
 }
 
