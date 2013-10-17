@@ -1314,6 +1314,208 @@ unsigned int write_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, ch
         //Nb models: 63002
         //User time: 2.78 sec.
 
+	fprintf ( out_fd, "\n" );
+	fprintf ( out_fd, "Nb models: %d\n", valid );
+	fprintf ( out_fd, "User time: %lf sec.\n", exectime );
+                
+	trie_free ( trie );    
+        trie = NULL;
+        alpha_map_free ( alphabet );
+        alphabet = NULL;
+
+	if ( fclose ( out_fd ) ) 
+	{
+      		fprintf( stderr, " Error: file close error!\n");				      
+		return ( 0 );
+	}
+	return ( 1 );
+}
+
+/*
+write the output a la RISOTTO/SMILE
+*/
+unsigned int write_structured_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime )
+{
+	time_t               t;
+   	time ( &t );
+	FILE * 		out_fd;				// file with the motifs
+	unsigned int i, j, k;
+	unsigned int valid = 0;
+
+        char * alphabet_str = NULL;
+
+	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = DNA;
+        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
+        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
+
+	AlphaMap *	alphabet = NULL;
+        Trie *      	trie = NULL;
+
+	/* Create an empty alphabet */
+	alphabet = alpha_map_new();
+
+	/* Define the alphabet's range */
+        alpha_map_add_range ( alphabet, 0, 127 );
+
+	/* Create an empty trie based on the alphabet */
+        trie = trie_new ( alphabet );
+
+	if ( ( out_fd = fopen( sw . risotto_out_filename, "w") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file!\n");
+		return  ( 0 );
+	}
+
+	//nb of boxes, absolute quorum/number of sequences, total number of symbols in the input sequences, total min length, 
+        //total max length, total substitutions, description given for each box in the input parameters, and the alphabet)
+	//%%% 2 128/1062 196736 12 12 2 6 6 1 16 18 6 6 1 alphabet ACGT$
+	unsigned int min_len = sw . l;
+	unsigned int max_len = sw . l;
+	unsigned int total_errs = sw . e;
+	unsigned int total_length_sm = sw . l;
+
+	unsigned int b;
+	for ( b = 0; b < sw . nb_boxes; b ++ )
+	{
+	        total_length_sm += sw . blens[b];
+		if ( sw . blens[b] < sw . l )
+			min_len = sw . blens[b];
+		else
+			max_len = sw . blens[b];
+		total_errs += sw . berrs[b];
+	} 		
+
+	char line1[LINE_SIZE];
+	line1[0] = 0;
+   	sprintf ( line1, "%%%%%% %d %d/%d %d %d %d %d %d %d %d ", sw . nb_boxes, ( sw . q * num_seqs ) / 100, num_seqs, sw . total_length, min_len, max_len, total_errs, sw . l, sw . l, sw . e );
+
+	char line2[LINE_SIZE];
+	line2[0] = 0;
+	for ( b = 0; b < sw . nb_boxes; b ++ )
+	{
+		char buffer[LINE_SIZE];
+		buffer[0] = 0;
+		sprintf( buffer, "%d %d %d %d %d ", sw . blens[b], sw . blens[b], sw . berrs[b], sw . bgaps[b], sw . bgaps[b] );
+		strncat( line2, buffer, strlen ( buffer ) );
+	}
+
+	char line3[LINE_SIZE];
+	line3[0] = 0;
+	sprintf ( line3, "alphabet %s$", alphabet_str);
+
+	strcat ( line1, line2 );
+	strcat ( line1, line3 );
+
+     	fprintf ( out_fd, "%s", line1 );
+	
+	/* We add spaces to the right of line 1 */
+        for( i = strlen ( line1 ); i < 79; i++ ) 
+     		fprintf ( out_fd, " " );
+
+	/* two empty lines */
+	fprintf ( out_fd, "\n" );
+        for( i = 0; i != 2; i++ ) 
+    	{ 
+    		fprintf( out_fd, "                                        " ); 
+    		fprintf( out_fd, "                                       \n" ); 
+    	} 
+
+	// one line with `='
+	fprintf( out_fd, "========================================" ); 
+	fprintf( out_fd, "=======================================\n" );
+                               
+	for ( i = 0; i < num_seqs; i ++ ) 
+	{
+		unsigned int m = strlen ( seqs[i] );
+
+                for ( j = sw . l - 1; j < m; j ++ )
+		{
+                        if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) >= sw . q && v[i][j] >= sw . n )
+                        {
+                        	AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_boxes + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
+                        	char      * motif   = calloc ( ( total_length_sm + sw . nb_boxes + 1 ) , sizeof( char ) );
+				unsigned int ell;
+				unsigned int offset;
+				unsigned int index = 0;
+				unsigned int jj = j - ( sw . l  ) + 1;
+
+				for ( b = 0; b <= sw . nb_boxes; b ++ ) 
+				{
+					/* Extract the structured motif from the sequences */
+					if ( b == 0 )	
+					{
+						offset = 0;
+				                ell = sw . l;
+						for ( k = 0; k < ell; k ++, index++ )
+						{
+							ACmotif[index] = ( AlphaChar ) seqs[i][jj + k];
+							motif[index]   = seqs[i][jj + k];
+						}
+						ACmotif [ index ] = '_'; 
+						motif[index] = '_';
+						index ++;
+					}	
+					else
+					{
+						offset += sw . bgaps[b - 1] + ell;
+						ell = sw . blens[b - 1];
+						for ( k = 0; k < ell; k ++, index ++ )
+						{
+							ACmotif[index] = ( AlphaChar ) seqs[i][jj + offset + k];
+							motif[index]   = seqs[i][jj + offset + k];
+						}
+						ACmotif [ index ] = '_'; 
+						motif[index] = '_';
+						index ++;
+					}
+				}
+
+				index--;
+				ACmotif [ index ] = 0;
+				motif [ index ] = 0;
+
+				/* Insert the extracted structured motif into the trie */
+				if ( trie_retrieve ( trie, ACmotif, NULL ) != TRUE )
+                                {
+					trie_store ( trie, ACmotif, 0 );
+
+                        		char      * id   = calloc ( ( total_length_sm + sw . nb_boxes + 1 ) , sizeof( char ) );
+
+					//TODO: this should be implemented in a clearer way.
+					unsigned int ii, jj;
+					for ( ii = 0; ii < total_length_sm + sw . nb_boxes; ii++ )
+					{
+						for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
+							if ( motif[ii] == alphabet_str[jj] ) break;
+
+                        			char * s   = calloc ( strlen ( alphabet_str ) , sizeof( char ) );
+						if ( jj < strlen ( alphabet_str ) )	
+						{
+							sprintf( s, "%d", jj);
+							id[ii] = s[0] ;
+						}
+						else
+							id[ii] = '_';
+							 
+						free ( s );
+					}
+					id[total_length_sm + sw . nb_boxes] = '\0';
+
+                                        fprintf ( out_fd, "%s %s %d\t%d\n", motif, id, u[i][j], v[i][j] );
+
+                        		free ( id );
+                                        valid ++;
+                                }
+                        	free ( ACmotif );
+                        	free ( motif );
+                        }
+		}
+	}
+
+        //Nb models: 63002
+        //User time: 2.78 sec.
+
+	fprintf ( out_fd, "\n" );
 	fprintf ( out_fd, "Nb models: %d\n", valid );
 	fprintf ( out_fd, "User time: %lf sec.\n", exectime );
                 
@@ -1750,6 +1952,7 @@ static struct option long_options[] =
    { "num-of-occurrences", 	required_argument, NULL, 'n' },
    { "num-of-threads",     	required_argument, NULL, 't' },
    { "long-sequences", 	  	required_argument, NULL, 'L' },
+   { "boxes-in-file",		required_argument, NULL, 's' },
    { "unmatched-in-file",	required_argument, NULL, 'I' },
    { "unmatched-out-file",	required_argument, NULL, 'u' },
    { "RISOTTO-out-file",	required_argument, NULL, 'R' },
@@ -1776,6 +1979,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
    sw -> unmatched_in_filename 		= NULL;
    sw -> unmatched_out_filename		= NULL;
    sw -> risotto_out_filename		= NULL;
+   sw -> boxes_in_filename		= NULL;
    sw -> q 				= 0;
    sw -> l        			= 0;
    sw -> d       			= 0;

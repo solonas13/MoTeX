@@ -192,7 +192,7 @@ int main ( int argc, char **argv )
 		/* read the (multi)FASTA file with the sequences to t -- record the number num_seq of sequences */
         	if ( ! ( in_fd = fopen ( input_filename, "r") ) ) 
         	{
-                	fprintf ( stderr, "Cannot open file %s\n", input_filename );
+                	fprintf ( stderr, " Error: Cannot open file %s!\n", input_filename );
                 	return ( 1 ); 
         	}
 
@@ -252,7 +252,7 @@ int main ( int argc, char **argv )
 			/* read the boxes file in memory */
 			if ( ! ( boxes_in_fd = fopen ( boxes_in_filename, "r") ) ) 
 			{
-				fprintf ( stderr, "Cannot open file %s\n", boxes_in_filename );
+				fprintf ( stderr, " Error: Cannot open file %s!\n", boxes_in_filename );
 				return ( 1 ); 
 			}
 
@@ -709,8 +709,8 @@ int main ( int argc, char **argv )
 			else
 			{
 				write_structured_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
-				//if ( risotto_out_filename != NULL )
-				//	write_motifs_risotto ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
+				if ( risotto_out_filename != NULL )
+					write_structured_motifs_risotto ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
 			}
 				
 		#ifdef _USE_MPI
@@ -732,7 +732,7 @@ int main ( int argc, char **argv )
 		/* open the file with the unmatched motifs for reading */
         	if ( ! ( un_in_fd = fopen ( unmatched_in_filename, "r") ) ) 
         	{
-                	fprintf ( stderr, "Cannot open file %s\n", unmatched_in_filename );
+                	fprintf ( stderr, " Error: Cannot open file %s!\n", unmatched_in_filename );
                 	return ( 1 ); 
         	}
 
