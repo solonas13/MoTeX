@@ -994,7 +994,7 @@ int main ( int argc, char **argv )
 	if ( risotto_out_filename )    free ( sw . risotto_out_filename );
 	if ( nb_boxes )
 	{ 
-		free ( sw . risotto_out_filename );
+		free ( sw . boxes_in_filename );
 		free ( sw . bgaps );
 		free ( sw . blens );
 		free ( sw . berrs );
