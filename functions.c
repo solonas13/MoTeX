@@ -652,40 +652,46 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 		unsigned int y = ( unsigned int ) pow ( 2 , ell - 1 ) - 1; 
 
 		for ( i = 0; i < n + 1; i ++ ) 
-		{  
+		{
+			int ii = i - offset;
+  
 			for( j = 0; j < m + 1 ; j++ )			
 			{
+				int jj = j - offset;
+  
 				if( j == 0 ) continue;
 
 				if ( i == 0 )
-					B[i][j] = ( 2 << ( min ( j , ell ) - 1 ) ) - 1;
+					B[i][j] = ( 2 << ( min ( j , ell ) - 1  ) ) - 1;
 				else
-					B[i][j] = shiftc ( B[i][j - 1], y ) | delta ( t[i - 1], p[j - 1] );
+					B[i][j] = shiftc ( B[i - 1][j - 1], y ) | delta ( t[i - 1], p[j - 1] );
 				
-				if ( popcount ( B[i][j] ) <= err && j >= l )
+				if ( jj < ( int ) l || ii < ( int ) l  ) continue;
+				
+				if ( popcount ( B[i][j] ) <= err )
 				{
-					if ( ( int ) ( i - offset ) >= 0 && ( int ) ( j - offset ) >= 0 ) 
+					R[ii][jj]++;
+					if (  R[ii][jj] == nb_boxes + 1 )
 					{
-						R[( int ) ( i - offset )][( int ) ( j - offset )] = R[( int ) ( i - offset )][( int ) ( j - offset )] + 1;
-						if (  R[( int ) ( i - offset )][( int ) ( j - offset )] == nb_boxes + 1 )	
+						if ( occ[jj - 1] == 0 )
 						{
-							if ( occ[j - 1 - offset] == 0 )
-							{
-								u[j - 1 - offset] = u[j - 1 - offset] + 1;
-								occ[j - 1 - offset] = 1;
-							} 
-							v[j - 1 - offset] = v[j - 1 - offset] + 1; 
-						}
+							u[jj - 1] = u[jj - 1] + 1;
+							occ[jj - 1] = 1;
+						} 
+						v[jj - 1] = v[jj - 1] + 1; 
 					}
 				}
-
 			}
+			//for( j = 0; j < m + 1; j++ )			
+			//	fprintf ( stderr, "%d ", popcount( B[i][j] ) );
+			//fprintf ( stderr, "\n" ); 
 		}
+		//fprintf ( stderr, "\n\n" ); getchar();
 	}
 
-	for( j = 0; j < m ; j++ )			
-		fprintf ( stderr, " j: %d\n", v[j] );
-	getchar();
+	//for( j = 0; j < m ; j++ )			
+	//	fprintf ( stderr, " j: %d\n", v[j] );
+	//getchar();
 
 	free ( B[0] );
 	free ( R[0] );
@@ -1127,16 +1133,21 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
                         {
                         	AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_boxes + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
                         	char      * motif   = calloc ( ( total_length_sm + sw . nb_boxes + 1 ) , sizeof( char ) );
-				unsigned int offset = 0;
+				unsigned int ell;
+				unsigned int offset;
 				unsigned int index = 0;
+				unsigned int jj = j - ( sw . l  ) + 1;
+
 				for ( b = 0; b <= sw . nb_boxes; b ++ ) 
 				{
 					if ( b == 0 )	
 					{
-						for ( k = 0; k < sw . l; k ++, index++ )
+						offset = 0;
+				                ell = sw . l;
+						for ( k = 0; k < ell; k ++, index++ )
 						{
-							ACmotif[index] = ( AlphaChar )seqs[i][j - ( sw . l  ) + 1 + index];
-							motif[index] = seqs[i][j - ( sw . l  ) + 1 + index];
+							ACmotif[index] = ( AlphaChar ) seqs[i][jj + k];
+							motif[index]   = seqs[i][jj + k];
 						}
 						ACmotif [ index ] = '_'; 
 						motif[index] = '_';
@@ -1144,17 +1155,20 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
 					}	
 					else
 					{
-						offset += sw . bgaps[b - 1];
-						for ( k = 0; k < sw . blens[b - 1]; k ++, index ++ )
+						offset += sw . bgaps[b - 1] + ell;
+						ell = sw . blens[b - 1];
+						for ( k = 0; k < ell; k ++, index ++ )
 						{
-							ACmotif[index] = ( AlphaChar )seqs[i][j - ( sw . l  ) + offset + 1 + index];
-							motif[index] = seqs[i][j - ( sw . l  ) + offset + 1 + index];
+							ACmotif[index] = ( AlphaChar ) seqs[i][jj + offset + k];
+							motif[index]   = seqs[i][jj + offset + k];
 						}
 						ACmotif [ index ] = '_'; 
 						motif[index] = '_';
 						index ++;
 					}
 				}
+
+				index--;
 				ACmotif [ index ] = 0;
 				motif [ index ] = 0;
 
