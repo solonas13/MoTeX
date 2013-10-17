@@ -1246,7 +1246,14 @@ unsigned int write_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, ch
 
 	// %%% 1 120/1200 1200000 8 8 1 alphabet ACGT$
 	char line1[80];
-   	sprintf ( line1, "%%%%%% 1 %d/%d %d %d %d %d alphabet %s$", ( sw . q * num_seqs ) / 100, num_seqs, sw . total_length, sw . l, sw . l, sw . e, alphabet_str );
+   	sprintf ( line1, "%%%%%% 1 %d/%d %d %d %d %d alphabet %s$", 
+				( int ) ceil ( ( double ) ( ( double )sw . q * num_seqs ) / ( double ) 100 ), 
+				num_seqs, 
+				sw . total_length, 
+				sw . l, 
+				sw . l, 
+				sw . e, 
+				alphabet_str );
    	
      	fprintf ( out_fd, "%s", line1 );
 	
@@ -1314,7 +1321,6 @@ unsigned int write_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, ch
         //Nb models: 63002
         //User time: 2.78 sec.
 
-	fprintf ( out_fd, "\n" );
 	fprintf ( out_fd, "Nb models: %d\n", valid );
 	fprintf ( out_fd, "User time: %lf sec.\n", exectime );
                 
@@ -1378,16 +1384,24 @@ unsigned int write_structured_motifs_risotto ( struct TSwitch sw, unsigned int n
 	for ( b = 0; b < sw . nb_boxes; b ++ )
 	{
 	        total_length_sm += sw . blens[b];
-		if ( sw . blens[b] < sw . l )
-			min_len = sw . blens[b];
-		else
-			max_len = sw . blens[b];
+		min_len += sw . blens[b];
+		max_len += sw . blens[b];
 		total_errs += sw . berrs[b];
 	} 		
 
 	char line1[LINE_SIZE];
 	line1[0] = 0;
-   	sprintf ( line1, "%%%%%% %d %d/%d %d %d %d %d %d %d %d ", sw . nb_boxes, ( sw . q * num_seqs ) / 100, num_seqs, sw . total_length, min_len, max_len, total_errs, sw . l, sw . l, sw . e );
+   	sprintf ( line1, "%%%%%% %d %d/%d %d %d %d %d %d %d %d ", 
+                         sw . nb_boxes + 1, 
+                         ( int ) ceil ( ( double ) ( ( double )sw . q * num_seqs ) / ( double ) 100 ), 
+                         num_seqs, 
+                         sw . total_length, 
+                         min_len, 
+                         max_len, 
+                         total_errs, 
+                         sw . l, 
+                         sw . l, 
+                         sw . e );
 
 	char line2[LINE_SIZE];
 	line2[0] = 0;
@@ -1395,7 +1409,7 @@ unsigned int write_structured_motifs_risotto ( struct TSwitch sw, unsigned int n
 	{
 		char buffer[LINE_SIZE];
 		buffer[0] = 0;
-		sprintf( buffer, "%d %d %d %d %d ", sw . blens[b], sw . blens[b], sw . berrs[b], sw . bgaps[b], sw . bgaps[b] );
+		sprintf( buffer, "%d %d %d %d %d ", sw . bgaps[b], sw . bgaps[b], sw . blens[b], sw . blens[b], sw . berrs[b] );
 		strncat( line2, buffer, strlen ( buffer ) );
 	}
 
@@ -1495,7 +1509,7 @@ unsigned int write_structured_motifs_risotto ( struct TSwitch sw, unsigned int n
 							id[ii] = s[0] ;
 						}
 						else
-							id[ii] = '_';
+							id[ii] = '-';
 							 
 						free ( s );
 					}
@@ -1515,7 +1529,6 @@ unsigned int write_structured_motifs_risotto ( struct TSwitch sw, unsigned int n
         //Nb models: 63002
         //User time: 2.78 sec.
 
-	fprintf ( out_fd, "\n" );
 	fprintf ( out_fd, "Nb models: %d\n", valid );
 	fprintf ( out_fd, "User time: %lf sec.\n", exectime );
                 
