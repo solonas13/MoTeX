@@ -23,6 +23,14 @@ For Ubuntu Linux, you may simply install the latest version by typing
 
 `sudo apt-get install libmpfr-dev' 
 
+   In order to  assess  the  statistical  significance  of the motifs 
+extracted by MoTeX, the programme SMILE, a statistical significance 
+application, is required.
+
+   For Linux, you can install it from this directory via
+ 
+`sh install-SMILE.sh'
+
 Basic Instructions
 ==================
 
