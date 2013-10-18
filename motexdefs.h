@@ -36,7 +36,7 @@ struct TSwitch
    char               * unmatched_in_filename;  			
    char               * unmatched_out_filename;  			
    char               * boxes_in_filename;  			
-   char               * risotto_out_filename;  			
+   char               * smile_out_filename;  			
    unsigned int         q;
    unsigned int         l;
    unsigned int         d;
@@ -100,8 +100,8 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 
 unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
 unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
-unsigned int write_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime );
-unsigned int write_structured_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime );
+unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime );
+unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime );
 unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
 unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char const ** fseqs, unsigned int ** u, unsigned int ** v, double exectime, int P, unsigned int num_seqs, struct Tdata * fdata );
 double gettime( void );

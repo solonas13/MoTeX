@@ -1210,9 +1210,9 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
 }
 
 /*
-write the output a la RISOTTO/SMILE
+write the output a la SMILE
 */
-unsigned int write_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime )
+unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime )
 {
 	time_t               t;
    	time ( &t );
@@ -1238,7 +1238,7 @@ unsigned int write_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, ch
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( out_fd = fopen( sw . risotto_out_filename, "w") ) == NULL) 
+	if ( ( out_fd = fopen( sw . smile_out_filename, "w") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
@@ -1338,9 +1338,9 @@ unsigned int write_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, ch
 }
 
 /*
-write the output a la RISOTTO/SMILE
+write the output a la SMILE
 */
-unsigned int write_structured_motifs_risotto ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime )
+unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime )
 {
 	time_t               t;
    	time ( &t );
@@ -1366,7 +1366,7 @@ unsigned int write_structured_motifs_risotto ( struct TSwitch sw, unsigned int n
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( out_fd = fopen( sw . risotto_out_filename, "w") ) == NULL) 
+	if ( ( out_fd = fopen( sw . smile_out_filename, "w") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
@@ -1968,7 +1968,7 @@ static struct option long_options[] =
    { "boxes-in-file",		required_argument, NULL, 's' },
    { "unmatched-in-file",	required_argument, NULL, 'I' },
    { "unmatched-out-file",	required_argument, NULL, 'u' },
-   { "RISOTTO-out-file",	required_argument, NULL, 'R' },
+   { "SMILE-out-file",		required_argument, NULL, 'R' },
    { "help",               	no_argument,       NULL, 'h' },
    { NULL,                 	0,                 NULL, 0   }
  };
@@ -1991,7 +1991,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
    sw -> output_filename		= NULL;
    sw -> unmatched_in_filename 		= NULL;
    sw -> unmatched_out_filename		= NULL;
-   sw -> risotto_out_filename		= NULL;
+   sw -> smile_out_filename		= NULL;
    sw -> boxes_in_filename		= NULL;
    sw -> q 				= 0;
    sw -> l        			= 0;
@@ -2035,8 +2035,8 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
            break;
 
          case 'R':
-           sw -> risotto_out_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
-           strcpy ( sw -> risotto_out_filename, optarg );
+           sw -> smile_out_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
+           strcpy ( sw -> smile_out_filename, optarg );
            break;
 
          case 's':
@@ -2163,7 +2163,7 @@ void usage ( void )
                      "                                      (default: 1).\n" );
    fprintf ( stdout, "  -s, --structured-motifs   <str>     Input filename  for the structure of the\n"
                      "                                      boxes in the case of structured motifs.\n" );
-   fprintf ( stdout, "  -R, --RISOTTO-out-file    <str>     RISOTTO-like output filename to be used by\n"
+   fprintf ( stdout, "  -R, --SMILE-out-file      <str>     SMILE-like output filename to be used by\n"
                      "                                      SMILE.\n" );
    fprintf ( stdout, "  -b, --background-file     <str>     MoTeX background filename for statistical\n"
                      "                                      evaluation passed as input.\n" );

@@ -27,7 +27,7 @@ For Ubuntu Linux, you may simply install the latest version by typing
 extracted by MoTeX, the programme SMILE, a statistical significance 
 application, is required.
 
-   For Linux, you can install it from this directory via
+   For Linux, you can install it from this directory by typing
  
 `sh install-SMILE.sh'
 

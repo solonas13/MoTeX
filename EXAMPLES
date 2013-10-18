@@ -14,13 +14,51 @@ change to directory `data' and follow the instructions in file README.
 Example 2.
 ----------
 
+Here is a series of steps to extract single motifs and assess their statistical
+significance:
+
+1. Uncompress the input file `dnc_subtilis_330-30.seq.bz2'
+  
+   bunzip2 ./data/dnc_subtilis_330-30.seq.bz2
+
+2. Extract single motifs 
+  
+   ./motexCPU -a DNA -i ./data/dnc_subtilis_330-30.seq -o single.motex -d 0 -k 6 -e 1 -q 12 -R single.smile
+
+3. Assess their statistical significance
+
+   ./SMILE/smile ./data/dnc_subtilis_330-30.seq ./single.smile ./single.smile.output 100 2
+
+
+Example 3.
+----------
+
+Here is a series of steps to extract structured motifs and assess their statistical
+significance:
+
+1. Uncompress the input file `dnc_subtilis_330-30.seq.bz2'
+  
+   bunzip2 ./data/dnc_subtilis_330-30.seq.bz2
+
+2. Extract structured motifs 
+  
+   ./motexCPU -a DNA -i ./data/dnc_subtilis_330-30.seq -o struct.motex -d 0 -k 6 -e 1 -q 12 -s ./data/boxes.txt -R struct.smile
+
+3. Assess their statistical significance
+
+   ./SMILE/smile ./data/dnc_subtilis_330-30.seq ./struct.smile ./struct.smile.output 100 2
+
+
+Example 4.
+----------
+
 Here is a series of steps which could potentially be used as a biological pipeline:
 
-1. Run the background (bg) dataset, and output it to `bg.motex'.
+1. Run a background (bg) input dataset, and output it to `bg.motex'.
 
   ./motexOMP -a DNA -i bg.dataset -o bg.motex -d 0 -q 1 -k 10 -e 1 -t 48
 
-2. Run the foreground (fg) dataset, and output the fg motifs to `fg1.motex'; output the fg motifs that are not matched with any bg motif to `un.motex'.
+2. Run a foreground (fg) input dataset, and output the fg motifs to `fg1.motex'; output the fg motifs that are not matched with any bg motif to `un.motex'.
 
   ./motexOMP -a DNA -i fg.dataset -b bg.motex -o fg1.motex -u un.motex -d 0 -q 1 -k 10 -e 1 -t 48
 

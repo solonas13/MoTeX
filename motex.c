@@ -46,7 +46,7 @@ int main ( int argc, char **argv )
 	char * 		background_filename;	// the background file
 	char * 		unmatched_in_filename;	// the input file of the unmatched motifs
 	char * 		unmatched_out_filename;	// the output file of the unmatched motifs
-	char * 		risotto_out_filename;	// the output file of the reported motifs a la RISOTTO
+	char * 		smile_out_filename;	// the output file of the reported motifs a la SMILE
 	char * 		boxes_in_filename;	// the input file for the boxes
 	FILE *		in_fd;			// the input file descriptor
 	FILE *		un_in_fd;		// the input file descriptor for the unmatched motifs
@@ -137,7 +137,7 @@ int main ( int argc, char **argv )
 	background_filename     = sw . background_filename;
 	unmatched_in_filename   = sw . unmatched_in_filename;
 	unmatched_out_filename  = sw . unmatched_out_filename;
-	risotto_out_filename    = sw . risotto_out_filename;
+	smile_out_filename      = sw . smile_out_filename;
 	boxes_in_filename       = sw . boxes_in_filename;
 	
 	if ( background_filename == NULL && unmatched_out_filename != NULL )
@@ -703,14 +703,14 @@ int main ( int argc, char **argv )
 				else
 					write_motifs_back ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
 
-				if ( risotto_out_filename != NULL )
-					write_motifs_risotto ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
+				if ( smile_out_filename != NULL )
+					write_motifs_smile ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
 			}
 			else
 			{
 				write_structured_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
-				if ( risotto_out_filename != NULL )
-					write_structured_motifs_risotto ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
+				if ( smile_out_filename != NULL )
+					write_structured_motifs_smile ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
 			}
 				
 		#ifdef _USE_MPI
@@ -992,7 +992,7 @@ int main ( int argc, char **argv )
 	if ( background_filename )    free ( sw . background_filename );
 	if ( unmatched_in_filename )  free ( sw . unmatched_in_filename );
 	if ( unmatched_out_filename ) free ( sw . unmatched_out_filename );
-	if ( risotto_out_filename )    free ( sw . risotto_out_filename );
+	if ( smile_out_filename )    free ( sw . smile_out_filename );
 	if ( nb_boxes )
 	{ 
 		free ( sw . boxes_in_filename );
