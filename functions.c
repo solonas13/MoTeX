@@ -1121,7 +1121,7 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
 	if ( sw . n )
 	fprintf ( out_fd, "#     n = %d\n", sw . n );
 	fprintf ( out_fd, "# Boxes input file: %s\n", sw . boxes_in_filename );
-	fprintf ( out_fd, "# Number of boxes: %d\n", sw . nb_boxes );
+	fprintf ( out_fd, "# Number of boxes: %d\n", sw . nb_boxes + 1 );
 	fprintf ( out_fd, "# Run on %d proc(s) in %lf secs\n", P, exectime );
    	fprintf ( out_fd, "####################################\n\n" );
 

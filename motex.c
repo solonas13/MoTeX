@@ -301,9 +301,9 @@ int main ( int argc, char **argv )
 		MPI_Bcast ( &nb_boxes, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the total number of boxes
     		MPI_Bcast ( &t[0], total_length + 1, MPI_CHAR, 0, MPI_COMM_WORLD); 	//send the actual (concatenated) text
 		MPI_Bcast ( &num_seqs, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send num_seqs
-		MPI_Bcast ( &bgaps, nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the boxes structure
-		MPI_Bcast ( &blens, nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
-		MPI_Bcast ( &berrs, nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
+		MPI_Bcast ( &bgaps[0], nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the boxes structure
+		MPI_Bcast ( &blens[0], nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
+		MPI_Bcast ( &berrs[0], nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
 	}
 	else
 	{
@@ -319,19 +319,19 @@ int main ( int argc, char **argv )
                 	return ( 1 );
         	}
 
-		bgaps = ( int * ) calloc ( nb_boxes , sizeof( int ) );
-		blens = ( int * ) calloc ( nb_boxes , sizeof( int ) );
-		berrs = ( int * ) calloc ( nb_boxes , sizeof( int ) );
+		bgaps = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
+		blens = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
+		berrs = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
 		
 		/* receive the data into t */
     		MPI_Bcast ( &t[0], total_length + 1, MPI_CHAR, 0, MPI_COMM_WORLD ); 	//receive the actual text
 		MPI_Bcast ( &num_seqs, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive num_seqs
-		MPI_Bcast ( &bgaps, nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the boxes structure
-		MPI_Bcast ( &blens, nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
-		MPI_Bcast ( &berrs, nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
+		MPI_Bcast ( &bgaps[0], nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the boxes structure
+		MPI_Bcast ( &blens[0], nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
+		MPI_Bcast ( &berrs[0], nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
 	}
 	#endif
-	
+
 	/* Each processor splits the concatenated text into the respective sequences */
         total_length = 0;
 	seqs   = ( char const ** ) calloc ( ( num_seqs ) , sizeof ( char * ) ); 
@@ -653,22 +653,45 @@ int main ( int argc, char **argv )
 						continue;
 					}
 
-					if ( d == 0 )
+					if ( nb_boxes == 0 )
 					{
-						if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
+						if ( d == 0 )
 						{
-							fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
-							return ( 1 );
-						}
-					}	
-					else
-					{
-						if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
+							if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
+							{
+								fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
+								return ( 1 );
+							}
+						}	
+						else
 						{
-							fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
-							exit ( 1 );
+							if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
+							{
+								fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
+								exit ( 1 );
+							}
 						}
 					}
+					else
+					{
+						if ( d == 0 )
+						{
+							if ( ! structured_motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, bgaps, blens, berrs, nb_boxes, l_occur, l_all_occur ) )
+							{
+								fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
+								return ( 1 );
+							}
+						}	
+						else
+						{
+							if ( ! structured_motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, bgaps, blens, berrs, nb_boxes, l_occur, l_all_occur ) )
+							{
+								fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
+								exit ( 1 );
+							}
+						}
+
+					}	
 				}
 
 				/* Collective communication */
