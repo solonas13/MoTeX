@@ -58,9 +58,13 @@ int main ( int argc, char **argv )
 	unsigned int 	total_length;		// the total length of the sequences
 
 	unsigned int 	nb_boxes;		// the number of boxes
-   	unsigned int  * bgaps;			//   the gaps
-   	unsigned int  * blens;			//   the lengths
-   	unsigned int  * berrs;			//   the errors	
+	unsigned int 	nb_gaps;		// the number of gaps
+	unsigned int 	nb_structs;		// the number of different motifs based on the structure of the distance intervals
+   	unsigned int  * bgaps_min;		//   the min gaps
+   	unsigned int  * bgaps_max;		//   the max gaps
+   	unsigned int  * blens;			//   the lengths of boxes
+   	unsigned int  * berrs;			//   the errors	in boxes
+	unsigned int ** S;			// the array that stores the motifs structs
 
 	unsigned int 	i, j;
 
@@ -256,19 +260,27 @@ int main ( int argc, char **argv )
 				return ( 1 ); 
 			}
 
-			if ( fscanf ( boxes_in_fd, "%d", &nb_boxes ) != 1 )
+			if ( fscanf ( boxes_in_fd, "%d", &nb_gaps ) != 1 )
 			{
 				fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
 				return ( 1 ); 
 			}
 
-			bgaps = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
+			nb_boxes = nb_gaps + 1;
+
+			bgaps_min = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
+			bgaps_max = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
 			blens = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
 			berrs = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
 
-			for ( i = 0; i < nb_boxes; i ++ )
+			for ( i = 0; i < nb_gaps; i ++ )
     			{  
-				if ( fscanf ( boxes_in_fd, "%d", &bgaps[i] ) != 1 )
+				if ( fscanf ( boxes_in_fd, "%d", &bgaps_min[i] ) != 1 )
+				{
+					fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
+					return ( 1 ); 
+				}
+				if ( fscanf ( boxes_in_fd, "%d", &bgaps_max[i] ) != 1 )
 				{
 					fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
 					return ( 1 ); 
@@ -292,24 +304,28 @@ int main ( int argc, char **argv )
 			}
 		}
 		else
-			nb_boxes = 0;
+		{
+			nb_gaps = 0;
+			nb_boxes = 1;
+		}
 
 
 	#ifdef _USE_MPI
 		/* broadcast the data */
 		MPI_Bcast ( &total_length, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the total length
-		MPI_Bcast ( &nb_boxes, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the total number of boxes
+		MPI_Bcast ( &nb_gaps, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the total number of boxes
     		MPI_Bcast ( &t[0], total_length + 1, MPI_CHAR, 0, MPI_COMM_WORLD); 	//send the actual (concatenated) text
 		MPI_Bcast ( &num_seqs, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send num_seqs
-		MPI_Bcast ( &bgaps[0], nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the boxes structure
-		MPI_Bcast ( &blens[0], nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
-		MPI_Bcast ( &berrs[0], nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
+		MPI_Bcast ( &bgaps_min[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the boxes structure
+		MPI_Bcast ( &bgaps_max[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the boxes structure
+		MPI_Bcast ( &blens[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//
+		MPI_Bcast ( &berrs[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//
 	}
 	else
 	{
 		/* receive the data */
 		MPI_Bcast ( &total_length, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the total length of data
-		MPI_Bcast ( &nb_boxes, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the total number of boxes
+		MPI_Bcast ( &nb_gaps, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the total number of boxes
 
 		/* allocate space for the data */
 		t = ( char * ) calloc ( total_length + 1 , sizeof( char ) );
@@ -318,17 +334,20 @@ int main ( int argc, char **argv )
         		fprintf( stderr, " Error: the text could not be allocated!\n" );
                 	return ( 1 );
         	}
-
-		bgaps = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
-		blens = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
-		berrs = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
+		
+		nb_boxes = nb_gaps + 1;	
+		bgaps_min = ( unsigned int * ) calloc ( nb_gaps , sizeof( unsigned int ) );
+		bgaps_max = ( unsigned int * ) calloc ( nb_gaps , sizeof( unsigned int ) );
+		blens = ( unsigned int * ) calloc ( nb_gaps , sizeof( unsigned int ) );
+		berrs = ( unsigned int * ) calloc ( nb_gaps , sizeof( unsigned int ) );
 		
 		/* receive the data into t */
     		MPI_Bcast ( &t[0], total_length + 1, MPI_CHAR, 0, MPI_COMM_WORLD ); 	//receive the actual text
 		MPI_Bcast ( &num_seqs, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive num_seqs
-		MPI_Bcast ( &bgaps[0], nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the boxes structure
-		MPI_Bcast ( &blens[0], nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
-		MPI_Bcast ( &berrs[0], nb_boxes, MPI_INT, 0, MPI_COMM_WORLD ); 		//
+		MPI_Bcast ( &bgaps_min[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the boxes structure
+		MPI_Bcast ( &bgaps_max[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the boxes structure
+		MPI_Bcast ( &blens[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//
+		MPI_Bcast ( &berrs[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//
 	}
 	#endif
 
@@ -362,13 +381,54 @@ int main ( int argc, char **argv )
 
 	sw . total_length = total_length;
 
-	if ( nb_boxes )
+	if ( nb_gaps )
 	{
-		sw . nb_boxes = nb_boxes;
-		sw . bgaps = bgaps;
+		unsigned int ** A;
+		A = ( unsigned int ** ) malloc ( ( nb_gaps ) * sizeof ( unsigned int * ) );
+		int * y = malloc( ( nb_gaps ) * sizeof ( unsigned int * ) );
+
+		nb_structs = 1;	
+		for ( i = 0; i < nb_gaps; i++ )
+		{
+			unsigned int nb_intervals = bgaps_max[i] - bgaps_min[i] + 1;
+			nb_structs *= nb_intervals;
+			y[i] = nb_intervals;
+			A[i] = ( unsigned int * ) calloc ( ( nb_intervals ) , sizeof ( unsigned int ) );
+			for ( j = 0; j < nb_intervals; j ++ )
+				A[i][j] = bgaps_min[i] + j;
+		}
+
+		sw . nb_gaps = nb_gaps;
+		sw . nb_boxes = nb_gaps + 1;
+		sw . bgaps_min = bgaps_min;
+		sw . bgaps_max = bgaps_max;
 		sw . blens = blens;
 		sw . berrs = berrs;
+		sw . nb_structs = nb_structs;
+
+		S = malloc( sizeof( unsigned int * ) * nb_structs );
+		for ( i = 0 ; i < nb_structs; i++ ) 
+			S[i] = calloc( nb_gaps, sizeof( unsigned int ) );
+
+		unsigned int xi = 0;
+		unsigned int * tmp_prod = calloc( nb_gaps, sizeof( unsigned int ) );
+
+		recurse( nb_gaps, 0, y, A, &xi, tmp_prod, S );
+	
+		sw . S = S;
+
+		free( tmp_prod );
+		free( y );
+		for ( i = 0; i < nb_gaps; i++ )
+			free ( A[i] );
+		free ( A );
 	}
+	else
+	{
+		nb_structs = 1;
+		sw . nb_structs = nb_structs;
+	}
+
 
 	/* The algorithm for motif extraction */
 	if ( unmatched_in_filename == NULL )	//This is, in the normal case, when we search for motifs in a set of sequences (MultiFASTA file)
@@ -398,14 +458,14 @@ int main ( int argc, char **argv )
 			unsigned int m = strlen ( seqs[i] );
 
 			/* allocate space for vectors lv and gv */
-			g_all_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+			g_all_occur[i] = ( unsigned int * ) calloc ( m * nb_structs, sizeof( unsigned int ) );
 			if ( ! g_all_occur[i] )
 			{
 				fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
 				exit ( 1 );
 			}
 
-			g_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+			g_occur[i] = ( unsigned int * ) calloc ( m * nb_structs, sizeof( unsigned int ) );
 			if ( ! g_occur[i] )
 			{
 				fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
@@ -424,11 +484,11 @@ int main ( int argc, char **argv )
 					continue;
 				}
 
-				if ( nb_boxes == 0 )
+				if ( nb_gaps == 0 )
 				{
 					if ( d == 0 )
 					{
-						if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
+						if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, sw, g_occur[i], g_all_occur[i] ) )
 						{
 							fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
 							exit ( 1 );
@@ -436,7 +496,7 @@ int main ( int argc, char **argv )
 					}	
 					else
 					{
-						if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
+						if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, sw, g_occur[i], g_all_occur[i] ) )
 						{
 							fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
 							exit ( 1 );
@@ -446,8 +506,8 @@ int main ( int argc, char **argv )
 				else
 				{
 					if ( d == 0 )
-					{
-						if ( ! structured_motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, bgaps, blens, berrs, nb_boxes, g_occur[i], g_all_occur[i] ) )
+					{	
+						if ( ! structured_motifs_extraction_hd ( seqs[i], m, seqs[j], n, sw, g_occur[i], g_all_occur[i] ) )
 						{
 							fprintf( stderr, " Error: structured_motifs_extraction_hd() failed!\n");                        
 							exit ( 1 );
@@ -455,7 +515,7 @@ int main ( int argc, char **argv )
 					}	
 					else
 					{
-						if ( ! structured_motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, bgaps, blens, berrs, nb_boxes, g_occur[i], g_all_occur[i] ) )
+						if ( ! structured_motifs_extraction_ed ( seqs[i], m, seqs[j], n, sw, g_occur[i], g_all_occur[i] ) )
 						{
 							fprintf( stderr, " Error: structured_motifs_extraction_ed() failed!\n");                        
 							exit ( 1 );
@@ -569,7 +629,7 @@ int main ( int argc, char **argv )
 
 					if ( d == 0 )
 					{
-						if ( ! motifs_extraction_opasm_hd ( seqs[i], m, seqs[j], n, l, e, l_all_occur, sendv, rank, P ) )
+						if ( ! motifs_extraction_opasm_hd ( seqs[i], m, seqs[j], n, sw, l_all_occur, sendv, rank, P ) )
 						{
 							fprintf( stderr, " Error: motifs_extraction_opasm_hd() failed!\n");                        
 							return ( 1 );
@@ -577,7 +637,7 @@ int main ( int argc, char **argv )
 					}	
 					else
 					{
-						if ( ! motifs_extraction_opasm_ed ( seqs[i], m, seqs[j], n, l, e, l_all_occur, sendv, rank, P ) )
+						if ( ! motifs_extraction_opasm_ed ( seqs[i], m, seqs[j], n, sw, l_all_occur, sendv, rank, P ) )
 						{
 							fprintf( stderr, " Error: motifs_extraction_opasm_ed() failed!\n");                        
 							return ( 1 );
@@ -610,28 +670,28 @@ int main ( int argc, char **argv )
 				unsigned int m = strlen ( seqs[i] );
 
 				/* allocate space for vectors */
-				g_all_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+				g_all_occur[i] = ( unsigned int * ) calloc ( m * nb_structs, sizeof( unsigned int ) );
 				if ( ! g_all_occur[i] )
 				{
 					fprintf( stderr, " Error: the global all-occurrences vector could not be allocated!\n");
 					return ( 1 );
 				}
 
-				g_occur[i] = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+				g_occur[i] = ( unsigned int * ) calloc ( m * nb_structs, sizeof( unsigned int ) );
 				if ( ! g_occur[i] )
 				{
 					fprintf( stderr, " Error: the global occurrences vector could not be allocated!\n");
 					return ( 1 );
 				}
 
-				l_all_occur = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+				l_all_occur = ( unsigned int * ) calloc ( m * nb_structs, sizeof( unsigned int ) );
 				if ( ! l_all_occur )
 				{
 					fprintf( stderr, " Error: the local all-occurrences vector could not be allocated!\n");
 					return ( 1 );
 				}
 
-				l_occur = ( unsigned int * ) calloc ( m , sizeof( unsigned int ) );
+				l_occur = ( unsigned int * ) calloc ( m * nb_structs, sizeof( unsigned int ) );
 				if ( ! l_occur )
 				{
 					fprintf( stderr, " Error: the local occurrences vector could not be allocated!\n");
@@ -653,11 +713,11 @@ int main ( int argc, char **argv )
 						continue;
 					}
 
-					if ( nb_boxes == 0 )
+					if ( nb_gaps == 0 )
 					{
 						if ( d == 0 )
 						{
-							if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
+							if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, sw, l_occur, l_all_occur ) )
 							{
 								fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
 								return ( 1 );
@@ -665,7 +725,7 @@ int main ( int argc, char **argv )
 						}	
 						else
 						{
-							if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
+							if ( ! motifs_extraction_ed ( seqs[i], m, seqs[j], n, sw, l_occur, l_all_occur ) )
 							{
 								fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
 								exit ( 1 );
@@ -676,7 +736,7 @@ int main ( int argc, char **argv )
 					{
 						if ( d == 0 )
 						{
-							if ( ! structured_motifs_extraction_hd ( seqs[i], m, seqs[j], n, l, e, bgaps, blens, berrs, nb_boxes, l_occur, l_all_occur ) )
+							if ( ! structured_motifs_extraction_hd ( seqs[i], m, seqs[j], n, sw, l_occur, l_all_occur ) )
 							{
 								fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
 								return ( 1 );
@@ -684,7 +744,7 @@ int main ( int argc, char **argv )
 						}	
 						else
 						{
-							if ( ! structured_motifs_extraction_ed ( seqs[i], m, seqs[j], n, l, e, bgaps, blens, berrs, nb_boxes, l_occur, l_all_occur ) )
+							if ( ! structured_motifs_extraction_ed ( seqs[i], m, seqs[j], n, sw, l_occur, l_all_occur ) )
 							{
 								fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
 								exit ( 1 );
@@ -695,8 +755,8 @@ int main ( int argc, char **argv )
 				}
 
 				/* Collective communication */
-				MPI_Reduce ( l_all_occur, g_all_occur[i], m, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
-				MPI_Reduce ( l_occur, g_occur[i], m, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
+				MPI_Reduce ( l_all_occur, g_all_occur[i], m * nb_structs, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
+				MPI_Reduce ( l_occur, g_occur[i], m * nb_structs, MPI_UNSIGNED, MPI_SUM, 0, MPI_COMM_WORLD );
 				free ( l_all_occur );
 				free ( l_occur );
 			}
@@ -719,7 +779,7 @@ int main ( int argc, char **argv )
 		#ifdef _USE_OMP
 		P = sw . t;
 		#endif
-			if ( nb_boxes == 0 )
+			if ( nb_gaps == 0 )
 			{
 				if ( background_filename == NULL )
 					write_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
@@ -857,7 +917,7 @@ int main ( int argc, char **argv )
 
 				if ( d == 0 )
 				{
-					if ( ! motifs_extraction_hd ( fseqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
+					if ( ! motifs_extraction_hd ( fseqs[i], m, seqs[j], n, sw, g_occur[i], g_all_occur[i] ) )
         				{
               					fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
               					exit ( 1 );
@@ -865,7 +925,7 @@ int main ( int argc, char **argv )
         			}	
 				else
 				{
-					if ( ! motifs_extraction_ed ( fseqs[i], m, seqs[j], n, l, e, g_occur[i], g_all_occur[i] ) )
+					if ( ! motifs_extraction_ed ( fseqs[i], m, seqs[j], n, sw, g_occur[i], g_all_occur[i] ) )
         				{
               					fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
               					exit ( 1 );
@@ -945,7 +1005,7 @@ int main ( int argc, char **argv )
 
 				if ( d == 0 )
 				{
-					if ( ! motifs_extraction_hd ( fseqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
+					if ( ! motifs_extraction_hd ( fseqs[i], m, seqs[j], n, sw, l_occur, l_all_occur ) )
         				{
               					fprintf( stderr, " Error: motifs_extraction_hd() failed!\n");                        
               					return ( 1 );
@@ -953,7 +1013,7 @@ int main ( int argc, char **argv )
         			}	
 				else
 				{
-					if ( ! motifs_extraction_ed ( fseqs[i], m, seqs[j], n, l, e, l_occur, l_all_occur ) )
+					if ( ! motifs_extraction_ed ( fseqs[i], m, seqs[j], n, sw, l_occur, l_all_occur ) )
         				{
               					fprintf( stderr, " Error: motifs_extraction_ed() failed!\n");                        
               					exit ( 1 );
@@ -1016,12 +1076,16 @@ int main ( int argc, char **argv )
 	if ( unmatched_in_filename )  free ( sw . unmatched_in_filename );
 	if ( unmatched_out_filename ) free ( sw . unmatched_out_filename );
 	if ( smile_out_filename )    free ( sw . smile_out_filename );
-	if ( nb_boxes )
+	if ( nb_gaps )
 	{ 
 		free ( sw . boxes_in_filename );
-		free ( sw . bgaps );
+		free ( sw . bgaps_min );
+		free ( sw . bgaps_max );
 		free ( sw . blens );
 		free ( sw . berrs );
+		for ( i = 0 ; i < nb_structs; i++ ) 
+			free ( S[i] );
+		free ( S );
 	}
 
 	#ifdef _USE_MPI

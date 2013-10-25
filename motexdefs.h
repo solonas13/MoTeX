@@ -45,10 +45,14 @@ struct TSwitch
    unsigned int		t;
    unsigned int		L;
    unsigned int         total_length;
+   unsigned int         nb_gaps;
    unsigned int         nb_boxes;
-   unsigned int       * bgaps;
+   unsigned int         nb_structs;
+   unsigned int       * bgaps_min;
+   unsigned int       * bgaps_max;
    unsigned int       * blens;
    unsigned int       * berrs;
+   unsigned int	     ** S;
  };
 
 struct Tdata
@@ -62,6 +66,7 @@ struct Tdata
 int decode_switches ( int argc, char * argv [], struct TSwitch * sw );
 void usage ( void );
 
+void recurse( unsigned int x, unsigned int xi, unsigned int* y, unsigned int ** A, unsigned int * newx, unsigned int * temp_inner, unsigned int ** B ); 
 inline unsigned int bitminmax ( unsigned int a, unsigned int b, unsigned int c );
 inline unsigned int shift ( unsigned int a );
 inline unsigned int shiftc ( unsigned int a, unsigned int x );
@@ -78,7 +83,6 @@ void fillTable( long double * a, int n );
 long double binomial_cdf_less_than( int x, int N, long double p, long double * LUT );
 #endif
 
-
 #ifdef _USE_MPI
 inline unsigned int i_coord ( unsigned int step, unsigned int n, unsigned int m, unsigned int x );
 inline unsigned int j_coord ( unsigned int step, unsigned int n, unsigned int m, unsigned int x );
@@ -89,14 +93,14 @@ inline unsigned int elements( unsigned int step, unsigned int n, unsigned int m 
 inline void allocation ( int rank, int P, unsigned int n, unsigned int m, unsigned int step, int* first, int* last );
 inline void vec_allocation ( int rank, int P, unsigned int m, int *first, int* last, int* count );
 inline void communication ( int P, int rank, unsigned int step, unsigned int n, unsigned int m, unsigned int* D, int first, int last, int first_n, int last_n );
-unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int*  v, int rank, int P );
-unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v, int rank, int P );
+unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int*  v, int rank, int P );
+unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v, int rank, int P );
 #endif
 
-unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v );
-unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * u, unsigned int * v );
-unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * bgaps, unsigned int * blens, unsigned int * berrs, unsigned int nb_boxes, unsigned int * u, unsigned int * v );
-unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, unsigned int l, unsigned int e, unsigned int * bgaps, unsigned int * blens, unsigned int * berrs, unsigned int nb_boxes, unsigned int * u, unsigned int * v );
+unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v );
+unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v );
+unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v );
+unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v );
 
 unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
 unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
@@ -105,3 +109,5 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
 unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char const ** fseqs, unsigned int ** u, unsigned int ** v, double exectime, int P, unsigned int num_seqs, struct Tdata * fdata );
 double gettime( void );
+
+int gindex;
