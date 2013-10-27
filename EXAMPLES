@@ -48,7 +48,7 @@ significance:
 The first line of the file `./data/boxes.txt' is an integer number representing the total number 
 of spacers of the structured motif. Every succeeding four lines are four integer numbers representing 
 the min and the max length of the corresponding spacer, the length of the box, and the maximum number 
-of errors allowed in the corresponding box, respectively.
+of errors allowed in the succeeding box, respectively.
 
 
 3. Assess their statistical significance
