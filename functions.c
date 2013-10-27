@@ -426,7 +426,7 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 
 				if ( i == 0 )
 					D0[x] = ( 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
-				else if ( j <= l )
+				else if ( j <= sw . l )
 					D0[x] = bitminmax ( shift ( D2[up] ) | 1, shift( D2[lft] ) | 1, shift( D1[ul] ) | delta ( t[i - 1], p[j - 1] ) );
 				else
 					D0[x] = bitminmax ( shiftc( D2[lft] , y ) | 1, shift ( D2[up] ) | 1, shiftc ( D1[ul], y ) | delta ( t[i - 1], p[j - 1] ) );
@@ -456,7 +456,7 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
  
 				if( i == 0 )
 					D2[x] = ( 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
-				else if ( j <= l )
+				else if ( j <= sw . l )
 					D2[x] = bitminmax ( shift ( D1[up] ) | 1, shift( D1[lft] ) | 1, shift( D0[ul] ) | delta ( t[i - 1], p[j - 1] ) );
 				else
 					D2[x] = bitminmax ( shiftc( D1[lft] , y ) | 1, shift ( D1[up] ) | 1, shiftc ( D0[ul], y ) | delta ( t[i - 1], p[j - 1] ) );
