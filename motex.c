@@ -385,7 +385,7 @@ int main ( int argc, char **argv )
 	{
 		unsigned int ** A;
 		A = ( unsigned int ** ) malloc ( ( nb_gaps ) * sizeof ( unsigned int * ) );
-		int * y = malloc( ( nb_gaps ) * sizeof ( unsigned int * ) );
+		unsigned int * y = malloc( ( nb_gaps ) * sizeof ( unsigned int * ) );
 
 		nb_structs = 1;	
 		for ( i = 0; i < nb_gaps; i++ )

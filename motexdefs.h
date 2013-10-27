@@ -66,7 +66,7 @@ struct Tdata
 int decode_switches ( int argc, char * argv [], struct TSwitch * sw );
 void usage ( void );
 
-void recurse( unsigned int x, unsigned int xi, unsigned int* y, unsigned int ** A, unsigned int * newx, unsigned int * temp_inner, unsigned int ** B ); 
+void recurse( unsigned int x, unsigned int xi, unsigned int * y, unsigned int ** A, unsigned int * newx, unsigned int * temp_inner, unsigned int ** B ); 
 inline unsigned int bitminmax ( unsigned int a, unsigned int b, unsigned int c );
 inline unsigned int shift ( unsigned int a );
 inline unsigned int shiftc ( unsigned int a, unsigned int x );

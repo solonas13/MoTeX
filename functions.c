@@ -735,7 +735,7 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 /*
 A recursive functions that creates the cartesian product of multiple arrays
 */
-void recurse( unsigned int x, unsigned int xi, unsigned int* y, unsigned int ** A, unsigned int * newx, unsigned int * temp_inner, unsigned int ** B ) 
+void recurse( unsigned int x, unsigned int xi, unsigned int * y, unsigned int ** A, unsigned int * newx, unsigned int * temp_inner, unsigned int ** B ) 
 {
 	unsigned int i;	
 	if ( xi < x ) 
