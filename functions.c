@@ -226,7 +226,7 @@ inline void communication ( int P, int rank, unsigned int step, unsigned int n, 
 }
 
 /*
-the dynamic programming algorithm under the hamming distance model for MPI
+the dynamic programming algorithm under the hamming distance model for one (or a few) very large sequence(s) for MPI
 */
 unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v, int rank, int P )
 {
@@ -366,7 +366,7 @@ unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const 
 }
 
 /*
-the dynamic programming algorithm under the edit distance model for MPI
+the dynamic programming algorithm under the hamming distance model for one (or a few) very large sequence(s) for MPI
 */
 unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v, int rank, int P )
 {
