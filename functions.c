@@ -849,7 +849,7 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
 }
 
 /*
-the dynamic programming algorithm under the hamming distance model for structured motifs extraction
+the dynamic programming algorithm under the edit distance model for structured motifs extraction
 */
 unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v )
 {

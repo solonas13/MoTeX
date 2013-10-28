@@ -110,4 +110,3 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char const ** fseqs, unsigned int ** u, unsigned int ** v, double exectime, int P, unsigned int num_seqs, struct Tdata * fdata );
 double gettime( void );
 
-int gindex;
