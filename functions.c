@@ -927,7 +927,6 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 
 	for ( i = 0; i < n + 1; i++ ) 
 	{
-		if ( i < sw . l ) continue;
 		for( j = 0; j < m + 1 ; j++ )			
 		{
 			if ( j < sw . l  ) continue;
