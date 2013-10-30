@@ -30,6 +30,8 @@ significance:
    cd SMILE
    ./smile ../data/dnc_subtilis_330-30.seq ../single.smile single.smile.output 100 2
 
+Notice that the highest scoring motifs in file `single.smile.output' (CCTCCT, CCCTCC, GGAGGG, ...) are identical to the ones 
+produced by RISOTTO using the same input parameters.
 
 Example 3.
 ----------
