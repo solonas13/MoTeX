@@ -56,6 +56,7 @@ int main ( int argc, char **argv )
         char const ** 	seqs    = NULL; 	// the sequences in memory
 	unsigned int 	num_seqs = 0;		// the total number of sequences
 	unsigned int 	total_length;		// the total length of the sequences
+	unsigned int	total_mot_length;   // the min total length of the motif
 
 	unsigned int 	nb_boxes;		// the number of boxes
 	unsigned int 	nb_gaps;		// the number of gaps
@@ -215,9 +216,16 @@ int main ( int argc, char **argv )
 			else
 				while ( ( c = fgetc( in_fd ) ) != EOF && c != '\n' );
 
-			num_seqs++;
+			unsigned int seq_len = 0;
+
         		while ( ( c = fgetc( in_fd ) ) != EOF && c != '>' )
         		{
+				if( seq_len == 0 && c == '\n' ) 
+				{
+                			fprintf ( stderr, " Omitting empty sequence in file %s!\n", input_filename );
+					c = fgetc( in_fd );
+					break;
+				}
 				if( c == '\n' ) continue;
 
 				c = toupper( c );
@@ -229,7 +237,10 @@ int main ( int argc, char **argv )
                 		}
 
 				if( strchr ( alphabet, c ) )
+				{
                 			t[ len++ ] = c;
+					seq_len++;
+				}
 				else
         			{
                 			fprintf ( stderr, " Error: input file %s contains an unexpected character!\n", input_filename );
@@ -237,7 +248,17 @@ int main ( int argc, char **argv )
         			}
 
         		}
-                	t[ len++ ] = DEL;
+
+			if( seq_len != 0 )
+			{
+                		if ( len >= max_alloc )
+                		{
+                        		t = ( char * ) realloc ( t,   ( max_alloc + ALLOC_SIZE ) * sizeof ( char ) ); 
+                       	 		max_alloc += ALLOC_SIZE;
+                		}
+                		t[ len++ ] = DEL;
+				num_seqs++;
+			}
 
 		} while( c != EOF );
 
@@ -268,6 +289,7 @@ int main ( int argc, char **argv )
 
 			nb_boxes = nb_gaps + 1;
 
+			total_mot_length = l;
 			bgaps_min = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
 			bgaps_max = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
 			blens = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
@@ -280,6 +302,7 @@ int main ( int argc, char **argv )
 					fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
 					return ( 1 ); 
 				}
+				total_mot_length += bgaps_min[i];
 				if ( fscanf ( boxes_in_fd, "%d", &bgaps_max[i] ) != 1 )
 				{
 					fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
@@ -290,6 +313,7 @@ int main ( int argc, char **argv )
 					fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
 					return ( 1 ); 
 				}
+				total_mot_length += blens[i];
 				if ( fscanf ( boxes_in_fd, "%d", &berrs[i] ) != 1 )
 				{
 					fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
@@ -307,6 +331,7 @@ int main ( int argc, char **argv )
 		{
 			nb_gaps = 0;
 			nb_boxes = 1;
+			total_mot_length = l;
 		}
 
 
@@ -316,6 +341,7 @@ int main ( int argc, char **argv )
 		MPI_Bcast ( &nb_gaps, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the total number of boxes
     		MPI_Bcast ( &t[0], total_length + 1, MPI_CHAR, 0, MPI_COMM_WORLD); 	//send the actual (concatenated) text
 		MPI_Bcast ( &num_seqs, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send num_seqs
+		MPI_Bcast ( &total_mot_length, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send num_seqs
 		MPI_Bcast ( &bgaps_min[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the boxes structure
 		MPI_Bcast ( &bgaps_max[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//send the boxes structure
 		MPI_Bcast ( &blens[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//
@@ -344,6 +370,7 @@ int main ( int argc, char **argv )
 		/* receive the data into t */
     		MPI_Bcast ( &t[0], total_length + 1, MPI_CHAR, 0, MPI_COMM_WORLD ); 	//receive the actual text
 		MPI_Bcast ( &num_seqs, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive num_seqs
+		MPI_Bcast ( &total_mot_length, 1, MPI_INT, 0, MPI_COMM_WORLD ); 		//send num_seqs
 		MPI_Bcast ( &bgaps_min[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the boxes structure
 		MPI_Bcast ( &bgaps_max[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//receive the boxes structure
 		MPI_Bcast ( &blens[0], nb_gaps, MPI_INT, 0, MPI_COMM_WORLD ); 		//
@@ -377,7 +404,7 @@ int main ( int argc, char **argv )
 		
 		free ( seq );
 	}
-	free ( t );
+	free ( t ); 
 
 	sw . total_length = total_length;
 
@@ -477,15 +504,15 @@ int main ( int argc, char **argv )
 				unsigned int n = strlen ( seqs[j] );
 
 				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
-				if ( l > n || l > m )
+				if ( total_mot_length > n || total_mot_length > m )
 				{
-					fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-					fprintf( stderr, " Error: omitting sequence %d!\n", j );
+					fprintf ( stderr, " Omitting short sequence in file %s!\n", input_filename );
 					continue;
 				}
 
 				if ( nb_gaps == 0 )
 				{
+
 					if ( d == 0 )
 					{
 						if ( ! motifs_extraction_hd ( seqs[i], m, seqs[j], n, sw, g_occur[i], g_all_occur[i] ) )
@@ -606,10 +633,9 @@ int main ( int argc, char **argv )
 					unsigned int n = strlen ( seqs[j] );
 
 					/* check if the length of the sequence satisfies the restrictions set by the algorithm */
-					if ( l > n || l > m )
+					if ( total_mot_length > n || total_mot_length > m )
 					{
-						fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-						fprintf( stderr, " Error: omitting sequence %d!\n", j );
+						fprintf ( stderr, " Omitting short sequence in file %s!\n", input_filename );
 						continue;
 					}
 
@@ -706,10 +732,9 @@ int main ( int argc, char **argv )
 					unsigned int n = strlen ( seqs[j] );
 
 					/* check if the length of the sequence satisfies the restrictions set by the algorithm */
-					if ( l > n || l > m )
+					if ( total_mot_length > n || total_mot_length > m )
 					{
-						fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-						fprintf( stderr, " Error: omitting sequence %d!\n", j );
+						fprintf ( stderr, " Omitting short sequence in file %s!\n", input_filename );
 						continue;
 					}
 
@@ -908,12 +933,11 @@ int main ( int argc, char **argv )
 				unsigned int n = strlen ( seqs[j] );
 
 				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
-				if ( l > n )
+				if ( total_mot_length > n )
 				{
-					fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-					fprintf( stderr, " Error: omitting sequence %d!\n", j );
+					fprintf ( stderr, " Omitting short sequence in file %s!\n", input_filename );
 					continue;
-        			}
+				}
 
 				if ( d == 0 )
 				{
@@ -996,12 +1020,11 @@ int main ( int argc, char **argv )
 				unsigned int n = strlen ( seqs[j] );
 
 				/* check if the length of the sequence satisfies the restrictions set by the algorithm */
-				if ( l > n )
+				if ( total_mot_length > n )
 				{
-					fprintf( stderr, " Error: the fixed-length of motifs must be less or equal to the length of the sequences!\n");
-					fprintf( stderr, " Error: omitting sequence %d!\n", j );
+					fprintf ( stderr, " Omitting short sequence in file %s!\n", input_filename );
 					continue;
-        			}
+				}
 
 				if ( d == 0 )
 				{
