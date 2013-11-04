@@ -37,7 +37,6 @@ int main ( int argc, char **argv )
 	struct TSwitch  sw;
 
 	unsigned int 	l;			// the length for motifs
-	unsigned int 	q;			// the quorum
 	unsigned int 	e;			// the max number of errors
 	unsigned int 	d;			// the distance
 	char *          alphabet;		// the alphabet
@@ -106,7 +105,12 @@ int main ( int argc, char **argv )
          		fprintf ( stderr, " Error: quorum argument q (%%) should be less or equal to 100!\n" );
          		return ( 1 );
        		}
-		else   q = sw . q;	
+
+		if ( sw . Q > 100 )
+       		{
+         		fprintf ( stderr, " Error: max-quorum argument Q (%%) should be less or equal to 100!\n" );
+         		return ( 1 );
+       		}
 
 		if ( sw . l > sizeof( unsigned int ) * CHAR_BIT - 1 )
                 {

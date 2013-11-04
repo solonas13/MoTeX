@@ -1113,23 +1113,24 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
                 for ( j = sw . l - 1; j < m; j ++ )
 		{
                         if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) >= sw . q && v[i][j] >= sw . n )
-                        {
-                        	AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
-				for ( k = 0; k < sw. l; k ++ )
-					ACmotif[k] = ( AlphaChar )seqs[i][k + j - ( sw . l ) + 1];
-				ACmotif [ k ] = 0;
-				if ( trie_retrieve ( trie, ACmotif, NULL ) != TRUE )
-                                {
-					trie_store ( trie, ACmotif, 0 );
+                        	if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) <= sw . Q && v[i][j] <= sw . N )
+				{
+					AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
+					for ( k = 0; k < sw. l; k ++ )
+						ACmotif[k] = ( AlphaChar )seqs[i][k + j - ( sw . l ) + 1];
+					ACmotif [ k ] = 0;
+					if ( trie_retrieve ( trie, ACmotif, NULL ) != TRUE )
+					{
+						trie_store ( trie, ACmotif, 0 );
 
-                        		char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
-					memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
-                                        fprintf ( out_fd, "%s %d %d %lf %d\n", motif, u[i][j], num_seqs, (  ( ( double ) u[i][j] / num_seqs ) ), v[i][j] );
-                                        valid ++;
-                        		free ( motif );
-                                }
-                        	free ( ACmotif );
-                        }
+						char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+						memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
+						fprintf ( out_fd, "%s %d %d %lf %d\n", motif, u[i][j], num_seqs, (  ( ( double ) u[i][j] / num_seqs ) ), v[i][j] );
+						valid ++;
+						free ( motif );
+					}
+					free ( ACmotif );
+				}
 		}
 	}
 
@@ -1205,59 +1206,60 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
                 	for ( k = 0; k < sw . nb_structs; k++ )
 			{
 				if (  (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100 ) >= sw . q && v[i][k * m + j] >= sw . n )
-				{
-					AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
-					char      * motif   = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
-					unsigned int ell;
-					unsigned int offset;
-					unsigned int index = 0;
-					unsigned int jj = j - ( sw . l  ) + 1;
-
-					for ( b = 0; b < sw . nb_boxes; b ++ ) 
+					if (  (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100 ) <= sw . Q && v[i][k * m + j] <= sw . N )
 					{
-						/* Extract the structured motif from the sequences */
-						if ( b == 0 )	
+						AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
+						char      * motif   = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
+						unsigned int ell;
+						unsigned int offset;
+						unsigned int index = 0;
+						unsigned int jj = j - ( sw . l  ) + 1;
+
+						for ( b = 0; b < sw . nb_boxes; b ++ ) 
 						{
-							offset = 0;
-							ell = sw . l;
-							for ( l = 0; l < ell; l++, index++ )
+							/* Extract the structured motif from the sequences */
+							if ( b == 0 )	
 							{
-								ACmotif[index] = ( AlphaChar ) seqs[i][jj + l];
-								motif[index]   = seqs[i][jj + l];
-							}
-							ACmotif [ index ] = '_'; 
-							motif[index] = '_';
-							index ++;
-						}	
-						else
-						{
-							offset += sw . S[k][b - 1] + ell;
-							ell = sw . blens[b - 1];
-							for ( l = 0; l < ell; l++, index++ )
+								offset = 0;
+								ell = sw . l;
+								for ( l = 0; l < ell; l++, index++ )
+								{
+									ACmotif[index] = ( AlphaChar ) seqs[i][jj + l];
+									motif[index]   = seqs[i][jj + l];
+								}
+								ACmotif [ index ] = '_'; 
+								motif[index] = '_';
+								index ++;
+							}	
+							else
 							{
-								ACmotif[index] = ( AlphaChar ) seqs[i][jj + offset + l];
-								motif[index]   = seqs[i][jj + offset + l];
+								offset += sw . S[k][b - 1] + ell;
+								ell = sw . blens[b - 1];
+								for ( l = 0; l < ell; l++, index++ )
+								{
+									ACmotif[index] = ( AlphaChar ) seqs[i][jj + offset + l];
+									motif[index]   = seqs[i][jj + offset + l];
+								}
+								ACmotif [ index ] = '_'; 
+								motif[index] = '_';
+								index ++;
 							}
-							ACmotif [ index ] = '_'; 
-							motif[index] = '_';
-							index ++;
 						}
-					}
 
-					index--;
-					ACmotif [ index ] = 0;
-					motif [ index ] = 0;
+						index--;
+						ACmotif [ index ] = 0;
+						motif [ index ] = 0;
 
-					/* Insert the extracted structured motif into the trie */
-					if ( trie_retrieve ( trie, ACmotif, NULL ) != TRUE )
-					{
-						trie_store ( trie, ACmotif, 0 );
-						fprintf ( out_fd, "%s %d %d %lf %d\n", motif, u[i][k * m + j], num_seqs, (  ( ( double ) u[i][k * m + j] / num_seqs ) ), v[i][k * m + j] );
-						valid ++;
+						/* Insert the extracted structured motif into the trie */
+						if ( trie_retrieve ( trie, ACmotif, NULL ) != TRUE )
+						{
+							trie_store ( trie, ACmotif, 0 );
+							fprintf ( out_fd, "%s %d %d %lf %d\n", motif, u[i][k * m + j], num_seqs, (  ( ( double ) u[i][k * m + j] / num_seqs ) ), v[i][k * m + j] );
+							valid ++;
+						}
+						free ( ACmotif );
+						free ( motif );
 					}
-					free ( ACmotif );
-					free ( motif );
-				}
                         }
 		}
 	}
@@ -1347,42 +1349,43 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
                 for ( j = sw . l - 1; j < m; j ++ )
 		{
                         if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) >= sw . q && v[i][j] >= sw . n )
-                        {
-                        	AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
-				for ( k = 0; k < sw. l; k ++ )
-					ACmotif[k] = ( AlphaChar )seqs[i][k + j - ( sw . l ) + 1];
-				ACmotif [ k ] = 0;
-				if ( trie_retrieve ( trie, ACmotif, NULL ) != TRUE )
-                                {
-					trie_store ( trie, ACmotif, 0 );
-
-                        		char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
-					memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
-
-                        		char      * id   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
-
-					//TODO: this should be implemented in a clearer way.
-					unsigned int ii, jj;
-					for ( ii = 0; ii < sw . l; ii++ )
+                        	if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) <= sw . Q && v[i][j] <= sw . N )
+				{
+					AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
+					for ( k = 0; k < sw. l; k ++ )
+						ACmotif[k] = ( AlphaChar )seqs[i][k + j - ( sw . l ) + 1];
+					ACmotif [ k ] = 0;
+					if ( trie_retrieve ( trie, ACmotif, NULL ) != TRUE )
 					{
-						for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
-							if ( motif[ii] == alphabet_str[jj] ) break;
+						trie_store ( trie, ACmotif, 0 );
 
-                        			char * s   = calloc ( ( sw . l ) , sizeof( char ) );
-						sprintf( s, "%d", jj); 
-						id[ii] = s[0] ;
-						free ( s );
+						char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+						memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
+
+						char      * id   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+
+						//TODO: this should be implemented in a clearer way.
+						unsigned int ii, jj;
+						for ( ii = 0; ii < sw . l; ii++ )
+						{
+							for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
+								if ( motif[ii] == alphabet_str[jj] ) break;
+
+							char * s   = calloc ( ( sw . l ) , sizeof( char ) );
+							sprintf( s, "%d", jj); 
+							id[ii] = s[0] ;
+							free ( s );
+						}
+						id[sw . l] = '\0';
+
+						fprintf ( out_fd, "%s %s %d\t%d\n", motif, id, u[i][j], v[i][j] );
+
+						valid ++;
+						free ( motif );
+						free ( id );
 					}
-					id[sw . l] = '\0';
-
-                                        fprintf ( out_fd, "%s %s %d\t%d\n", motif, id, u[i][j], v[i][j] );
-
-                                        valid ++;
-                        		free ( motif );
-                        		free ( id );
-                                }
-                        	free ( ACmotif );
-                        }
+					free ( ACmotif );
+				}
 		}
 	}
 
@@ -1515,84 +1518,85 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 			for ( k = 0; k < sw . nb_structs; k ++ )
 			{
 				if (  (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100 ) >= sw . q && v[i][k * m + j] >= sw . n )
-				{
-					AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
-					char      * motif   = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
-					unsigned int ell;
-					unsigned int offset;
-					unsigned int index = 0;
-					unsigned int jj = j - ( sw . l  ) + 1;
-
-					for ( b = 0; b < sw . nb_boxes; b ++ ) 
+					if (  (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100 ) <= sw . Q && v[i][k * m + j] <= sw . N )
 					{
-						/* Extract the structured motif from the sequences */
-						if ( b == 0 )	
+						AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
+						char      * motif   = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
+						unsigned int ell;
+						unsigned int offset;
+						unsigned int index = 0;
+						unsigned int jj = j - ( sw . l  ) + 1;
+
+						for ( b = 0; b < sw . nb_boxes; b ++ ) 
 						{
-							offset = 0;
-							ell = sw . l;
-							for ( l = 0; l < ell; l++, index++ )
+							/* Extract the structured motif from the sequences */
+							if ( b == 0 )	
 							{
-								ACmotif[index] = ( AlphaChar ) seqs[i][jj + l];
-								motif[index]   = seqs[i][jj + l];
-							}
-							ACmotif [ index ] = '_'; 
-							motif[index] = '_';
-							index ++;
-						}	
-						else
-						{
-							offset += sw . S[k][b - 1] + ell;
-							ell = sw . blens[b - 1];
-							for ( l = 0; l < ell; l++, index++ )
-							{
-								ACmotif[index] = ( AlphaChar ) seqs[i][jj + offset + l];
-								motif[index]   = seqs[i][jj + offset + l];
-							}
-							ACmotif [ index ] = '_'; 
-							motif[index] = '_';
-							index ++;
-						}
-					}
-
-					index--;
-					ACmotif [ index ] = 0;
-					motif [ index ] = 0;
-
-					/* Insert the extracted structured motif into the trie */
-					if ( trie_retrieve ( trie, ACmotif, NULL ) != TRUE )
-					{
-						trie_store ( trie, ACmotif, 0 );
-
-						char      * id   = calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
-
-						//TODO: this should be implemented in a clearer way.
-						unsigned int ii, jj;
-						for ( ii = 0; ii < total_length_sm + sw . nb_gaps; ii++ )
-						{
-							for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
-								if ( motif[ii] == alphabet_str[jj] ) break;
-
-							char * s   = calloc ( strlen ( alphabet_str ) , sizeof( char ) );
-							if ( jj < strlen ( alphabet_str ) )	
-							{
-								sprintf( s, "%d", jj);
-								id[ii] = s[0] ;
-							}
+								offset = 0;
+								ell = sw . l;
+								for ( l = 0; l < ell; l++, index++ )
+								{
+									ACmotif[index] = ( AlphaChar ) seqs[i][jj + l];
+									motif[index]   = seqs[i][jj + l];
+								}
+								ACmotif [ index ] = '_'; 
+								motif[index] = '_';
+								index ++;
+							}	
 							else
-								id[ii] = '-';
-								 
-							free ( s );
+							{
+								offset += sw . S[k][b - 1] + ell;
+								ell = sw . blens[b - 1];
+								for ( l = 0; l < ell; l++, index++ )
+								{
+									ACmotif[index] = ( AlphaChar ) seqs[i][jj + offset + l];
+									motif[index]   = seqs[i][jj + offset + l];
+								}
+								ACmotif [ index ] = '_'; 
+								motif[index] = '_';
+								index ++;
+							}
 						}
-						id[total_length_sm + sw . nb_gaps] = '\0';
 
-						fprintf ( out_fd, "%s %s %d\t%d\n", motif, id, u[i][k * m + j], v[i][k * m + j] );
+						index--;
+						ACmotif [ index ] = 0;
+						motif [ index ] = 0;
 
-						free ( id );
-						valid ++;
+						/* Insert the extracted structured motif into the trie */
+						if ( trie_retrieve ( trie, ACmotif, NULL ) != TRUE )
+						{
+							trie_store ( trie, ACmotif, 0 );
+
+							char      * id   = calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
+
+							//TODO: this should be implemented in a clearer way.
+							unsigned int ii, jj;
+							for ( ii = 0; ii < total_length_sm + sw . nb_gaps; ii++ )
+							{
+								for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
+									if ( motif[ii] == alphabet_str[jj] ) break;
+
+								char * s   = calloc ( strlen ( alphabet_str ) , sizeof( char ) );
+								if ( jj < strlen ( alphabet_str ) )	
+								{
+									sprintf( s, "%d", jj);
+									id[ii] = s[0] ;
+								}
+								else
+									id[ii] = '-';
+									 
+								free ( s );
+							}
+							id[total_length_sm + sw . nb_gaps] = '\0';
+
+							fprintf ( out_fd, "%s %s %d\t%d\n", motif, id, u[i][k * m + j], v[i][k * m + j] );
+
+							free ( id );
+							valid ++;
+						}
+						free ( ACmotif );
+						free ( motif );
 					}
-					free ( ACmotif );
-					free ( motif );
-				}
                         }
 		}
 	}
@@ -1776,116 +1780,117 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
                 for ( j = sw . l - 1; j < m; j ++ )
 		{
                         if (  ( ( double ) u[i][j] / num_seqs ) * 100  >= sw . q && v[i][j] >= sw . n )
-                        {
-                        	AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
-                        	char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
-                                memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
-				for ( k = 0; k < sw. l; k ++ )
-					ACmotif[k] = ( AlphaChar )seqs[i][k + j - ( sw . l ) + 1];
-				ACmotif [ k ] = 0;
-				TrieData data;
-				if ( trie_retrieve ( trie, ACmotif, &data ) != TRUE ) 	//it does not exist as bg motif; add it as a fg motif
-                                {
-					data = -1;
-					trie_store ( trie, ACmotif, data );
-									
-#ifdef _USE_MPFR
-				mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int)u[i][j], (unsigned long int)num_seqs, (long double)background_quorum_size/background_size, mpfr_factLUT);
-				
-				mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
-				
-				fprintf ( out_fd, "%s %d %d %lf %d %d %d ", 
-					  motif, 
-					  u[i][j],
-					  num_seqs,
-					  (double) u[i][j]/num_seqs,
-					  v[i][j],
-					  0,
-					  0
-					  );
-				
-				mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
-				
-				fprintf( out_fd, "\n");
-				
-#else
-					bin_cdf = binomial_cdf_less_than (u[i][j], num_seqs, ( long double ) background_quorum_size/background_size, log_factLUT );
-					
-                                        fprintf ( out_fd, "%s %d %d %lf %d %d %d %Le\n", 
-							motif, 
-							u[i][j], 
-							num_seqs, 
-							(  ( ( double ) u[i][j] / num_seqs ) ), 
-							v[i][j], 
-							0, 
-							0, 
-							1. - bin_cdf  );
-					
-#endif
-					
-
-                                        fprintf ( un_out_fd, "%s %d %d %lf %d\n", 	//write it out as an unmatched fg motif
-							motif, 
-							u[i][j], 
-							num_seqs, 
-							(  ( ( double ) u[i][j] / num_seqs ) ), 
-							v[i][j] );
-					
-                                        uvalid ++;
-                                }
-				else 							//it already exists 
+                        	if (  ( ( double ) u[i][j] / num_seqs ) * 100  <= sw . Q && v[i][j] <= sw . N )
 				{
-					if ( data != -1 )				//as a bg motif; add it as a fg motif matching this bg motif
-					  {
-					    
-					    
-					    
-#ifdef _USE_MPFR
-					    mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int)u[i][j], (unsigned long int) num_seqs, ( long double ) bdata[ data ] . r , mpfr_factLUT);
-					    
-					    mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
-					    
-					    fprintf ( out_fd, "%s %d %d %lf %d %lf %d ", 
-						      motif, 
-						      u[i][j],
-						      num_seqs,
-						      (double) u[i][j]/num_seqs,
-						      v[i][j],						      
-						      bdata[data] . r,
-						      bdata[data] . v
-						      );
-					    
-					    mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
-					    fprintf(out_fd, "\n");
-					    
-#else
-					    
-					  
-
-
-						bin_cdf = binomial_cdf_less_than ( u[i][j], num_seqs, bdata[ data ].u, log_factLUT);
-					  
-
-					  	fprintf ( out_fd, "%s %d %d %lf %d %lf %d %Le\n", 
+					AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
+					char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+					memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
+					for ( k = 0; k < sw. l; k ++ )
+						ACmotif[k] = ( AlphaChar )seqs[i][k + j - ( sw . l ) + 1];
+					ACmotif [ k ] = 0;
+					TrieData data;
+					if ( trie_retrieve ( trie, ACmotif, &data ) != TRUE ) 	//it does not exist as bg motif; add it as a fg motif
+					{
+						data = -1;
+						trie_store ( trie, ACmotif, data );
+										
+	#ifdef _USE_MPFR
+					mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int)u[i][j], (unsigned long int)num_seqs, (long double)background_quorum_size/background_size, mpfr_factLUT);
+					
+					mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
+					
+					fprintf ( out_fd, "%s %d %d %lf %d %d %d ", 
+						  motif, 
+						  u[i][j],
+						  num_seqs,
+						  (double) u[i][j]/num_seqs,
+						  v[i][j],
+						  0,
+						  0
+						  );
+					
+					mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
+					
+					fprintf( out_fd, "\n");
+					
+	#else
+						bin_cdf = binomial_cdf_less_than (u[i][j], num_seqs, ( long double ) background_quorum_size/background_size, log_factLUT );
+						
+						fprintf ( out_fd, "%s %d %d %lf %d %d %d %Le\n", 
 								motif, 
 								u[i][j], 
-								num_seqs,
-						    		(  ( ( double ) u[i][j] / num_seqs ) ), 
-						    		v[i][j], 
-						    		bdata[ data ]  . r, 
-						    		bdata [ data ] . v,
-						    		1. - bin_cdf
-						    );
-#endif
-					  	data = -1;
-						trie_store ( trie, ACmotif, data );
-                                        	pvalid ++;
+								num_seqs, 
+								(  ( ( double ) u[i][j] / num_seqs ) ), 
+								v[i][j], 
+								0, 
+								0, 
+								1. - bin_cdf  );
+						
+	#endif
+						
+
+						fprintf ( un_out_fd, "%s %d %d %lf %d\n", 	//write it out as an unmatched fg motif
+								motif, 
+								u[i][j], 
+								num_seqs, 
+								(  ( ( double ) u[i][j] / num_seqs ) ), 
+								v[i][j] );
+						
+						uvalid ++;
 					}
-					//as a fg motif; do nothing as it is a duplicate	
+					else 							//it already exists 
+					{
+						if ( data != -1 )				//as a bg motif; add it as a fg motif matching this bg motif
+						  {
+						    
+						    
+						    
+	#ifdef _USE_MPFR
+						    mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int)u[i][j], (unsigned long int) num_seqs, ( long double ) bdata[ data ] . r , mpfr_factLUT);
+						    
+						    mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
+						    
+						    fprintf ( out_fd, "%s %d %d %lf %d %lf %d ", 
+							      motif, 
+							      u[i][j],
+							      num_seqs,
+							      (double) u[i][j]/num_seqs,
+							      v[i][j],						      
+							      bdata[data] . r,
+							      bdata[data] . v
+							      );
+						    
+						    mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
+						    fprintf(out_fd, "\n");
+						    
+	#else
+						    
+						  
+
+
+							bin_cdf = binomial_cdf_less_than ( u[i][j], num_seqs, bdata[ data ].u, log_factLUT);
+						  
+
+							fprintf ( out_fd, "%s %d %d %lf %d %lf %d %Le\n", 
+									motif, 
+									u[i][j], 
+									num_seqs,
+									(  ( ( double ) u[i][j] / num_seqs ) ), 
+									v[i][j], 
+									bdata[ data ]  . r, 
+									bdata [ data ] . v,
+									1. - bin_cdf
+							    );
+	#endif
+							data = -1;
+							trie_store ( trie, ACmotif, data );
+							pvalid ++;
+						}
+						//as a fg motif; do nothing as it is a duplicate	
+					}
+					free ( motif );
+					free ( ACmotif );
 				}
-                        	free ( motif );
-                        	free ( ACmotif );
-                        }
 		}
 	}
 
@@ -1971,44 +1976,45 @@ unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char
                 for ( j = m - 1; j < m; j ++ )
 		{
                         if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) >= sw . q && v[i][j] >= sw . n )
-                        {
-                        	char      * motif   = calloc ( ( m + 1 ) , sizeof( char ) );
-				memcpy ( motif, &fseqs[i][j - ( m ) + 1 ], m );
-				
-#ifdef _USE_MPFR
-				mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int) fdata[i] . u, (unsigned long int) fdata[i] . n, (long double) u[i][j] / num_seqs, mpfr_factLUT);
-				
-				mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
-				
-				fprintf ( out_fd, "%s %d %d %lf %d %lf %d ", 
-					  motif, 
-					  fdata[i] . u,
-					  fdata[i] . n,
-					  fdata[i] . r,
-					  fdata[i] . v,
-					  (double) u[i][j]/ num_seqs,
-					  v[i][j]
-					  );
-				mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
-				fprintf( out_fd, "\n");
-#else
-				
-				long double bin_cdf = binomial_cdf_less_than ( fdata[i] . u, fdata[i] . n, ( long double ) u[i][j] / num_seqs, log_factLUT );
+                        	if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) <= sw . Q && v[i][j] <= sw . N )
+				{
+					char      * motif   = calloc ( ( m + 1 ) , sizeof( char ) );
+					memcpy ( motif, &fseqs[i][j - ( m ) + 1 ], m );
+					
+	#ifdef _USE_MPFR
+					mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int) fdata[i] . u, (unsigned long int) fdata[i] . n, (long double) u[i][j] / num_seqs, mpfr_factLUT);
+					
+					mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
+					
+					fprintf ( out_fd, "%s %d %d %lf %d %lf %d ", 
+						  motif, 
+						  fdata[i] . u,
+						  fdata[i] . n,
+						  fdata[i] . r,
+						  fdata[i] . v,
+						  (double) u[i][j]/ num_seqs,
+						  v[i][j]
+						  );
+					mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
+					fprintf( out_fd, "\n");
+	#else
+					
+					long double bin_cdf = binomial_cdf_less_than ( fdata[i] . u, fdata[i] . n, ( long double ) u[i][j] / num_seqs, log_factLUT );
 
-				fprintf ( out_fd, "%s %d %d %lf %d %lf %d %Le\n", 
-					  motif, 
-					  fdata[i] . u,
-					  fdata[i] . n,
-					  fdata[i] . r,
-					  fdata[i] . v,
-					  (double) u[i][j] /num_seqs,
-					  v[i][j],
-					  1. - bin_cdf
-					  );
-#endif
-                                valid ++;
-                        	free ( motif );
-                        }
+					fprintf ( out_fd, "%s %d %d %lf %d %lf %d %Le\n", 
+						  motif, 
+						  fdata[i] . u,
+						  fdata[i] . n,
+						  fdata[i] . r,
+						  fdata[i] . v,
+						  (double) u[i][j] /num_seqs,
+						  v[i][j],
+						  1. - bin_cdf
+						  );
+	#endif
+					valid ++;
+					free ( motif );
+				}
 		}
 	}
 
@@ -2030,10 +2036,12 @@ static struct option long_options[] =
    { "input-file",         	required_argument, NULL, 'i' },
    { "output-file",        	required_argument, NULL, 'o' },
    { "quorum",         	   	required_argument, NULL, 'q' },
+   { "max-quorum",         	required_argument, NULL, 'Q' },
    { "motifs-length",      	required_argument, NULL, 'k' },
    { "distance",   	   	required_argument, NULL, 'd' },
    { "errors",   	   	required_argument, NULL, 'e' },
-   { "num-of-occurrences", 	required_argument, NULL, 'n' },
+   { "num-of-occ", 	        required_argument, NULL, 'n' },
+   { "max-num-of-occ", 	        required_argument, NULL, 'N' },
    { "num-of-threads",     	required_argument, NULL, 't' },
    { "long-sequences", 	  	required_argument, NULL, 'L' },
    { "boxes-in-file",		required_argument, NULL, 's' },
@@ -2065,16 +2073,18 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
    sw -> smile_out_filename		= NULL;
    sw -> boxes_in_filename		= NULL;
    sw -> q 				= 0;
+   sw -> Q 				= 100;
    sw -> l        			= 0;
    sw -> d       			= 0;
    sw -> e       			= 0;
-   sw -> n       			= 0;
+   sw -> n       			= 1;
+   sw -> N       			= 10000;
    sw -> t       			= 4;
    sw -> L       			= 0;
 
    args = 0;
 
-   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:k:d:e:n:s:t:L:I:R:u:h", long_options, &oi ) ) != - 1 )
+   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:Q:k:d:e:n:N:s:t:L:I:S:u:h", long_options, &oi ) ) != - 1 )
     {
       switch ( opt )
        {
@@ -2105,7 +2115,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
            strcpy ( sw -> unmatched_out_filename, optarg );
            break;
 
-         case 'R':
+         case 'S':
            sw -> smile_out_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
            strcpy ( sw -> smile_out_filename, optarg );
            break;
@@ -2131,6 +2141,15 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
 	   args ++;
            break;
 
+         case 'Q':
+           val = strtol ( optarg, &ep, 10 );
+           if ( optarg == ep )
+            {
+              return ( 0 );
+            }
+           sw -> n = val;
+           break;
+
          case 'k':
            val = strtol ( optarg, &ep, 10 );
            if ( optarg == ep )
@@ -2142,6 +2161,15 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
            break;
 
          case 'n':
+           val = strtol ( optarg, &ep, 10 );
+           if ( optarg == ep )
+            {
+              return ( 0 );
+            }
+           sw -> n = val;
+           break;
+
+         case 'N':
            val = strtol ( optarg, &ep, 10 );
            if ( optarg == ep )
             {
@@ -2229,12 +2257,17 @@ void usage ( void )
    fprintf ( stdout, "  -q, --quorum              <int>     The quorum is the minimum percentage (%%)\n"
                      "                                      of sequences in which a motif must occur.\n\n" );
    fprintf ( stdout, " Optional:\n" );
-   fprintf ( stdout, "  -n, --num-of-occurrences  <int>     The minimum  number of  occurrences of a\n"
+   fprintf ( stdout, "  -Q, --max-quorum          <int>     The maximum percentage (%%) of sequences\n"
+                     "                                      in which a motif can occur (default: 100).\n" );
+   fprintf ( stdout, "  -n, --num-of-occ          <int>     The minimum  number of  occurrences of a\n"
                      "                                      reported  motif in any  of the sequences\n"
                      "                                      (default: 1).\n" );
+   fprintf ( stdout, "  -N, --max-num-of-occ      <int>     The maximum  number of  occurrences of a\n"
+                     "                                      reported  motif in any  of the sequences\n"
+                     "                                      (default: 10000).\n" );
    fprintf ( stdout, "  -s, --structured-motifs   <str>     Input filename  for the structure of the\n"
                      "                                      boxes in the case of structured motifs.\n" );
-   fprintf ( stdout, "  -R, --SMILE-out-file      <str>     SMILE-like output filename to be used by\n"
+   fprintf ( stdout, "  -S, --SMILE-out-file      <str>     SMILE-like output filename to be used by\n"
                      "                                      SMILE.\n" );
    fprintf ( stdout, "  -b, --background-file     <str>     MoTeX background filename for statistical\n"
                      "                                      evaluation passed as input.\n" );

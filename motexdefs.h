@@ -38,10 +38,12 @@ struct TSwitch
    char               * boxes_in_filename;  			
    char               * smile_out_filename;  			
    unsigned int         q;
+   unsigned int         Q;
    unsigned int         l;
    unsigned int         d;
    unsigned int         e;
    unsigned int		n;
+   unsigned int		N;
    unsigned int		t;
    unsigned int		L;
    unsigned int         total_length;
