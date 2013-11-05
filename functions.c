@@ -1062,6 +1062,79 @@ inline unsigned int popcount ( unsigned int x )
 	return __builtin_popcount( x );
 }
 
+unsigned int write_motex_header ( struct TSwitch sw, unsigned int num_seqs, double exectime, int P )
+{
+	time_t               t;
+   	time ( &t );
+	FILE * 		out_fd;				// file with the motifs
+	unsigned int         i;
+
+	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file!\n");
+		return  ( 0 );
+	}
+      	
+	if ( sw . nb_boxes == 1 )
+	{
+		fprintf ( out_fd, "####################################\n" );
+		fprintf ( out_fd, "# Program: MoTeX\n" );
+		fprintf ( out_fd, "# Rundate: %s", ctime ( &t ) );
+		fprintf ( out_fd, "# Input file: %s\n", sw . input_filename );
+		fprintf ( out_fd, "# Output file: %s\n", sw . output_filename );
+		fprintf ( out_fd, "# For %d input sequences\n", num_seqs );
+		fprintf ( out_fd, "#     d = %d\n", sw . d );
+		fprintf ( out_fd, "#     q = %d\n", sw . q );
+		if ( sw . Q != 100 )
+		fprintf ( out_fd, "#     Q = %d\n", sw . Q );
+		if ( sw . n != 1 )
+		fprintf ( out_fd, "#     n = %d\n", sw . n );
+		if ( sw . N != 10000 )
+		fprintf ( out_fd, "#     N = %d\n", sw . N );
+		fprintf ( out_fd, "#     l = %d\n", sw . l ) ;
+		fprintf ( out_fd, "#     e = %d\n", sw . e );
+		fprintf ( out_fd, "# Run on %d proc(s) in %lf secs\n", P, exectime );
+		fprintf ( out_fd, "####################################\n\n" );
+	}
+	else
+	{
+		fprintf ( out_fd, "####################################\n" );
+		fprintf ( out_fd, "# Program: MoTeX\n" );
+		fprintf ( out_fd, "# Rundate: %s", ctime ( &t ) );
+		fprintf ( out_fd, "# Input file: %s\n", sw . input_filename );
+		fprintf ( out_fd, "# Output file: %s\n", sw . output_filename );
+		fprintf ( out_fd, "# For %d input sequences\n", num_seqs );
+		fprintf ( out_fd, "#     d = %d\n", sw . d );
+		fprintf ( out_fd, "#     q = %d\n", sw . q );
+		if ( sw . Q != 100 )
+		fprintf ( out_fd, "#     Q = %d\n", sw . Q );
+		if ( sw . n != 1 )
+		fprintf ( out_fd, "#     n = %d\n", sw . n );
+		if ( sw . N != 10000 )
+		fprintf ( out_fd, "#     N = %d\n", sw . N );
+		fprintf ( out_fd, "# Number of boxes: %d\n", sw . nb_boxes );
+		fprintf ( out_fd, "#     l0 = %d\n", sw . l ) ;
+		fprintf ( out_fd, "#     e0 = %d\n", sw . e );
+		for ( i = 0; i < sw . nb_gaps; i ++ )	
+		{
+			fprintf ( out_fd, "#     g%d = [%d,%d]\n", i + 1, sw . bgaps_min[i], sw . bgaps_max[i] ) ;
+			fprintf ( out_fd, "#     l%d = %d\n", i + 1, sw . blens[i] ) ;
+			fprintf ( out_fd, "#     e%d = %d\n", i + 1, sw . berrs[i] );
+		}
+		fprintf ( out_fd, "# Boxes input file: %s\n", sw . boxes_in_filename );
+		fprintf ( out_fd, "# Run on %d proc(s) in %lf secs\n", P, exectime );
+		fprintf ( out_fd, "####################################\n\n" );
+	}
+
+	if ( fclose ( out_fd ) ) 
+	{
+      		fprintf( stderr, " Error: file close error!\n");				      
+		return ( 0 );
+	}
+
+	return ( 1 );
+}
+
 /*
 write the output
 */
@@ -1076,6 +1149,9 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 	AlphaMap *	alphabet = NULL;
         Trie *      	trie = NULL;
 
+	/* Write the header */
+	write_motex_header ( sw, num_seqs, exectime, P );
+
 	/* Create an empty alphabet */
 	alphabet = alpha_map_new();
 
@@ -1085,26 +1161,11 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
+	if ( ( out_fd = fopen( sw . output_filename, "a+") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
 	}
-
-   	fprintf ( out_fd, "####################################\n" );
-   	fprintf ( out_fd, "# Program: MOTifs EXtraction\n" );
-   	fprintf ( out_fd, "# Rundate: %s", ctime ( &t ) );
-   	fprintf ( out_fd, "# Input file: %s\n", sw . input_filename );
-   	fprintf ( out_fd, "# Output file: %s\n", sw . output_filename );
-	fprintf ( out_fd, "# For N = %d input sequences\n", num_seqs );
-	fprintf ( out_fd, "#     l = %d\n", sw . l ) ;
-	fprintf ( out_fd, "#     d = %d\n", sw . d );
-	fprintf ( out_fd, "#     e = %d\n", sw . e );
-	fprintf ( out_fd, "#     q = %d\n", sw . q );
-	if ( sw . n )
-	fprintf ( out_fd, "#     n = %d\n", sw . n );
-	fprintf ( out_fd, "# Run on %d proc(s) in %lf secs\n", P, exectime );
-   	fprintf ( out_fd, "####################################\n\n" );
 
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
@@ -1163,6 +1224,9 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
 	AlphaMap *	alphabet = NULL;
         Trie *      	trie = NULL;
 
+	/* Write the header */
+	write_motex_header ( sw, num_seqs, exectime, P );
+
 	/* Create an empty alphabet */
 	alphabet = alpha_map_new();
 
@@ -1172,30 +1236,17 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
-	{	 
-		fprintf( stderr, " Error: cannot open file!\n");
-		return  ( 0 );
-	}
-
-   	fprintf ( out_fd, "####################################\n" );
-   	fprintf ( out_fd, "# Program: MOTifs EXtraction\n" );
-   	fprintf ( out_fd, "# Rundate: %s", ctime ( &t ) );
-   	fprintf ( out_fd, "# Input file: %s\n", sw . input_filename );
-   	fprintf ( out_fd, "# Output file: %s\n", sw . output_filename );
-	fprintf ( out_fd, "# For N = %d input sequences\n", num_seqs );
-	if ( sw . n )
-	fprintf ( out_fd, "#     n = %d\n", sw . n );
-	fprintf ( out_fd, "# Boxes input file: %s\n", sw . boxes_in_filename );
-	fprintf ( out_fd, "# Number of boxes: %d\n", sw . nb_boxes );
-	fprintf ( out_fd, "# Run on %d proc(s) in %lf secs\n", P, exectime );
-   	fprintf ( out_fd, "####################################\n\n" );
-
 	/* Calculate the actual length of the structured motif --- excluding the gaps */
 	unsigned int total_length_sm = sw . l;
 	unsigned int b;
 	for ( b = 0; b < sw . nb_gaps; b ++ )	
 		total_length_sm += sw . blens[b];
+
+	if ( ( out_fd = fopen( sw . output_filename, "a+") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file!\n");
+		return  ( 0 );
+	}
 
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
@@ -1660,6 +1711,8 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 
 	int background_size = 0, background_quorum_size = 0;
 
+        write_motex_header ( sw, num_seqs, exectime, P );
+
 	/* Create an empty alphabet */
 	alphabet = alpha_map_new();
 
@@ -1669,7 +1722,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
+	if ( ( out_fd = fopen( sw . output_filename, "a+") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
@@ -1756,22 +1809,6 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
       		fprintf( stderr, " Error: file close error!\n");				      
 		return ( 0 );
 	}
-
-   	fprintf ( out_fd, "####################################\n" );
-   	fprintf ( out_fd, "# Program: MOTifs EXtraction\n" );
-   	fprintf ( out_fd, "# Rundate: %s", ctime ( &t ) );
-   	fprintf ( out_fd, "# Input file: %s\n", sw . input_filename );
-   	fprintf ( out_fd, "# Background file: %s\n", sw . background_filename );
-   	fprintf ( out_fd, "# Output file: %s\n", sw . output_filename );
-	fprintf ( out_fd, "# For N = %d input sequences\n", num_seqs );
-	fprintf ( out_fd, "#     l = %d\n", sw . l ) ;
-	fprintf ( out_fd, "#     d = %d\n", sw . d );
-	fprintf ( out_fd, "#     e = %d\n", sw . e );
-	fprintf ( out_fd, "#     q = %d\n", sw . q );
-	if ( sw . n )
-	fprintf ( out_fd, "#     n = %d\n", sw . n );
-	fprintf ( out_fd, "# Run on %d proc(s) in %lf secs\n", P, exectime );
-   	fprintf ( out_fd, "####################################\n\n" );
 
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{

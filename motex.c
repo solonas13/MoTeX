@@ -456,6 +456,7 @@ int main ( int argc, char **argv )
 	}
 	else
 	{
+		sw . nb_boxes = nb_boxes;
 		nb_structs = 1;
 		sw . nb_structs = nb_structs;
 	}
