@@ -105,6 +105,7 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v );
 
 unsigned int write_motex_header ( struct TSwitch sw, unsigned int num_seqs, double exectime, int P );
+unsigned int write_smile_header ( struct TSwitch sw, unsigned int num_seqs, char * alphabet_str );
 unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
 unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P );
 unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime );

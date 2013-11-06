@@ -55,7 +55,7 @@ int main ( int argc, char **argv )
         char const ** 	seqs    = NULL; 	// the sequences in memory
 	unsigned int 	num_seqs = 0;		// the total number of sequences
 	unsigned int 	total_length;		// the total length of the sequences
-	unsigned int	total_mot_length;   // the min total length of the motif
+	unsigned int	total_mot_length;   	// the min total length of the motif
 
 	unsigned int 	nb_boxes;		// the number of boxes
 	unsigned int 	nb_gaps;		// the number of gaps

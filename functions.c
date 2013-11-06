@@ -1140,8 +1140,6 @@ write the output
 */
 unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P )
 {
-	time_t               t;
-   	time ( &t );
 	FILE * 		out_fd;				// file with the motifs
 	unsigned int i, j, k;
 	unsigned int valid = 0;
@@ -1215,8 +1213,6 @@ write the output for structured motifs
 */
 unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P )
 {
-	time_t               t;
-   	time ( &t );
 	FILE * 		out_fd;				// file with the motifs
 	unsigned int i, j, k, l;
 	unsigned int valid = 0;
@@ -1330,52 +1326,80 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
 	return ( 1 );
 }
 
-/*
-write the output a la SMILE
-*/
-unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime )
+unsigned int write_smile_header ( struct TSwitch sw, unsigned int num_seqs, char * alphabet_str )
 {
-	time_t               t;
-   	time ( &t );
 	FILE * 		out_fd;				// file with the motifs
-	unsigned int i, j, k;
-	unsigned int valid = 0;
-
-        char * alphabet_str = NULL;
-
-	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = DNA;
-        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
-        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
-
-	AlphaMap *	alphabet = NULL;
-        Trie *      	trie = NULL;
-
-	/* Create an empty alphabet */
-	alphabet = alpha_map_new();
-
-	/* Define the alphabet's range */
-        alpha_map_add_range ( alphabet, 0, 127 );
-
-	/* Create an empty trie based on the alphabet */
-        trie = trie_new ( alphabet );
-
+	unsigned int i;
+	char line1[LINE_SIZE];
+	
 	if ( ( out_fd = fopen( sw . smile_out_filename, "w") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
 	}
 
-	// %%% 1 120/1200 1200000 8 8 1 alphabet ACGT$
-	char line1[80];
-   	sprintf ( line1, "%%%%%% 1 %d/%d %d %d %d %d alphabet %s$", 
-				( int ) ceil ( ( double ) ( ( double )sw . q * num_seqs ) / ( double ) 100 ), 
-				num_seqs, 
-				sw . total_length, 
-				sw . l, 
-				sw . l, 
-				sw . e, 
-				alphabet_str );
-   	
+	if ( sw . nb_boxes == 1 )
+	{
+		// %%% 1 120/1200 1200000 8 8 1 alphabet ACGT$
+		sprintf ( line1, "%%%%%% 1 %d/%d %d %d %d %d alphabet %s$", 
+					( int ) ceil ( ( double ) ( ( double )sw . q * num_seqs ) / ( double ) 100 ), 
+					num_seqs, 
+					sw . total_length, 
+					sw . l, 
+					sw . l, 
+					sw . e, 
+					alphabet_str );
+	}
+   	else
+	{
+		//nb of boxes, absolute quorum/number of sequences, total number of symbols in the input sequences, total min length, 
+		//total max length, total substitutions, description given for each box in the input parameters, and the alphabet)
+		//%%% 2 128/1062 196736 12 12 2 6 6 1 16 18 6 6 1 alphabet ACGT$
+		unsigned int min_len = sw . l;
+		unsigned int max_len = sw . l;
+		unsigned int total_errs = sw . e;
+		unsigned int total_length_sm = sw . l;
+
+		unsigned int b;
+		for ( b = 0; b < sw . nb_gaps; b ++ )
+		{
+			total_length_sm += sw . blens[b];
+			min_len += sw . blens[b];
+			max_len += sw . blens[b];
+			total_errs += sw . berrs[b];
+		} 		
+
+		line1[0] = 0;
+		sprintf ( line1, "%%%%%% %d %d/%d %d %d %d %d %d %d %d ", 
+				 sw . nb_boxes, 
+				 ( int ) ceil ( ( double ) ( ( double )sw . q * num_seqs ) / ( double ) 100 ), 
+				 num_seqs, 
+				 sw . total_length, 
+				 min_len, 
+				 max_len, 
+				 total_errs, 
+				 sw . l, 
+				 sw . l, 
+				 sw . e );
+
+		char line2[LINE_SIZE];
+		line2[0] = 0;
+		for ( b = 0; b < sw . nb_gaps; b ++ )
+		{
+			char buffer[LINE_SIZE];
+			buffer[0] = 0;
+			sprintf( buffer, "%d %d %d %d %d ", sw . bgaps_min[b], sw . bgaps_max[b], sw . blens[b], sw . blens[b], sw . berrs[b] );
+			strncat( line2, buffer, strlen ( buffer ) );
+		}
+
+		char line3[LINE_SIZE];
+		line3[0] = 0;
+		sprintf ( line3, "alphabet %s$", alphabet_str);
+
+		strcat ( line1, line2 );
+		strcat ( line1, line3 );
+	}
+
      	fprintf ( out_fd, "%s", line1 );
 	
         for( i = strlen ( line1 ); i < 79; i++ ) 
@@ -1392,7 +1416,49 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
 	// one line with `='
 	fprintf( out_fd, "========================================" ); 
 	fprintf( out_fd, "=======================================\n" );
-                               
+
+	if ( fclose ( out_fd ) ) 
+	{
+      		fprintf( stderr, " Error: file close error!\n");				      
+		return ( 0 );
+	}
+	return ( 1 );
+}
+
+/*
+write the output a la SMILE
+*/
+unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime )
+{
+	FILE * 		out_fd;				// file with the motifs
+	unsigned int i, j, k;
+	unsigned int valid = 0;
+        char * alphabet_str = NULL;
+
+	AlphaMap *	alphabet = NULL;
+        Trie *      	trie = NULL;
+
+	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = DNA;
+        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
+        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
+
+	write_smile_header ( sw, num_seqs, alphabet_str );
+
+	/* Create an empty alphabet */
+	alphabet = alpha_map_new();
+
+	/* Define the alphabet's range */
+        alpha_map_add_range ( alphabet, 0, 127 );
+
+	/* Create an empty trie based on the alphabet */
+        trie = trie_new ( alphabet );
+
+	if ( ( out_fd = fopen( sw . smile_out_filename, "a+") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file!\n");
+		return  ( 0 );
+	}
+
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
 		unsigned int m = strlen ( seqs[i] );
@@ -1440,9 +1506,6 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
 		}
 	}
 
-        //Nb models: 63002
-        //User time: 2.78 sec.
-
 	fprintf ( out_fd, "Nb models: %d\n", valid );
 	fprintf ( out_fd, "User time: %lf sec.\n", exectime );
                 
@@ -1464,8 +1527,6 @@ write the output a la SMILE
 */
 unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime )
 {
-	time_t               t;
-   	time ( &t );
 	FILE * 		out_fd;				// file with the motifs
 	unsigned int i, j, k, l;
 	unsigned int valid = 0;
@@ -1475,6 +1536,8 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = DNA;
         else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
         else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
+
+	write_smile_header ( sw, num_seqs, alphabet_str );
 
 	AlphaMap *	alphabet = NULL;
         Trie *      	trie = NULL;
@@ -1488,78 +1551,17 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( out_fd = fopen( sw . smile_out_filename, "w") ) == NULL) 
+	if ( ( out_fd = fopen( sw . smile_out_filename, "a+") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
 	}
 
-	//nb of boxes, absolute quorum/number of sequences, total number of symbols in the input sequences, total min length, 
-        //total max length, total substitutions, description given for each box in the input parameters, and the alphabet)
-	//%%% 2 128/1062 196736 12 12 2 6 6 1 16 18 6 6 1 alphabet ACGT$
-	unsigned int min_len = sw . l;
-	unsigned int max_len = sw . l;
-	unsigned int total_errs = sw . e;
-	unsigned int total_length_sm = sw . l;
-
 	unsigned int b;
+	unsigned int total_length_sm = sw . l;
 	for ( b = 0; b < sw . nb_gaps; b ++ )
-	{
-	        total_length_sm += sw . blens[b];
-		min_len += sw . blens[b];
-		max_len += sw . blens[b];
-		total_errs += sw . berrs[b];
-	} 		
+		total_length_sm += sw . blens[b];
 
-	char line1[LINE_SIZE];
-	line1[0] = 0;
-   	sprintf ( line1, "%%%%%% %d %d/%d %d %d %d %d %d %d %d ", 
-                         sw . nb_boxes, 
-                         ( int ) ceil ( ( double ) ( ( double )sw . q * num_seqs ) / ( double ) 100 ), 
-                         num_seqs, 
-                         sw . total_length, 
-                         min_len, 
-                         max_len, 
-                         total_errs, 
-                         sw . l, 
-                         sw . l, 
-                         sw . e );
-
-	char line2[LINE_SIZE];
-	line2[0] = 0;
-	for ( b = 0; b < sw . nb_gaps; b ++ )
-	{
-		char buffer[LINE_SIZE];
-		buffer[0] = 0;
-		sprintf( buffer, "%d %d %d %d %d ", sw . bgaps_min[b], sw . bgaps_max[b], sw . blens[b], sw . blens[b], sw . berrs[b] );
-		strncat( line2, buffer, strlen ( buffer ) );
-	}
-
-	char line3[LINE_SIZE];
-	line3[0] = 0;
-	sprintf ( line3, "alphabet %s$", alphabet_str);
-
-	strcat ( line1, line2 );
-	strcat ( line1, line3 );
-
-     	fprintf ( out_fd, "%s", line1 );
-	
-	/* We add spaces to the right of line 1 */
-        for( i = strlen ( line1 ); i < 79; i++ ) 
-     		fprintf ( out_fd, " " );
-
-	/* two empty lines */
-	fprintf ( out_fd, "\n" );
-        for( i = 0; i != 2; i++ ) 
-    	{ 
-    		fprintf( out_fd, "                                        " ); 
-    		fprintf( out_fd, "                                       \n" ); 
-    	} 
-
-	// one line with `='
-	fprintf( out_fd, "========================================" ); 
-	fprintf( out_fd, "=======================================\n" );
-                               
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
 		unsigned int m = strlen ( seqs[i] );
