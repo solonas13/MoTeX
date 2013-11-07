@@ -1235,7 +1235,6 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
 	for ( b = 0; b < sw . nb_gaps; b ++ )	
 		total_length_sm += sw . blens[b];
 
-
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
 		unsigned int m = strlen ( seqs[i] );
@@ -1512,7 +1511,6 @@ write the output a la SMILE
 unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime )
 {
 	FILE * 		out_fd;				// file with the motifs
-	FILE * 		un_out_fd;			// file with the motifs
 	unsigned int i, j, k, l;
 	unsigned int valid = 0;
 
@@ -1627,7 +1625,7 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 							}
 							id[total_length_sm + sw . nb_gaps] = '\0';
 
-							fprintf ( un_out_fd, "%s %s %d\t%d\n", motif, id, u[i][k * m + j], v[i][k * m + j] );
+							fprintf ( out_fd, "%s %s %d\t%d\n", motif, id, u[i][k * m + j], v[i][k * m + j] );
 
 							free ( id );
 							valid ++;
@@ -1691,7 +1689,6 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	char background_quorum_size_string[100];
 
 	int background_size = 0, background_quorum_size = 0;
-
 
 	/* Create an empty alphabet */
 	alphabet = alpha_map_new();
@@ -1917,6 +1914,10 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	fprintf ( out_fd, "#A total of %d valid motifs were extracted:\n", pvalid + uvalid );
 	fprintf ( out_fd, "#  %d of them were matched with background motifs\n", pvalid );
 	fprintf ( out_fd, "#  %d of them were not matched with any background motif.\n\n", uvalid );
+	
+	fprintf ( un_out_fd, "\n#A total of %d background motifs were read.\n", num_bseqs );
+	fprintf ( un_out_fd, "#A total of %d valid motifs were extracted:\n", pvalid + uvalid );
+	fprintf ( un_out_fd, "#  %d of them were not matched with any background motif.\n\n", uvalid );
 	
 
 	#ifdef _USE_MPFR
@@ -2258,6 +2259,10 @@ unsigned int write_structured_motifs_back ( struct TSwitch sw, unsigned int num_
 	fprintf ( out_fd, "#A total of %d valid motifs were extracted:\n", pvalid + uvalid );
 	fprintf ( out_fd, "#  %d of them were matched with background motifs\n", pvalid );
 	fprintf ( out_fd, "#  %d of them were not matched with any background motif.\n\n", uvalid );
+
+	fprintf ( un_out_fd, "\n#A total of %d background motifs were read.\n", num_bseqs );
+	fprintf ( un_out_fd, "#A total of %d valid motifs were extracted:\n", pvalid + uvalid );
+	fprintf ( un_out_fd, "#  %d of them were not matched with any background motif.\n\n", uvalid );
 	
 
 	#ifdef _USE_MPFR
@@ -2491,10 +2496,10 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
 		}
 	}
 
+	fprintf ( out_fd, "Nb models: %d\n", pvalid + uvalid );
+	fprintf ( out_fd, "User time: %lf sec.\n", exectime );
 	fprintf ( un_out_fd, "Nb models: %d\n", uvalid );
 	fprintf ( un_out_fd, "User time: %lf sec.\n", exectime );
-	fprintf ( out_fd, "Nb models: %d\n", pvalid );
-	fprintf ( out_fd, "User time: %lf sec.\n", exectime );
 
 	trie_free ( trie );    
         trie = NULL;
@@ -2772,10 +2777,10 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
 		}
 	}
 
+	fprintf ( out_fd, "Nb models: %d\n", pvalid + uvalid );
+	fprintf ( out_fd, "User time: %lf sec.\n", exectime );
 	fprintf ( un_out_fd, "Nb models: %d\n", uvalid );
 	fprintf ( un_out_fd, "User time: %lf sec.\n", exectime );
-	fprintf ( out_fd, "Nb models: %d\n", pvalid );
-	fprintf ( out_fd, "User time: %lf sec.\n", exectime );
 
 	trie_free ( trie );    
         trie = NULL;
