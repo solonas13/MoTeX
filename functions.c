@@ -1424,7 +1424,7 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
         else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
         else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
 
-	if ( ( out_fd = fopen( sw . smile_out_filename, "a+") ) == NULL) 
+	if ( ( out_fd = fopen( sw . smile_out_filename, "w") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
@@ -1440,7 +1440,6 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
 
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
-
 
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
@@ -2149,75 +2148,67 @@ unsigned int write_structured_motifs_back ( struct TSwitch sw, unsigned int num_
 						{
 							data = -1;
 							trie_store ( trie, ACmotif, data );
-											
+
 							#ifdef _USE_MPFR
 							mpfr_binomial_cdf_less_than( 	mpfr_bin, 
-											(unsigned long int) u[k * m + i][j], 
+											(unsigned long int) u[i][k * m + j], 
 											(unsigned long int) num_seqs, 
 											(long double) background_quorum_size / background_size, 
 											mpfr_factLUT);
 							
 							mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
-							
+
 							fprintf ( out_fd, "%s %d %d %lf %d %d %d ", 
 									motif, 
-									u[k * m + i][j],
+									u[i][k * m + j],
 									num_seqs,
-									(double) u[k * m + i][j]/num_seqs,
-									v[k * m + i][j],
+									(double) u[i][k * m + j]/num_seqs,
+									v[i][k * m + j],
 									0,
-									0
-									);
+									0);
 							
 							mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
-							
+
 							fprintf( out_fd, "\n");
 							
 							#else
-							bin_cdf = binomial_cdf_less_than ( u[k * m + i][j], num_seqs, ( long double ) background_quorum_size/background_size, log_factLUT );
+							bin_cdf = binomial_cdf_less_than ( u[i][k * m + j], num_seqs, ( long double ) background_quorum_size/background_size, log_factLUT );
 								
 							fprintf ( out_fd, "%s %d %d %lf %d %d %d %Le\n", 
 									motif, 
-									u[k * m + i][j], 
+									u[i][k * m + j], 
 									num_seqs, 
-									(  ( ( double ) u[k * m + i][j] / num_seqs ) ), 
-									v[k * m + i][j], 
+									(  ( ( double ) u[i][k * m + j] / num_seqs ) ), 
+									v[i][k * m + j], 
 									0, 
 									0, 
 									1. - bin_cdf  );
-								
 							#endif
 								
 							fprintf ( un_out_fd, "%s %d %d %lf %d\n", 	//write it out as an unmatched fg motif
 									motif, 
-									u[k * m + i][j], 
+									u[i][k * m + j], 
 									num_seqs, 
-									(  ( ( double ) u[k * m + i][j] / num_seqs ) ), 
-									v[k * m + i][j] );
-							
+									(  ( ( double ) u[i][k * m + j] / num_seqs ) ), 
+									v[i][k * m + j] );
 							uvalid ++;
 						}
 						else 							//it already exists 
 						{
 							if ( data != -1 )				//as a bg motif; add it as a fg motif matching this bg motif
 							{
-							    
 								#ifdef _USE_MPFR
+							
+								mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int) u[i][k * m + j], (unsigned long int) num_seqs, ( long double ) bdata[ data ] . r , mpfr_factLUT);
+							    
+								mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
 
-								mpfr_binomial_cdf_less_than( 	mpfr_bin, 
-												( unsigned long int ) u[k * m + i][j], 
-												( unsigned long int ) num_seqs, 
-												( long double ) bdata[ data ] . r, 
-												mpfr_factLUT );
-								    
-								mpfr_ui_sub( mpfr_bin, 1, mpfr_bin, GMP_RNDU );
-								   
 								fprintf ( out_fd, "%s %d %d %lf %d %lf %d ", 
 										motif, 
-										u[k * m + i][j],
+										u[i][k * m + j],
 										num_seqs,
-										(double) u[k * m + i][j]/num_seqs,
-										v[k * m + i][j],						      
+										(double) u[i][k * m + j]/num_seqs,
+										v[i][k * m + j],						      
 										bdata[data] . r,
 										bdata[data] . v
 										);
@@ -2227,14 +2218,14 @@ unsigned int write_structured_motifs_back ( struct TSwitch sw, unsigned int num_
 								    
 								#else
 
-								bin_cdf = binomial_cdf_less_than ( u[k * m + i][j], num_seqs, bdata[ data ].u, log_factLUT);
+								bin_cdf = binomial_cdf_less_than ( u[i][k * m + j], num_seqs, bdata[ data ].u, log_factLUT);
 
 								fprintf ( out_fd, "%s %d %d %lf %d %lf %d %Le\n", 
 										motif, 
-										u[k * m + i][j], 
+										u[i][k * m + j], 
 										num_seqs,
-										(  ( ( double ) u[k * m + i][j] / num_seqs ) ), 
-										v[k * m + i][j], 
+										(  ( ( double ) u[i][k * m + j] / num_seqs ) ), 
+										v[i][k * m + j], 
 										bdata[ data ]  . r, 
 										bdata [ data ] . v,
 										1. - bin_cdf
