@@ -1718,7 +1718,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 
         write_motex_header ( un_out_fd, sw, num_seqs, exectime, P );
 
-	if ( ( in_fd = fopen( sw . background_filename, "r") ) == NULL) 
+	if ( ( in_fd = fopen( sw . background_in_filename, "r") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
@@ -2007,7 +2007,7 @@ unsigned int write_structured_motifs_back ( struct TSwitch sw, unsigned int num_
 
         write_motex_header ( un_out_fd, sw, num_seqs, exectime, P );
 
-	if ( ( in_fd = fopen( sw . background_filename, "r") ) == NULL) 
+	if ( ( in_fd = fopen( sw . background_in_filename, "r") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
@@ -2337,9 +2337,9 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( in_fd = fopen( sw . background_filename, "r") ) == NULL) 
+	if ( ( in_fd = fopen( sw . background_in_filename, "r") ) == NULL) 
 	{	 
-		fprintf( stderr, " Error: cannot open file %s!\n", sw . background_filename );
+		fprintf( stderr, " Error: cannot open file %s!\n", sw . background_in_filename );
 		return  ( 0 );
 	}
 
@@ -2568,9 +2568,9 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( in_fd = fopen( sw . background_filename, "r") ) == NULL) 
+	if ( ( in_fd = fopen( sw . background_in_filename, "r") ) == NULL) 
 	{	 
-		fprintf( stderr, " Error: cannot open file %s!\n", sw . background_filename );
+		fprintf( stderr, " Error: cannot open file %s!\n", sw . background_in_filename );
 		return  ( 0 );
 	}
 
@@ -2888,7 +2888,7 @@ unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char
 static struct option long_options[] =
  {
    { "alphabet",           	required_argument, NULL, 'a' },
-   { "background-file",    	required_argument, NULL, 'b' },
+   { "background-in-file",    	required_argument, NULL, 'b' },
    { "input-file",         	required_argument, NULL, 'i' },
    { "output-file",        	required_argument, NULL, 'o' },
    { "quorum",         	   	required_argument, NULL, 'q' },
@@ -2922,7 +2922,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
 
    /* initialisation */
    sw -> alphabet			= NULL;
-   sw -> background_filename		= NULL;
+   sw -> background_in_filename		= NULL;
    sw -> input_filename 		= NULL;
    sw -> output_filename		= NULL;
    sw -> un_in_filename 		= NULL;
@@ -2959,8 +2959,8 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
            break;
 
          case 'b':
-           sw -> background_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
-           strcpy ( sw -> background_filename, optarg );
+           sw -> background_in_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
+           strcpy ( sw -> background_in_filename, optarg );
            break;
 
          case 'I':
@@ -3133,7 +3133,7 @@ void usage ( void )
                      "                                      boxes in the case of structured motifs.\n" );
    fprintf ( stdout, "  -S, --SMILE-out-file      <str>     SMILE-like output filename to be used by\n"
                      "                                      SMILE.\n" );
-   fprintf ( stdout, "  -b, --background-file     <str>     MoTeX background filename for statistical\n"
+   fprintf ( stdout, "  -b, --background-in-file  <str>     MoTeX background filename for statistical\n"
                      "                                      evaluation passed as input.\n" );
    fprintf ( stdout, "  -t, --threads             <int>     Number of threads to be used by the OMP\n"
                      "                                      version (default: 4).\n" );

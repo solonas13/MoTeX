@@ -42,7 +42,7 @@ int main ( int argc, char **argv )
 	char *          alphabet;		// the alphabet
 	char * 		input_filename;		// the input file
 	char * 		output_filename;	// the output file
-	char * 		background_filename;	// the background file
+	char * 		background_in_filename;	// the background file
 	char * 		un_in_filename;		// the input file of the unmatched motifs
 	char * 		un_out_filename;	// the output file of the unmatched motifs
 	char * 		smile_out_filename;	// the output file of the reported motifs a la SMILE
@@ -150,45 +150,54 @@ int main ( int argc, char **argv )
 		output_filename     	= sw . output_filename;
     	}
 
-	background_filename     = sw . background_filename;
+	background_in_filename  = sw . background_in_filename;
 	un_in_filename          = sw . un_in_filename;
 	un_out_filename         = sw . un_out_filename;
 	smile_out_filename      = sw . smile_out_filename;
 	un_smile_out_filename   = sw . un_smile_out_filename;
 	boxes_in_filename       = sw . boxes_in_filename;
 	
-	if ( background_filename == NULL && un_out_filename != NULL )
+	/* If a background file is NOT given as input */
+	if ( background_in_filename == NULL )
        	{
-        	fprintf ( stderr, " Error: `-u' option must be used with `-b' option!\n" );
-        	return ( 1 );
+		if ( un_out_filename != NULL )
+		{
+        		fprintf ( stderr, " Error: `-u' option must be used with `-b' option!\n" );
+        		return ( 1 );
+		}
+
+		if ( un_smile_out_filename != NULL )
+		{
+        		fprintf ( stderr, " Error: `-U' option must be used with `-b' option!\n" );
+        		return ( 1 );
+		}
        	}
 
-	if ( background_filename == NULL && un_smile_out_filename != NULL )
+	/* If a background file is given as input */
+	if ( background_in_filename != NULL ) 
        	{
-        	fprintf ( stderr, " Error: `-U' option must be used with `-b' option!\n" );
-        	return ( 1 );
-       	}
+		if ( un_out_filename == NULL )
+		{
+			fprintf ( stderr, " Error: `-b' option must be used with `-u' option!\n" );
+			return ( 1 );
+		}
 
-	if ( un_smile_out_filename != NULL  && smile_out_filename == NULL )
-       	{
-        	fprintf ( stderr, " Error: `-U' option must be used with `-S' option!\n" );
-        	return ( 1 );
-       	}
-
-	if ( background_filename != NULL && un_in_filename != NULL )
-       	{
-        	fprintf ( stderr, " Error: `-I' option cannot be used with `-b' option!\n" );
-        	return ( 1 );
+		/* If SMILE-like output is used, then it must be used for the unmatched motifs as well */
+		if ( un_smile_out_filename != NULL  && smile_out_filename == NULL )
+		{
+			fprintf ( stderr, " Error: `-U' option must be used with `-S' option!\n" );
+			return ( 1 );
+		}
+		
+		if ( un_in_filename != NULL )
+		{
+        		fprintf ( stderr, " Error: `-I' option cannot be used with `-b' option!\n" );
+        		return ( 1 );
+		}	
        	}
 
 	if ( boxes_in_filename != NULL )
        	{
-		if ( un_out_filename != NULL )
-		{
-			fprintf ( stderr, " Error: `-u' option cannot be used with `-s' option!\n" );
-			return ( 1 );
-		}
-
 		if ( un_in_filename != NULL )
 		{
 			fprintf ( stderr, " Error: `-I' option cannot be used with `-s' option!\n" );
@@ -196,15 +205,6 @@ int main ( int argc, char **argv )
 		}
 	}
 
-	if ( boxes_in_filename == NULL )
-       	{
-		if ( un_smile_out_filename != NULL )
-		{
-			fprintf ( stderr, " Error: `-U' option must be used with `-s' option!\n" );
-			return ( 1 );
-		}
-	}
-        
 	#ifdef _USE_OMP
 	/* set the num of threads to be used */
 	threads = sw . t;
@@ -840,7 +840,7 @@ int main ( int argc, char **argv )
 		#endif
 			if ( nb_gaps == 0 )
 			{
-				if ( background_filename == NULL )
+				if ( background_in_filename == NULL )
 				{
 					write_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
 					if ( smile_out_filename != NULL )
@@ -856,7 +856,7 @@ int main ( int argc, char **argv )
 			}
 			else
 			{
-				if ( background_filename == NULL )
+				if ( background_in_filename == NULL )
 				{
 					write_structured_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
 					if ( smile_out_filename != NULL )
@@ -1144,7 +1144,7 @@ int main ( int argc, char **argv )
 	free ( sw . input_filename );
    	free ( sw . output_filename );
    	free ( sw . alphabet );
-	if ( background_filename )    free ( sw . background_filename );
+	if ( background_in_filename )    free ( sw . background_in_filename );
 	if ( un_in_filename )  free ( sw . un_in_filename );
 	if ( un_out_filename ) free ( sw . un_out_filename );
 	if ( smile_out_filename )    free ( sw . smile_out_filename );

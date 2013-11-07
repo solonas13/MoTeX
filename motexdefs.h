@@ -32,7 +32,7 @@ struct TSwitch
    char               * alphabet;
    char               * input_filename;
    char               * output_filename;
-   char               * background_filename;
+   char               * background_in_filename;
    char               * un_in_filename;  			
    char               * un_out_filename;  			
    char               * boxes_in_filename;  			
