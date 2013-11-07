@@ -849,8 +849,8 @@ int main ( int argc, char **argv )
 				else
 				{
 					write_motifs_back ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
-					//if ( un_smile_out_filename != NULL )
-					//	write_motifs_back_smile ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+					if ( un_smile_out_filename != NULL )
+						write_motifs_back_smile ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
 				}
 
 			}
@@ -864,7 +864,7 @@ int main ( int argc, char **argv )
 				}
 				else
 				{
-					//write_structured_motifs_back ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+					write_structured_motifs_back ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
 					if ( un_smile_out_filename != NULL )
 						write_structuted_motifs_back_smile ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
 				}
