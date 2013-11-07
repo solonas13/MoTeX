@@ -901,6 +901,9 @@ int main ( int argc, char **argv )
 
 		/* read the motifs in memory */
 		max_alloc = num_fseqs = 0;
+
+		/* This is to avoid the header */
+		while ( fgets ( line, LINE_SIZE, in_fd ) && line[0] != '\n' );
  
 		while ( fgets ( line, LINE_SIZE, un_in_fd ) && line[0] != '\n' )
 		{
