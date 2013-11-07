@@ -43,9 +43,10 @@ int main ( int argc, char **argv )
 	char * 		input_filename;		// the input file
 	char * 		output_filename;	// the output file
 	char * 		background_filename;	// the background file
-	char * 		unmatched_in_filename;	// the input file of the unmatched motifs
-	char * 		unmatched_out_filename;	// the output file of the unmatched motifs
+	char * 		un_in_filename;		// the input file of the unmatched motifs
+	char * 		un_out_filename;	// the output file of the unmatched motifs
 	char * 		smile_out_filename;	// the output file of the reported motifs a la SMILE
+	char * 		un_smile_out_filename;	// the output file of the unmatched motifs a la SMILE
 	char * 		boxes_in_filename;	// the input file for the boxes
 	FILE *		in_fd;			// the input file descriptor
 	FILE *		un_in_fd;		// the input file descriptor for the unmatched motifs
@@ -114,12 +115,18 @@ int main ( int argc, char **argv )
 
 		if ( sw . l > sizeof( unsigned int ) * CHAR_BIT - 1 )
                 {
-                        fprintf( stderr, " Error: the fixed-length of motifs must be less or equal than %d!\n", ( unsigned int ) ( sizeof( unsigned int ) * CHAR_BIT - 1 ) );
+                        fprintf( stderr, " Error: the fixed-length of motifs k must be less or equal than %d!\n", ( unsigned int ) ( sizeof( unsigned int ) * CHAR_BIT - 1 ) );
                         return ( 1 );
                 }
       		else 	l = sw . l;
-	
+
       		e   	= sw . e;	
+
+		if ( e >= l )
+       		{
+         		fprintf ( stderr, " Error: error threshold e must be less than the fixed-length of motifs k!\n" );
+         		return ( 1 );
+       		}
 
       		if ( sw . d == 0 )       d = sw . d;
       		else if ( sw . d == 1 )  d = sw . d;
@@ -144,18 +151,31 @@ int main ( int argc, char **argv )
     	}
 
 	background_filename     = sw . background_filename;
-	unmatched_in_filename   = sw . unmatched_in_filename;
-	unmatched_out_filename  = sw . unmatched_out_filename;
+	un_in_filename          = sw . un_in_filename;
+	un_out_filename         = sw . un_out_filename;
 	smile_out_filename      = sw . smile_out_filename;
+	un_smile_out_filename   = sw . un_smile_out_filename;
 	boxes_in_filename       = sw . boxes_in_filename;
 	
-	if ( background_filename == NULL && unmatched_out_filename != NULL )
+	if ( background_filename == NULL && un_out_filename != NULL )
        	{
         	fprintf ( stderr, " Error: `-u' option must be used with `-b' option!\n" );
         	return ( 1 );
        	}
 
-	if ( background_filename != NULL && unmatched_in_filename != NULL )
+	if ( background_filename == NULL && un_smile_out_filename != NULL )
+       	{
+        	fprintf ( stderr, " Error: `-U' option must be used with `-b' option!\n" );
+        	return ( 1 );
+       	}
+
+	if ( un_smile_out_filename != NULL  && smile_out_filename == NULL )
+       	{
+        	fprintf ( stderr, " Error: `-U' option must be used with `-S' option!\n" );
+        	return ( 1 );
+       	}
+
+	if ( background_filename != NULL && un_in_filename != NULL )
        	{
         	fprintf ( stderr, " Error: `-I' option cannot be used with `-b' option!\n" );
         	return ( 1 );
@@ -163,15 +183,24 @@ int main ( int argc, char **argv )
 
 	if ( boxes_in_filename != NULL )
        	{
-		if ( unmatched_out_filename != NULL )
+		if ( un_out_filename != NULL )
 		{
 			fprintf ( stderr, " Error: `-u' option cannot be used with `-s' option!\n" );
 			return ( 1 );
 		}
 
-		if ( unmatched_in_filename != NULL )
+		if ( un_in_filename != NULL )
 		{
 			fprintf ( stderr, " Error: `-I' option cannot be used with `-s' option!\n" );
+			return ( 1 );
+		}
+	}
+
+	if ( boxes_in_filename == NULL )
+       	{
+		if ( un_smile_out_filename != NULL )
+		{
+			fprintf ( stderr, " Error: `-U' option must be used with `-s' option!\n" );
 			return ( 1 );
 		}
 	}
@@ -188,7 +217,7 @@ int main ( int argc, char **argv )
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
 	long_seq = sw . L;
 
-	if ( long_seq && unmatched_in_filename != NULL )
+	if ( long_seq && un_in_filename != NULL )
        	{
         	fprintf ( stderr, " Error: `-I' option cannot be used with `-L' option!\n" );
         	return ( 1 );
@@ -463,7 +492,7 @@ int main ( int argc, char **argv )
 
 
 	/* The algorithm for motif extraction */
-	if ( unmatched_in_filename == NULL )	//This is, in the normal case, when we search for motifs in a set of sequences (MultiFASTA file)
+	if ( un_in_filename == NULL )	//This is, in the normal case, when we search for motifs in a set of sequences (MultiFASTA file)
 	{
 		start = gettime();
 
@@ -812,18 +841,33 @@ int main ( int argc, char **argv )
 			if ( nb_gaps == 0 )
 			{
 				if ( background_filename == NULL )
+				{
 					write_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+					if ( smile_out_filename != NULL )
+						write_motifs_smile ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
+				}
 				else
+				{
 					write_motifs_back ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+					//if ( un_smile_out_filename != NULL )
+					//	write_motifs_back_smile ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+				}
 
-				if ( smile_out_filename != NULL )
-					write_motifs_smile ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
 			}
 			else
 			{
-				write_structured_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
-				if ( smile_out_filename != NULL )
-					write_structured_motifs_smile ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
+				if ( background_filename == NULL )
+				{
+					write_structured_motifs ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+					if ( smile_out_filename != NULL )
+						write_structured_motifs_smile ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start );
+				}
+				else
+				{
+					//write_structured_motifs_back ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+					if ( un_smile_out_filename != NULL )
+						write_structuted_motifs_back_smile ( sw, num_seqs, seqs, g_occur, g_all_occur, end - start, P );
+				}
 			}
 				
 		#ifdef _USE_MPI
@@ -843,9 +887,9 @@ int main ( int argc, char **argv )
 	else //This is in the case when we search for foreground motifs, which were previously not exactly matched with background motifs, in a set of sequences (MultiFASTA file)
 	{
 		/* open the file with the unmatched motifs for reading */
-        	if ( ! ( un_in_fd = fopen ( unmatched_in_filename, "r") ) ) 
+        	if ( ! ( un_in_fd = fopen ( un_in_filename, "r") ) ) 
         	{
-                	fprintf ( stderr, " Error: Cannot open file %s!\n", unmatched_in_filename );
+                	fprintf ( stderr, " Error: Cannot open file %s!\n", un_in_filename );
                 	return ( 1 ); 
         	}
 
@@ -1101,9 +1145,10 @@ int main ( int argc, char **argv )
    	free ( sw . output_filename );
    	free ( sw . alphabet );
 	if ( background_filename )    free ( sw . background_filename );
-	if ( unmatched_in_filename )  free ( sw . unmatched_in_filename );
-	if ( unmatched_out_filename ) free ( sw . unmatched_out_filename );
+	if ( un_in_filename )  free ( sw . un_in_filename );
+	if ( un_out_filename ) free ( sw . un_out_filename );
 	if ( smile_out_filename )    free ( sw . smile_out_filename );
+	if ( un_smile_out_filename )    free ( sw . un_smile_out_filename );
 	if ( nb_gaps )
 	{ 
 		free ( sw . boxes_in_filename );

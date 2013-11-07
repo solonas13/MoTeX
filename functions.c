@@ -1062,19 +1062,15 @@ inline unsigned int popcount ( unsigned int x )
 	return __builtin_popcount( x );
 }
 
-unsigned int write_motex_header ( struct TSwitch sw, unsigned int num_seqs, double exectime, int P )
+/*
+write the header of the output
+*/
+unsigned int write_motex_header ( FILE * out_fd, struct TSwitch sw, unsigned int num_seqs, double exectime, int P )
 {
 	time_t               t;
    	time ( &t );
-	FILE * 		out_fd;				// file with the motifs
 	unsigned int         i;
 
-	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
-	{	 
-		fprintf( stderr, " Error: cannot open file!\n");
-		return  ( 0 );
-	}
-      	
 	if ( sw . nb_boxes == 1 )
 	{
 		fprintf ( out_fd, "####################################\n" );
@@ -1126,12 +1122,6 @@ unsigned int write_motex_header ( struct TSwitch sw, unsigned int num_seqs, doub
 		fprintf ( out_fd, "####################################\n\n" );
 	}
 
-	if ( fclose ( out_fd ) ) 
-	{
-      		fprintf( stderr, " Error: file close error!\n");				      
-		return ( 0 );
-	}
-
 	return ( 1 );
 }
 
@@ -1147,8 +1137,14 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 	AlphaMap *	alphabet = NULL;
         Trie *      	trie = NULL;
 
+	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file!\n");
+		return  ( 0 );
+	}
+
 	/* Write the header */
-	write_motex_header ( sw, num_seqs, exectime, P );
+	write_motex_header ( out_fd, sw, num_seqs, exectime, P );
 
 	/* Create an empty alphabet */
 	alphabet = alpha_map_new();
@@ -1159,11 +1155,6 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( out_fd = fopen( sw . output_filename, "a+") ) == NULL) 
-	{	 
-		fprintf( stderr, " Error: cannot open file!\n");
-		return  ( 0 );
-	}
 
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
@@ -1220,8 +1211,14 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
 	AlphaMap *	alphabet = NULL;
         Trie *      	trie = NULL;
 
+	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file!\n");
+		return  ( 0 );
+	}
+
 	/* Write the header */
-	write_motex_header ( sw, num_seqs, exectime, P );
+	write_motex_header ( out_fd, sw, num_seqs, exectime, P );
 
 	/* Create an empty alphabet */
 	alphabet = alpha_map_new();
@@ -1238,11 +1235,6 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
 	for ( b = 0; b < sw . nb_gaps; b ++ )	
 		total_length_sm += sw . blens[b];
 
-	if ( ( out_fd = fopen( sw . output_filename, "a+") ) == NULL) 
-	{	 
-		fprintf( stderr, " Error: cannot open file!\n");
-		return  ( 0 );
-	}
 
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
@@ -1326,17 +1318,13 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
 	return ( 1 );
 }
 
-unsigned int write_smile_header ( struct TSwitch sw, unsigned int num_seqs, char * alphabet_str )
+/*
+write the header of the output a la SMILE
+*/
+unsigned int write_smile_header ( FILE * out_fd, struct TSwitch sw, unsigned int num_seqs, char * alphabet_str )
 {
-	FILE * 		out_fd;				// file with the motifs
 	unsigned int i;
 	char line1[LINE_SIZE];
-	
-	if ( ( out_fd = fopen( sw . smile_out_filename, "w") ) == NULL) 
-	{	 
-		fprintf( stderr, " Error: cannot open file!\n");
-		return  ( 0 );
-	}
 
 	if ( sw . nb_boxes == 1 )
 	{
@@ -1417,11 +1405,6 @@ unsigned int write_smile_header ( struct TSwitch sw, unsigned int num_seqs, char
 	fprintf( out_fd, "========================================" ); 
 	fprintf( out_fd, "=======================================\n" );
 
-	if ( fclose ( out_fd ) ) 
-	{
-      		fprintf( stderr, " Error: file close error!\n");				      
-		return ( 0 );
-	}
 	return ( 1 );
 }
 
@@ -1442,7 +1425,13 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
         else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
         else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
 
-	write_smile_header ( sw, num_seqs, alphabet_str );
+	if ( ( out_fd = fopen( sw . smile_out_filename, "a+") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file!\n");
+		return  ( 0 );
+	}
+
+	write_smile_header ( out_fd, sw, num_seqs, alphabet_str );
 
 	/* Create an empty alphabet */
 	alphabet = alpha_map_new();
@@ -1453,11 +1442,6 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( out_fd = fopen( sw . smile_out_filename, "a+") ) == NULL) 
-	{	 
-		fprintf( stderr, " Error: cannot open file!\n");
-		return  ( 0 );
-	}
 
 	for ( i = 0; i < num_seqs; i ++ ) 
 	{
@@ -1528,6 +1512,7 @@ write the output a la SMILE
 unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char const ** seqs, unsigned int ** u, unsigned int ** v, double exectime )
 {
 	FILE * 		out_fd;				// file with the motifs
+	FILE * 		un_out_fd;			// file with the motifs
 	unsigned int i, j, k, l;
 	unsigned int valid = 0;
 
@@ -1537,7 +1522,13 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
         else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
         else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
 
-	write_smile_header ( sw, num_seqs, alphabet_str );
+	if ( ( out_fd = fopen( sw . smile_out_filename, "w") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file!\n");
+		return  ( 0 );
+	}
+
+	write_smile_header ( out_fd, sw, num_seqs, alphabet_str );
 
 	AlphaMap *	alphabet = NULL;
         Trie *      	trie = NULL;
@@ -1550,12 +1541,6 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
-
-	if ( ( out_fd = fopen( sw . smile_out_filename, "a+") ) == NULL) 
-	{	 
-		fprintf( stderr, " Error: cannot open file!\n");
-		return  ( 0 );
-	}
 
 	unsigned int b;
 	unsigned int total_length_sm = sw . l;
@@ -1642,7 +1627,7 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 							}
 							id[total_length_sm + sw . nb_gaps] = '\0';
 
-							fprintf ( out_fd, "%s %s %d\t%d\n", motif, id, u[i][k * m + j], v[i][k * m + j] );
+							fprintf ( un_out_fd, "%s %s %d\t%d\n", motif, id, u[i][k * m + j], v[i][k * m + j] );
 
 							free ( id );
 							valid ++;
@@ -1653,9 +1638,6 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
                         }
 		}
 	}
-
-        //Nb models: 63002
-        //User time: 2.78 sec.
 
 	fprintf ( out_fd, "Nb models: %d\n", valid );
 	fprintf ( out_fd, "User time: %lf sec.\n", exectime );
@@ -1678,8 +1660,6 @@ write the output considering a background file as input
 */
 unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P )
 {
-	time_t               t;
-   	time ( &t );
 	FILE * 		out_fd;				// file with the motifs
 	FILE * 		un_out_fd;			// file with the unmatched fg motifs
 	FILE * 		in_fd;				// file with the bg motifs
@@ -1696,24 +1676,22 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 
         struct Tdata * bdata = NULL;
 	
-#ifdef _USE_MPFR
+	#ifdef _USE_MPFR
 	mpfr_t mpfr_bin;
 	mpfr_init2(mpfr_bin, ACC);
 
 	mpfr_t * mpfr_factLUT = malloc( ( num_seqs + 1 ) * sizeof( mpfr_t ) );
 	mpfr_fillTable( mpfr_factLUT, ( unsigned long int ) num_seqs );
-#else
+	#else
 	long double bin_cdf = 0.;
 	long double *log_factLUT = calloc( (num_seqs + 1 ), sizeof(long double) );
 	fillTable ( log_factLUT, num_seqs );
-#endif
-
+	#endif
 	char background_size_string[100];
 	char background_quorum_size_string[100];
 
 	int background_size = 0, background_quorum_size = 0;
 
-        write_motex_header ( sw, num_seqs, exectime, P );
 
 	/* Create an empty alphabet */
 	alphabet = alpha_map_new();
@@ -1724,17 +1702,21 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	/* Create an empty trie based on the alphabet */
         trie = trie_new ( alphabet );
 
-	if ( ( out_fd = fopen( sw . output_filename, "a+") ) == NULL) 
+	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
 	}
 
-	if ( ( un_out_fd = fopen( sw . unmatched_out_filename, "w") ) == NULL) 
+        write_motex_header ( out_fd, sw, num_seqs, exectime, P );
+
+	if ( ( un_out_fd = fopen( sw . un_out_filename, "w") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
 	}
+
+        write_motex_header ( un_out_fd, sw, num_seqs, exectime, P );
 
 	if ( ( in_fd = fopen( sw . background_filename, "r") ) == NULL) 
 	{	 
@@ -1742,28 +1724,30 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 		return  ( 0 );
 	}
 
+	/* Here we need to read the num of seqs and the quorum of the bf file */
+	unsigned int line_num = 0;
 	while ( fgets ( line, LINE_SIZE, in_fd ) && line[0] != '\n' )
 	{
-		if ( strlen( line ) > 10 && line[6] == 'N' )
-	      	{
-			for ( i = 10; i < strlen(line); ++i )
-		  	{
-		    		background_size_string[i - 10] = line[i];
-		    
-		    		if(line[i] == 32 || line[i] == 10 || line[i] == 13 || line[i] == 9)	break;
-		  	}
-			background_size_string[i] = '\0';
-		
-	      	}
-	    	else if( strlen( line ) > 10 && line[6] == 'q')
-	      	{
-			for( i = 10; i < strlen(line); ++i )
-		  	{
-		    		background_quorum_size_string[i - 10] = line[i];
-		    		if(line[i] == 32 || line[i] == 10 || line[i] == 13 || line[i] == 9)	break;
-		  	}
-			background_quorum_size_string[i] = '\0';
-	      	}
+		line_num++;
+		if ( line_num == 6 )
+		{
+				
+			char * pch;
+			pch = strtok ( line, " " );
+			pch = strtok ( NULL, " " );
+			pch = strtok ( NULL, " " );
+			strcpy ( background_size_string, pch );
+		}
+		if ( line_num == 8 )
+		{
+				
+			char * pch;
+			pch = strtok ( line, " " );
+			pch = strtok ( NULL, " " );
+			pch = strtok ( NULL, " " );
+			pch = strtok ( NULL, "\n" );
+			strcpy ( background_quorum_size_string, pch );
+		}
 	}
 	
 	background_size = atoi( background_size_string );
@@ -1833,28 +1817,28 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 						data = -1;
 						trie_store ( trie, ACmotif, data );
 										
-	#ifdef _USE_MPFR
-					mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int)u[i][j], (unsigned long int)num_seqs, (long double)background_quorum_size/background_size, mpfr_factLUT);
-					
-					mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
-					
-					fprintf ( out_fd, "%s %d %d %lf %d %d %d ", 
-						  motif, 
-						  u[i][j],
-						  num_seqs,
-						  (double) u[i][j]/num_seqs,
-						  v[i][j],
-						  0,
-						  0
-						  );
-					
-					mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
-					
-					fprintf( out_fd, "\n");
-					
-	#else
-						bin_cdf = binomial_cdf_less_than (u[i][j], num_seqs, ( long double ) background_quorum_size/background_size, log_factLUT );
+						#ifdef _USE_MPFR
+						mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int)u[i][j], (unsigned long int)num_seqs, (long double)background_quorum_size/background_size, mpfr_factLUT);
 						
+						mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
+						
+						fprintf ( out_fd, "%s %d %d %lf %d %d %d ", 
+							  	motif, 
+							  	u[i][j],
+							  	num_seqs,
+							  	(double) u[i][j]/num_seqs,
+							  	v[i][j],
+							  	0,
+							  	0
+							  	);
+						
+						mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
+						
+						fprintf( out_fd, "\n");
+						
+						#else
+						bin_cdf = binomial_cdf_less_than (u[i][j], num_seqs, ( long double ) background_quorum_size/background_size, log_factLUT );
+							
 						fprintf ( out_fd, "%s %d %d %lf %d %d %d %Le\n", 
 								motif, 
 								u[i][j], 
@@ -1864,10 +1848,9 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 								0, 
 								0, 
 								1. - bin_cdf  );
-						
-	#endif
-						
-
+							
+						#endif
+							
 						fprintf ( un_out_fd, "%s %d %d %lf %d\n", 	//write it out as an unmatched fg motif
 								motif, 
 								u[i][j], 
@@ -1880,35 +1863,30 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 					else 							//it already exists 
 					{
 						if ( data != -1 )				//as a bg motif; add it as a fg motif matching this bg motif
-						  {
+						{
 						    
-						    
-						    
-	#ifdef _USE_MPFR
-						    mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int)u[i][j], (unsigned long int) num_seqs, ( long double ) bdata[ data ] . r , mpfr_factLUT);
-						    
-						    mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
-						    
-						    fprintf ( out_fd, "%s %d %d %lf %d %lf %d ", 
-							      motif, 
-							      u[i][j],
-							      num_seqs,
-							      (double) u[i][j]/num_seqs,
-							      v[i][j],						      
-							      bdata[data] . r,
-							      bdata[data] . v
-							      );
-						    
-						    mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
-						    fprintf(out_fd, "\n");
-						    
-	#else
-						    
-						  
+							#ifdef _USE_MPFR
 
+							mpfr_binomial_cdf_less_than(mpfr_bin, (unsigned long int)u[i][j], (unsigned long int) num_seqs, ( long double ) bdata[ data ] . r , mpfr_factLUT);
+							    
+							mpfr_ui_sub(mpfr_bin, 1, mpfr_bin, GMP_RNDU);
+							   
+							fprintf ( out_fd, "%s %d %d %lf %d %lf %d ", 
+									motif, 
+								      	u[i][j],
+								      	num_seqs,
+								      	(double) u[i][j]/num_seqs,
+								      	v[i][j],						      
+								      	bdata[data] . r,
+								      	bdata[data] . v
+								      	);
+							    
+							mpfr_out_str( out_fd, 10, 10, mpfr_bin, GMP_RNDU);
+							fprintf(out_fd, "\n");
+							    
+							#else
 
 							bin_cdf = binomial_cdf_less_than ( u[i][j], num_seqs, bdata[ data ].u, log_factLUT);
-						  
 
 							fprintf ( out_fd, "%s %d %d %lf %d %lf %d %Le\n", 
 									motif, 
@@ -1920,12 +1898,14 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 									bdata [ data ] . v,
 									1. - bin_cdf
 							    );
-	#endif
+
+							#endif
+
 							data = -1;
 							trie_store ( trie, ACmotif, data );
 							pvalid ++;
 						}
-						//as a fg motif; do nothing as it is a duplicate	
+							//as a fg motif; do nothing as it is a duplicate	
 					}
 					free ( motif );
 					free ( ACmotif );
@@ -1939,11 +1919,11 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	fprintf ( out_fd, "#  %d of them were not matched with any background motif.\n\n", uvalid );
 	
 
-#ifdef _USE_MPFR
+	#ifdef _USE_MPFR
 	
-#else
+	#else
 	free(log_factLUT);
-#endif
+	#endif
 	
 	trie_free ( trie );    
         trie = NULL;
@@ -1966,12 +1946,291 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 }
 
 /*
+write the output a la SMILE considering a motex background file as input
+*/
+unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs, char const   ** seqs, unsigned int ** u, unsigned int ** v, double exectime, int P )
+{
+	FILE * 		out_fd;				// file with the motifs
+	FILE * 		un_out_fd;			// file with the motifs
+	FILE * 		in_fd;				// file with the bg motifs
+	unsigned int i, j, k, l;
+	char line[LINE_SIZE];
+        char * alphabet_str = NULL;
+
+	unsigned int pvalid = 0;
+	unsigned int uvalid = 0;
+	unsigned int num_bseqs;
+	unsigned int max_alloc;
+
+	AlphaMap *	alphabet = NULL;
+        Trie *      	trie = NULL;
+
+        struct Tdata * bdata = NULL;
+	
+	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = DNA;
+        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
+        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
+
+	if ( ( un_out_fd = fopen( sw . un_smile_out_filename, "w") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file %s!\n", sw . un_smile_out_filename );
+		return  ( 0 );
+	}
+
+	write_smile_header ( un_out_fd, sw, num_seqs, alphabet_str );
+
+	if ( ( out_fd = fopen( sw . smile_out_filename, "w") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file %s!\n", sw . smile_out_filename );
+		return  ( 0 );
+	}
+
+	write_smile_header ( out_fd, sw, num_seqs, alphabet_str );
+
+
+	/* Create an empty alphabet */
+	alphabet = alpha_map_new();
+
+	/* Define the alphabet's range */
+        alpha_map_add_range ( alphabet, 0, 127 );
+
+	/* Create an empty trie based on the alphabet */
+        trie = trie_new ( alphabet );
+
+	if ( ( in_fd = fopen( sw . background_filename, "r") ) == NULL) 
+	{	 
+		fprintf( stderr, " Error: cannot open file %s!\n", sw . background_filename );
+		return  ( 0 );
+	}
+
+	unsigned int line_num = 0;
+	char background_size_string[100];
+	char background_quorum_size_string[100];
+
+	/* Here we need to read the num of seqs and the quorum of the bf file */
+	while ( fgets ( line, LINE_SIZE, in_fd ) && line[0] != '\n' )
+	{
+		line_num++;
+		if ( line_num == 6 )
+		{
+				
+			char * pch;
+			pch = strtok ( line, " " );
+			pch = strtok ( NULL, " " );
+			pch = strtok ( NULL, " " );
+			strcpy ( background_size_string, pch );
+		}
+		if ( line_num == 8 )
+		{
+				
+			char * pch;
+			pch = strtok ( line, " " );
+			pch = strtok ( NULL, " " );
+			pch = strtok ( NULL, " " );
+			pch = strtok ( NULL, "\n" );
+			strcpy ( background_quorum_size_string, pch );
+		}
+	}
+
+	unsigned int b;
+	unsigned int total_length_sm = sw . l;
+	for ( b = 0; b < sw . nb_gaps; b ++ )
+		total_length_sm += sw . blens[b];
+	
+	max_alloc = num_bseqs = 0;
+ 
+	while ( fgets ( line, LINE_SIZE, in_fd ) && line[0] != '\n' )
+	{
+		if ( num_bseqs >= max_alloc )
+                {
+                	bdata = ( struct Tdata * ) realloc ( bdata,   ( max_alloc + ALLOC_SIZE ) * sizeof ( struct Tdata ) );
+                        max_alloc += ALLOC_SIZE;
+               	}
+		AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
+		char * pch;
+		pch = strtok ( line, " " );
+		for ( k = 0; k < total_length_sm + sw . nb_gaps; k ++ )
+			ACmotif[k] = ( AlphaChar ) pch[k];
+
+    		pch = strtok ( NULL, " " );
+    		bdata[ num_bseqs ] . u = atoi( pch );
+
+    		pch = strtok ( NULL, " " );
+    		bdata[ num_bseqs ] . n = atoi( pch );
+
+    		pch = strtok ( NULL, " " );
+    		bdata[ num_bseqs ] . r = atof( pch );
+
+    		pch = strtok ( NULL, " ");
+    		bdata[ num_bseqs ] . v = atoi( pch );
+
+		TrieData data = num_bseqs;
+		trie_store ( trie, ACmotif, data );
+
+                free ( ACmotif );
+		num_bseqs++;
+	}
+
+	if ( fclose ( in_fd ) ) 
+	{
+      		fprintf( stderr, " Error: file close error!\n");				      
+		return ( 0 );
+	}
+
+	for ( i = 0; i < num_seqs; i ++ ) 
+	{
+		unsigned int m = strlen ( seqs[i] );
+
+                for ( j = sw . l - 1; j < m; j ++ )
+		{
+			for ( k = 0; k < sw . nb_structs; k ++ )
+			{
+				if (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100  >= sw . q && v[i][k * m + j] >= sw . n )
+					if (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100  <= sw . Q && v[i][k * m + j] <= sw . N )
+					{
+						AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
+						char      * motif   = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
+						unsigned int ell;
+						unsigned int offset;
+						unsigned int index = 0;
+						unsigned int jj = j - ( sw . l  ) + 1;
+
+						for ( b = 0; b < sw . nb_boxes; b ++ ) 
+						{
+							/* Extract the structured motif from the sequences */
+							if ( b == 0 )	
+							{
+								offset = 0;
+								ell = sw . l;
+								for ( l = 0; l < ell; l++, index++ )
+								{
+									ACmotif[index] = ( AlphaChar ) seqs[i][jj + l];
+									motif[index]   = seqs[i][jj + l];
+								}
+								ACmotif [ index ] = '_'; 
+								motif[index] = '_';
+								index ++;
+							}	
+							else
+							{
+								offset += sw . S[k][b - 1] + ell;
+								ell = sw . blens[b - 1];
+								for ( l = 0; l < ell; l++, index++ )
+								{
+									ACmotif[index] = ( AlphaChar ) seqs[i][jj + offset + l];
+									motif[index]   = seqs[i][jj + offset + l];
+								}
+								ACmotif [ index ] = '_'; 
+								motif[index] = '_';
+								index ++;
+							}
+						}
+
+						index--;
+						ACmotif [ index ] = 0;
+						motif [ index ] = 0;
+
+						TrieData data;
+
+						if ( trie_retrieve ( trie, ACmotif, &data ) != TRUE ) 	// ACmotif does not exist as bg motif --- output it to the unmatched ones
+						{
+							data = -1;
+							trie_store ( trie, ACmotif, data );
+							char      * id   = calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
+
+							//TODO: this should be implemented in a clearer way.
+							unsigned int ii, jj;
+							for ( ii = 0; ii < total_length_sm + sw . nb_gaps; ii++ )
+							{
+								for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
+									if ( motif[ii] == alphabet_str[jj] ) break;
+
+								char * s   = calloc ( strlen ( alphabet_str ) , sizeof( char ) );
+								if ( jj < strlen ( alphabet_str ) )	
+								{
+									sprintf( s, "%d", jj);
+									id[ii] = s[0] ;
+								}
+								else
+									id[ii] = '-';
+									 
+								free ( s );
+							}
+							id[total_length_sm + sw . nb_gaps] = '\0';
+							fprintf ( un_out_fd, "%s %s %d\t%d\n", motif, id, u[i][k * m + j], v[i][k * m + j] );
+							fprintf ( out_fd,    "%s %s %d\t%d\n", motif, id, u[i][k * m + j], v[i][k * m + j] );
+							free ( id );
+							uvalid ++;
+						}
+						else 							// it already exists 
+						{
+							if ( data != -1 )				// as a bg motif; add it as a fg motif matching this bg motif
+							{
+								char      * id   = calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
+
+								//TODO: this should be implemented in a clearer way.
+								unsigned int ii, jj;
+								for ( ii = 0; ii < total_length_sm + sw . nb_gaps; ii++ )
+								{
+									for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
+										if ( motif[ii] == alphabet_str[jj] ) break;
+
+									char * s   = calloc ( strlen ( alphabet_str ) , sizeof( char ) );
+									if ( jj < strlen ( alphabet_str ) )	
+									{
+										sprintf( s, "%d", jj );
+										id[ii] = s[0] ;
+									}
+									else
+										id[ii] = '-';
+										 
+									free ( s );
+								}
+								id[total_length_sm + sw . nb_gaps] = '\0';
+								fprintf ( out_fd, "%s %s %d\t%d\n", motif, id, u[i][k * m + j], v[i][k * m + j] );
+								free ( id );
+								data = -1;
+								trie_store ( trie, ACmotif, data );
+								pvalid ++;
+							}
+						}
+						free ( motif );
+						free ( ACmotif );
+					}
+			}
+		}
+	}
+
+	fprintf ( un_out_fd, "Nb models: %d\n", uvalid );
+	fprintf ( un_out_fd, "User time: %lf sec.\n", exectime );
+	fprintf ( out_fd, "Nb models: %d\n", pvalid );
+	fprintf ( out_fd, "User time: %lf sec.\n", exectime );
+
+	trie_free ( trie );    
+        trie = NULL;
+        alpha_map_free ( alphabet );
+        alphabet = NULL;
+	free ( bdata );
+	bdata = NULL;
+
+	if ( fclose ( un_out_fd ) ) 
+	{
+      		fprintf( stderr, " Error: file close error!\n");				      
+		return ( 0 );
+	}
+	if ( fclose ( out_fd ) ) 
+	{
+      		fprintf( stderr, " Error: file close error!\n");				      
+		return ( 0 );
+	}
+	return ( 1 );
+}
+
+/*
 write the output considering a foreground file of previously unmatched motifs as input
 */
 unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char const ** fseqs, unsigned int ** u, unsigned int ** v, double exectime, int P, unsigned int num_seqs, struct Tdata * fdata )
 {
-	time_t               t;
-   	time ( &t );
 	FILE * 		out_fd;				// file with the motifs
 	unsigned int i, j, k;
 	unsigned int valid = 0;
@@ -1986,27 +2245,14 @@ unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char
 	long double *log_factLUT = calloc( (num_seqs + 1), sizeof(long double) );
 	fillTable ( log_factLUT, num_seqs );
 #endif
-
 	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
 	{	 
 		fprintf( stderr, " Error: cannot open file!\n");
 		return  ( 0 );
 	}
 
-   	fprintf ( out_fd, "####################################\n" );
-   	fprintf ( out_fd, "# Program: MOTifs EXtraction\n" );
-   	fprintf ( out_fd, "# Rundate: %s", ctime ( &t ) );
-   	fprintf ( out_fd, "# Input file: %s\n", sw . input_filename );
-   	fprintf ( out_fd, "# Output file: %s\n", sw . output_filename );
-	fprintf ( out_fd, "# For N = %d input sequences\n", num_seqs );
-	fprintf ( out_fd, "#     l = %d\n", sw . l ) ;
-	fprintf ( out_fd, "#     d = %d\n", sw . d );
-	fprintf ( out_fd, "#     e = %d\n", sw . e );
-	fprintf ( out_fd, "#     q = %d\n", sw . q );
-	if ( sw . n )
-	fprintf ( out_fd, "#     n = %d\n", sw . n );
-	fprintf ( out_fd, "# Run on %d proc(s) in %lf secs\n", P, exectime );
-   	fprintf ( out_fd, "####################################\n\n" );
+        write_motex_header ( out_fd, sw, num_seqs, exectime, P );
+
 
 	for ( i = 0; i < num_fseqs; i ++ ) 
 	{
@@ -2086,7 +2332,8 @@ static struct option long_options[] =
    { "boxes-in-file",		required_argument, NULL, 's' },
    { "unmatched-in-file",	required_argument, NULL, 'I' },
    { "unmatched-out-file",	required_argument, NULL, 'u' },
-   { "SMILE-out-file",		required_argument, NULL, 'R' },
+   { "SMILE-out-file",		required_argument, NULL, 'S' },
+   { "unmatched-SMILE-out-file",required_argument, NULL, 'U' },
    { "help",               	no_argument,       NULL, 'h' },
    { NULL,                 	0,                 NULL, 0   }
  };
@@ -2107,9 +2354,10 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
    sw -> background_filename		= NULL;
    sw -> input_filename 		= NULL;
    sw -> output_filename		= NULL;
-   sw -> unmatched_in_filename 		= NULL;
-   sw -> unmatched_out_filename		= NULL;
+   sw -> un_in_filename 		= NULL;
+   sw -> un_out_filename		= NULL;
    sw -> smile_out_filename		= NULL;
+   sw -> un_smile_out_filename		= NULL;
    sw -> boxes_in_filename		= NULL;
    sw -> q 				= 0;
    sw -> Q 				= 100;
@@ -2123,7 +2371,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
 
    args = 0;
 
-   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:Q:k:d:e:n:N:s:t:L:I:S:u:h", long_options, &oi ) ) != - 1 )
+   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:Q:k:d:e:n:N:s:t:L:I:S:u:U:h", long_options, &oi ) ) != - 1 )
     {
       switch ( opt )
        {
@@ -2145,18 +2393,23 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
            break;
 
          case 'I':
-           sw -> unmatched_in_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
-           strcpy ( sw -> unmatched_in_filename, optarg );
+           sw -> un_in_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
+           strcpy ( sw -> un_in_filename, optarg );
            break;
 
          case 'u':
-           sw -> unmatched_out_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
-           strcpy ( sw -> unmatched_out_filename, optarg );
+           sw -> un_out_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
+           strcpy ( sw -> un_out_filename, optarg );
            break;
 
          case 'S':
            sw -> smile_out_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
            strcpy ( sw -> smile_out_filename, optarg );
+           break;
+
+         case 'U':
+           sw -> un_smile_out_filename = ( char * ) malloc ( ( strlen ( optarg ) + 1 ) * sizeof ( char ) );
+           strcpy ( sw -> un_smile_out_filename, optarg );
            break;
 
          case 's':
@@ -2186,7 +2439,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
             {
               return ( 0 );
             }
-           sw -> n = val;
+           sw -> Q = val;
            break;
 
          case 'k':
@@ -2214,7 +2467,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
             {
               return ( 0 );
             }
-           sw -> n = val;
+           sw -> N = val;
            break;
 
          case 'd':
@@ -2254,6 +2507,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
            sw -> e = val;
 	   args ++;
            break;
+
          case 'h':
            return ( 0 );
        }
@@ -2317,13 +2571,17 @@ void usage ( void )
                      "                                      the MPI version, this should be set to 1\n"
                      "                                      (default: 0); useful  for a few (or one)\n"
                      "                                      very long sequence(s), e.g. a chromosome.\n" );
-   fprintf ( stdout, "  -u, --unmatched-out-file  <str>     Output filename for foreground motifs not\n"
-                     "                                      matched exactly with any background motif \n"
+   fprintf ( stdout, "  -u, --un-out-file         <str>     Output filename for foreground motifs not\n"
+                     "                                      matched exactly with any background motif\n"
                      "                                      in the file passed with the `-b' option.\n" );
-   fprintf ( stdout, "  -I, --unmatched-in-file   <str>     Input filename of the aforementioned file\n"
+   fprintf ( stdout, "  -I, --un-in-file          <str>     Input filename of the aforementioned file\n"
                      "                                      with the unmatched  motifs. These  motifs\n"
                      "                                      will be approximately searched  as motifs\n"
                      "                                      in the file passed with the `-i' option.\n" );
+   fprintf ( stdout, "  -U, --SMILE-un-out-file   <str>     SMILE-like output filename for foreground\n"
+                     "                                      motifs  not  matched  exactly  with  any\n"
+                     "                                      background motif in the file passed with\n"
+                     "                                      the `-b' option.\n" );
  }
 
 /*
