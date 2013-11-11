@@ -1,26 +1,44 @@
-1. Compile the programme for the simulation of motifs
+1. Compile the programme for the simulation of motifs.
 
-  $ gcc -o motif_sim motif_sim.c
+  For single motifs type:
 
-2. Uncompress the basic input dataset
+  $ gcc -o motif_sim motif_sim.c -lm
 
-  $ bunzip2 hsapiens.1200_genes.fa.bz2
+  For structured motifs type:
 
-3. Generate the motifs and the modified input dataset <8, 1, 2, 1>, using the basic input dataset
+  $ gcc -o str_motif_sim str_motif_sim.c -lm
 
-  $ ./motif_sim hsapiens.1200_genes.fa 8 1 2 1 100 hsapiens.1200_genes_mod.fa motifs.txt
+2. Uncompress the basic input dataset via
 
-4. Go up one directory
+  $ bunzip2 dnc_subtilis_330-30.seq.bz2
+
+3. Generate the motifs and the modified input dataset using the basic input dataset.
+
+  For single motifs type:
+
+  $ ./motif_sim dnc_subtilis_330-30.seq 8 0 1 7 100 dnc_subtilis_330-30_mod.seq motifs.txt
+
+  For structured motifs type:
+
+  $ ./str_motif_sim dnc_subtilis_330-30.seq 8 1 boxes.txt 7 100 dnc_subtilis_330-30_mod.seq motifs.txt
+
+4. Go up one directory via
 
   $ cd ..
 
-5. Compile MoTeX
+5. Compile MoTeX via
 
   $ make -f Makefile.OMP.gcc
 
-6. Run MoTeX with <int> threads --- it requires around ten minutes with 48 threads
+6. Run MoTeX with 4 threads.
 
-  $ ./motexOMP -a DNA -i ./data/hsapiens.1200_genes_mod.fa -o output.motex -d 0 -k 8 -e 2 -q 1 -t <int>
+  For single motifs type:
+
+  $ ./motexOMP -a DNA -i ./data/dnc_subtilis_330-30_mod.seq -o output.motex -d 0 -k 8 -e 1 -q 7 -t 4
+
+  For structured motifs type:
+
+  $ ./motexOMP -a DNA -i ./data/dnc_subtilis_330-30_mod.seq -o output.motex -d 0 -k 8 -e 1 -q 7 -t 4 -s ./data/boxes.txt
 
 7. Change to directory `data'
 

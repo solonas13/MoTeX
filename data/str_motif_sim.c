@@ -43,8 +43,10 @@ int main ( int argc, char **argv )
         unsigned int    total_length;           // the total length of the sequences
 	char            * alphabet;
         unsigned int    i, j;
-	FILE *          in_fd;                  // the input file descriptor
-        char *          input_filename;         // the input file
+	FILE *          in_fd;                    // the input file descriptor
+        char *          input_filename;           // the input file
+	FILE *          boxes_in_fd;              // the input file descriptor
+        char *          boxes_in_filename;     // the input boxes file
 	FILE *          out1_fd;                  // the input file descriptor
         char *          output1_filename;         // the input file
 	FILE *          out2_fd;                  // the input file descriptor
@@ -53,26 +55,19 @@ int main ( int argc, char **argv )
 	if ( argc != 9 )
 	{
 		fprintf ( stderr, " Error: wrong number of arguments!\n" );
-		fprintf ( stderr, " %s <input> <k> <e_min> <e_max> <q> <# motifs> <sequences FASTA output> <implanted motifs output>\n", argv[0] );
+		fprintf ( stderr, " %s <input> <k> <e_max> <boxes> <q> <# motifs> <sequences FASTA output> <implanted motifs output>\n", argv[0] );
 		return ( 1 );
 	}
         
 	alphabet = DNA;
         input_filename = argv[1];	          // input
         unsigned int k = atoi ( argv[2] );        // motif length         
-	unsigned int eMIN = atoi ( argv[3] );     // (unsigned int)(rand())%( eMIN + 1 );        // number of errors
-	unsigned int eMAX = atoi ( argv[4] );     // (unsigned int)(rand())%( eMAX + 1 );        // number of errors
+	unsigned int eMAX = atoi ( argv[3] );     // (unsigned int)(rand())%( eMAX + 1 );        // number of errors
+	boxes_in_filename = argv[4];     	  // boxes
 	unsigned int q = atoi ( argv[5] );	  // proportion of sequences into which we will insert the motif
         unsigned int num_mot = atoi ( argv[6] );  // number of motifs to be inserted         
         output1_filename = argv[7];		  // output
         output2_filename = argv[8];		  // output
-
-	if ( eMIN > eMAX )
-	{
-		fprintf ( stderr, " Error: e_min MUST be <= e_max!\n" );
-		fprintf ( stderr, " %s <input> <k> <e_min> <e_max> <q> <# motifs> <sequences FASTA output> <implanted motifs output>\n", argv[0] );
-		return ( 1 );
-	}
 
 	/* read the (multi)FASTA file with the sequences to t -- record the number num_seq of sequences */
 	if ( ! ( in_fd = fopen ( input_filename, "r") ) )
@@ -156,6 +151,61 @@ int main ( int argc, char **argv )
         }
         free ( t );
 
+	/* read the boxes file in memory */
+	if ( ! ( boxes_in_fd = fopen ( boxes_in_filename, "r") ) ) 
+	{
+		fprintf ( stderr, " Error: Cannot open file %s!\n", boxes_in_filename );
+		return ( 1 );
+	}
+
+	unsigned int nb_gaps = 0;
+
+	if ( fscanf ( boxes_in_fd, "%d", &nb_gaps ) != 1 )
+	{
+		fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
+		return ( 1 );
+	}
+
+	unsigned int nb_boxes = nb_gaps + 1;
+
+	unsigned int total_mot_length = k;
+	unsigned int * bgaps_min = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
+	unsigned int * bgaps_max = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
+	unsigned int * blens = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
+	unsigned int * berrs = ( unsigned int * ) calloc ( nb_boxes , sizeof( unsigned int ) );
+
+	for ( i = 0; i < nb_gaps; i ++ )
+	{
+		if ( fscanf ( boxes_in_fd, "%d", &bgaps_min[i] ) != 1 )
+		{
+			fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
+			return ( 1 );
+		}
+		total_mot_length += bgaps_min[i];
+		if ( fscanf ( boxes_in_fd, "%d", &bgaps_max[i] ) != 1 )
+		{
+			fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
+			return ( 1 );
+		}
+		if ( fscanf ( boxes_in_fd, "%d", &blens[i] ) != 1 )
+		{
+			fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
+			return ( 1 );
+		}
+		total_mot_length += blens[i];
+		if ( fscanf ( boxes_in_fd, "%d", &berrs[i] ) != 1 )
+		{
+			fprintf ( stderr, " Error: file %s is not in the correct format!\n", boxes_in_filename );
+			return ( 1 );
+		}
+	}
+
+	if ( fclose ( boxes_in_fd ) )
+	{
+		fprintf( stderr, " Error: file close error!\n");
+		return ( 1 );
+	}
+
 	if ( ! ( out2_fd = fopen ( output2_filename, "w") ) )
 	{
 		fprintf ( stderr, "Cannot open file %s\n", output2_filename );
@@ -166,9 +216,16 @@ int main ( int argc, char **argv )
 	{
 		//Create the motif
                 char * motif = NULL;
-                motif = ( char * ) calloc ( ( k + 1) , sizeof ( char ) );
-		
-		for ( j = 0; j < k; j ++ )
+                motif = calloc ( ( total_mot_length + 1 ) , sizeof( char ) );
+                char * out_motif = NULL;
+                out_motif = calloc ( ( total_mot_length + 1 ) , sizeof( char ) );
+
+		unsigned int b;
+		unsigned int index = 0;
+		unsigned int ell;
+		unsigned int gap;
+
+		for ( j = 0; j < total_mot_length; j++ )
 		{
 			unsigned int DNAchar = ( unsigned int ) ( rand() ) %( 4 );        // number of errors
 			if ( DNAchar == 0 ) motif[j] = 'A';
@@ -176,8 +233,35 @@ int main ( int argc, char **argv )
 			if ( DNAchar == 2 ) motif[j] = 'G';
 			if ( DNAchar == 3 ) motif[j] = 'T';
 		}
-                motif[ k ] = '\0';
-		fprintf ( out2_fd, "%s\n", motif );	
+                motif[ j ] = '\0';
+
+		unsigned int offset = 0;
+		for ( b = 0; b < nb_boxes; b ++ )
+		{
+			/* Extract the structured motif from the sequence */
+			if ( b == 0 )
+			{
+				ell = k;
+				for ( j = 0; j < ell; j++, index++ )
+					out_motif[index] = motif[j];
+				out_motif [ index ] = '_';
+				index ++;
+			}
+			else
+			{
+				offset += bgaps_min[b - 1] + ell;
+				ell = blens[b - 1];
+				for ( j = 0; j < ell; j++, index++ )
+					out_motif[ index ] = motif[offset + j];
+				out_motif [ index ] = '_';
+				index ++;
+			}
+		}
+		index--;
+                out_motif[ index ] = '\0';
+		//fprintf ( stderr, "%s\n", motif );	
+		//fprintf ( stderr, "%s\n", out_motif );
+		fprintf ( out2_fd, "%s\n", out_motif );	
 
 		//Compute the number of sequences where we will implant motifs
 		unsigned int alt_seqs = ceil ( ( double ) ( q * num_seqs ) / ( double ) 100 );
@@ -195,43 +279,69 @@ int main ( int argc, char **argv )
 			}
 		}
 
-		//Implant the motifs by also inserting errors in them
+		//Implant the structured motifs by also inserting errors in them
 		for ( j = 0; j < num_seqs; j ++ )
 		{
 			if ( alt_seqs_arr[ j ] == 1 )
 			{
 				//fprintf ( stderr, "%s\n", motif ); 
-                		char * motif_cpy = ( char * ) calloc ( ( k + 1) , sizeof ( char ) );
-				strcpy ( motif_cpy, motif);
-				unsigned int e = ( unsigned int ) ( rand() ) % ( eMAX + 1 );
-				while ( e < eMIN )
-					e = ( unsigned int ) ( rand() ) % ( eMAX + 1 );
-				unsigned int jj;
-				for ( jj = 0; jj < e; jj++ )
-				{
-					unsigned int pos = ( unsigned int ) ( rand() ) % ( k );
-					unsigned int DNAchar = ( unsigned int ) ( rand() ) %( 4 );        
-					if ( DNAchar == 0 ) motif_cpy[pos] = 'A';
-					if ( DNAchar == 1 ) motif_cpy[pos] = 'C';
-					if ( DNAchar == 2 ) motif_cpy[pos] = 'G';
-					if ( DNAchar == 3 ) motif_cpy[pos] = 'T';
-				}
-				//fprintf ( stderr, "%s\n", seqs[j] ); 
-				//fprintf ( stderr, "%s\n", motif_cpy ); 
+                		char * motif_cpy = ( char * ) calloc ( ( total_mot_length + 1 ) , sizeof ( char ) );
+				strcpy ( motif_cpy, motif );
 
-				char * new_seq = ( char * ) calloc ( strlen( motif ) + strlen ( seqs[ j ] ) + 1, sizeof ( char ) );
+				unsigned int offset = 0;
+				for ( b = 0; b < nb_boxes; b ++ )
+				{
+					/* Extract the structured motif from the sequence */
+					if ( b == 0 )
+					{
+						ell = k;
+						unsigned int e = ( unsigned int ) ( rand() ) % ( eMAX + 1 );
+						unsigned int jj;
+						for ( jj = 0; jj < e; jj++ )
+						{
+							unsigned int pos = ( unsigned int ) ( rand() ) % ( ell );
+							unsigned int DNAchar = ( unsigned int ) ( rand() ) %( 4 );        
+							if ( DNAchar == 0 ) motif_cpy[pos] = 'A';
+							if ( DNAchar == 1 ) motif_cpy[pos] = 'C';
+							if ( DNAchar == 2 ) motif_cpy[pos] = 'G';
+							if ( DNAchar == 3 ) motif_cpy[pos] = 'T';
+						}
+					}
+					else
+					{
+						offset += bgaps_min[b - 1] + ell;
+						ell = blens[b - 1];
+						unsigned int e = ( unsigned int ) ( rand() ) % ( berrs[b - 1] + 1 );
+						unsigned int jj;
+						for ( jj = 0; jj < e; jj++ )
+						{
+							unsigned int pos = ( unsigned int ) ( rand() ) % ( ell );
+							unsigned int DNAchar = ( unsigned int ) ( rand() ) %( 4 );        
+							if ( DNAchar == 0 ) motif_cpy[pos + offset] = 'A';
+							if ( DNAchar == 1 ) motif_cpy[pos + offset] = 'C';
+							if ( DNAchar == 2 ) motif_cpy[pos + offset] = 'G';
+							if ( DNAchar == 3 ) motif_cpy[pos + offset] = 'T';
+						}
+					}
+				}
+				//fprintf ( stderr, "%s\n", motif ); 
+				//fprintf ( stderr, "%s\n", motif_cpy ); 
+				//fprintf ( stderr, "%s\n", seqs[j] ); 
+
+				char * new_seq = ( char * ) calloc ( strlen( motif_cpy ) + strlen ( seqs[ j ] ) + 1, sizeof ( char ) );
 				sprintf ( new_seq, "%s%s", seqs[j], motif_cpy );
-				new_seq [ strlen( motif ) + strlen ( seqs[ j ] ) ] = '\0'; 
+				new_seq [ strlen( motif_cpy ) + strlen ( seqs[ j ] ) ] = '\0'; 
                 		free ( seqs[j] );
-                		seqs[j]   = strdup ( new_seq );
-                		free ( motif_cpy );
-				free ( new_seq );
+                		seqs[j] = strdup ( new_seq );
 				//fprintf ( stderr, "%s\n", seqs[j] ); 
 				//getchar();
+                		free ( motif_cpy );
+                		free ( new_seq );
 			}
 		}
 
                 free ( motif );
+                free ( out_motif );
                 free ( alt_seqs_arr );
 	}
 
@@ -252,7 +362,7 @@ int main ( int argc, char **argv )
 		fprintf ( out1_fd, ">%d\n", i );	
 		fprintf ( out1_fd, "%s\n", seqs[i] );	
 	}
-	fprintf ( stderr, "%d motifs were implanted; each in %d distinct sequences.\n", num_mot,  ( int ) ceil ( ( double ) ( q * num_seqs ) / ( double ) 100 ) );	
+	fprintf ( stderr, "%d structured motifs were implanted; each in %d distinct sequences.\n", num_mot,  ( int ) ceil ( ( double ) ( q * num_seqs ) / ( double ) 100 ) );	
 
 	if ( fclose ( out1_fd ) )
 	{
@@ -264,5 +374,9 @@ int main ( int argc, char **argv )
         for ( i = 0; i < num_seqs; i ++ )
                 free ( ( void * ) seqs[i] );
         free ( seqs );
+	free ( bgaps_min );
+	free ( bgaps_max );
+	free ( blens );
+	free ( berrs );
 
 }
