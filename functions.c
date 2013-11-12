@@ -653,6 +653,7 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
         for ( j = 1; j < sw . nb_structs; ++ j )
                 occ[j] = ( void * ) occ[0] + j * ( m ) * sizeof ( unsigned int );
 
+	/* Computing the DP matrices */
 	for ( b = 0; b < sw . nb_boxes; b++ ) 
 	{
 		unsigned int ell;
@@ -677,6 +678,7 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 		}
 	}
 
+	/* Merging the single-motif occurrences into structured-motif occurrences */
 	for ( i = 0; i < n + 1; i++ ) 
 	{
 		if ( i < sw . l ) continue;
@@ -687,31 +689,35 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 			{
 				for ( k = 0; k < sw . nb_structs; k ++ )
 				{
-					unsigned int array_offset = k * m;
-					unsigned int dist_offset_j = j;
-					unsigned int dist_offset_i = i;
-					unsigned int r = 1;
-					for ( g = 0; g < sw . nb_gaps; g++ )
+					unsigned int l;
+					for ( l = 0; l < sw . nb_structs; l ++ )
 					{
-						dist_offset_j += ( sw . S[k][g] + sw . blens[g] );
-						dist_offset_i += ( sw . S[k][g] + sw . blens[g] );
-						
-						if ( dist_offset_i < n + 1 && dist_offset_j < m + 1 )
-							if ( popcount ( B[g + 1][dist_offset_i][dist_offset_j] ) <= sw . berrs[g] )
-							{
-								r++;
-								if ( r == sw . nb_boxes )
+						unsigned int array_offset = k * m;
+						unsigned int dist_offset_j = j;
+						unsigned int dist_offset_i = i;
+						unsigned int r = 1;
+						for ( g = 0; g < sw . nb_gaps; g++ )
+						{
+							dist_offset_j += ( sw . S[k][g] + sw . blens[g] );
+							dist_offset_i += ( sw . S[l][g] + sw . blens[g] );
+							
+							if ( dist_offset_i < n + 1 && dist_offset_j < m + 1 )
+								if ( popcount ( B[g + 1][dist_offset_i][dist_offset_j] ) <= sw . berrs[g] )
 								{
-									if ( occ[k][j - 1] == 0 )
+									r++;
+									if ( r == sw . nb_boxes )
 									{
-										u[ array_offset + j - 1] = u[ array_offset + j - 1] + 1;
-										occ[k][j - 1] = 1;
-									} 
-									v[ array_offset + j - 1] = v[ array_offset + j - 1] + 1; 
-								}
-							}	
-							else
-								break;
+										if ( occ[k][j - 1] == 0 )
+										{
+											u[ array_offset + j - 1] = u[ array_offset + j - 1] + 1;
+											occ[k][j - 1] = 1;
+										} 
+										v[ array_offset + j - 1] = v[ array_offset + j - 1] + 1; 
+									}
+								}	
+								else
+									break;
+						}
 					}
 
 				}
@@ -899,6 +905,7 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
         for ( j = 1; j < sw . nb_structs; ++ j )
                 occ[j] = ( void * ) occ[0] + j * ( m ) * sizeof ( unsigned int );
 
+	/* Computing the DP matrices */
 	for ( b = 0; b < sw . nb_boxes; b++ ) 
 	{
 		unsigned int ell;
@@ -925,6 +932,7 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 		}
 	}
 
+	/* Merging the single-motif occurrences into structured-motif occurrences */
 	for ( i = 0; i < n + 1; i++ ) 
 	{
 		for( j = 0; j < m + 1 ; j++ )			
@@ -934,31 +942,35 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 			{
 				for ( k = 0; k < sw . nb_structs; k ++ )
 				{
-					unsigned int array_offset = k * m;
-					unsigned int dist_offset_j = j;
-					unsigned int dist_offset_i = i;
-					unsigned int r = 1;
-					for ( g = 0; g < sw . nb_gaps; g++ )
-					{
-						dist_offset_j += ( sw . S[k][g] + sw . blens[g] );
-						dist_offset_i += ( sw . S[k][g] + sw . blens[g] );
-						
-						if ( dist_offset_i < n + 1 && dist_offset_j < m + 1 )
-							if ( popcount ( B[g + 1][dist_offset_i][dist_offset_j] ) <= sw . berrs[g] )
-							{
-								r++;
-								if ( r == sw . nb_boxes )
+					unsigned int l;
+					for ( l = 0; l < sw . nb_structs; l ++ )
+					{	
+						unsigned int array_offset = k * m;
+						unsigned int dist_offset_j = j;
+						unsigned int dist_offset_i = i;
+						unsigned int r = 1;
+						for ( g = 0; g < sw . nb_gaps; g++ )
+						{
+							dist_offset_j += ( sw . S[k][g] + sw . blens[g] );
+							dist_offset_i += ( sw . S[l][g] + sw . blens[g] );
+							
+							if ( dist_offset_i < n + 1 && dist_offset_j < m + 1 )
+								if ( popcount ( B[g + 1][dist_offset_i][dist_offset_j] ) <= sw . berrs[g] )
 								{
-									if ( occ[k][j - 1] == 0 )
+									r++;
+									if ( r == sw . nb_boxes )
 									{
-										u[ array_offset + j - 1] = u[ array_offset + j - 1] + 1;
-										occ[k][j - 1] = 1;
-									}	 
-									v[ array_offset + j - 1] = v[ array_offset + j - 1] + 1; 
-								}
-							}	
-							else
-								break;
+										if ( occ[k][j - 1] == 0 )
+										{
+											u[ array_offset + j - 1] = u[ array_offset + j - 1] + 1;
+											occ[k][j - 1] = 1;
+										}	 
+										v[ array_offset + j - 1] = v[ array_offset + j - 1] + 1; 
+									}
+								}	
+								else
+									break;
+						}
 					}
 
 				}
