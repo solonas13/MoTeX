@@ -1400,22 +1400,37 @@ unsigned int write_smile_header ( FILE * out_fd, struct TSwitch sw, unsigned int
 	}
 
      	fprintf ( out_fd, "%s", line1 );
-	
-        for( i = strlen ( line1 ); i < 79; i++ ) 
-     		fprintf ( out_fd, " " );
 
-	// two empty lines
-	fprintf ( out_fd, "\n" );
-        for( i = 0; i != 2; i++ ) 
-    	{ 
-    		fprintf( out_fd, "                                        " ); 
-    		fprintf( out_fd, "                                       \n" ); 
-    	} 
+	if      ( ! strcmp ( "DNA", sw . alphabet ) )
+	{
+        	for( i = strlen ( line1 ); i < 79; i++ ) 
+     			fprintf ( out_fd, " " );
 
+		// two empty lines
+		fprintf ( out_fd, "\n" );
+        	for( i = 0; i != 2; i++ ) 
+    		{ 
+    			fprintf( out_fd, "                                        " ); 
+    			fprintf( out_fd, "                                       \n" ); 
+    		}
+	}
+ 
+        if ( ! strcmp ( "PROT", sw . alphabet ) )
+	{
+        	for( i = strlen ( line1 ); i < 159; i++ ) 
+     			fprintf ( out_fd, " " );
+
+		// one empty line
+		fprintf ( out_fd, "\n" );
+        	for( i = 0; i != 1; i++ ) 
+    		{ 
+    			fprintf( out_fd, "                                        " ); 
+    			fprintf( out_fd, "                                       \n" ); 
+    		}
+	}
 	// one line with `='
 	fprintf( out_fd, "========================================" ); 
 	fprintf( out_fd, "=======================================\n" );
-
 	return ( 1 );
 }
 
@@ -1475,7 +1490,6 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
 
 						char      * id   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
 
-						//TODO: this should be implemented in a clearer way.
 						unsigned int ii, jj;
 						for ( ii = 0; ii < sw . l; ii++ )
 						{
@@ -1483,7 +1497,7 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
 								if ( motif[ii] == alphabet_str[jj] ) break;
 
 							char * s   = calloc ( ( sw . l ) , sizeof( char ) );
-							sprintf( s, "%d", jj); 
+							sprintf( s, "%c", ( char ) ( '0' + jj ) );
 							id[ii] = s[0] ;
 							free ( s );
 						}
@@ -1616,7 +1630,6 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 
 							char      * id   = calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
 
-							//TODO: this should be implemented in a clearer way.
 							unsigned int ii, jj;
 							for ( ii = 0; ii < total_length_sm + sw . nb_gaps; ii++ )
 							{
@@ -1626,7 +1639,7 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 								char * s   = calloc ( strlen ( alphabet_str ) , sizeof( char ) );
 								if ( jj < strlen ( alphabet_str ) )	
 								{
-									sprintf( s, "%d", jj);
+									sprintf( s, "%c", ( char ) ( '0' + jj ) );
 									id[ii] = s[0] ;
 								}
 								else
@@ -1635,7 +1648,7 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 								free ( s );
 							}
 							id[total_length_sm + sw . nb_gaps] = '\0';
-
+							                   
 							fprintf ( out_fd, "%s %s %d\t%d\n", motif, id, u[i][k * m + j], v[i][k * m + j] );
 
 							free ( id );
@@ -2447,7 +2460,6 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
 
 						char      * id   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
 
-						//TODO: this should be implemented in a clearer way.
 						unsigned int ii, jj;
 						for ( ii = 0; ii < sw . l; ii++ )
 						{
@@ -2455,7 +2467,7 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
 								if ( motif[ii] == alphabet_str[jj] ) break;
 
 							char * s   = calloc ( ( sw . l ) , sizeof( char ) );
-							sprintf( s, "%d", jj); 
+							sprintf( s, "%c", ( char ) ( '0' + jj ) );
 							id[ii] = s[0] ;
 							free ( s );
 						}
@@ -2717,7 +2729,6 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
 							trie_store ( trie, ACmotif, data );
 							char      * id   = calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
 
-							//TODO: this should be implemented in a clearer way.
 							unsigned int ii, jj;
 							for ( ii = 0; ii < total_length_sm + sw . nb_gaps; ii++ )
 							{
@@ -2727,7 +2738,7 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
 								char * s   = calloc ( strlen ( alphabet_str ) , sizeof( char ) );
 								if ( jj < strlen ( alphabet_str ) )	
 								{
-									sprintf( s, "%d", jj);
+									sprintf( s, "%c", ( char ) ( '0' + jj ) );
 									id[ii] = s[0] ;
 								}
 								else
@@ -2757,7 +2768,7 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
 									char * s   = calloc ( strlen ( alphabet_str ) , sizeof( char ) );
 									if ( jj < strlen ( alphabet_str ) )	
 									{
-										sprintf( s, "%d", jj );
+										sprintf( s, "%c", ( char ) ( '0' + jj ) );
 										id[ii] = s[0] ;
 									}
 									else
