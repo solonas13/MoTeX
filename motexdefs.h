@@ -27,6 +27,8 @@
 #define max(a,b) ((a) > (b)) ? (a) : (b)
 #define min(a,b) ((a) < (b)) ? (a) : (b)
 
+typedef unsigned long int WORD;
+
 struct TSwitch
  {
    char               * alphabet;
@@ -70,11 +72,11 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw );
 void usage ( void );
 
 void recurse( unsigned int x, unsigned int xi, unsigned int * y, unsigned int ** A, unsigned int * newx, unsigned int * temp_inner, unsigned int ** B ); 
-inline unsigned int bitminmax ( unsigned int a, unsigned int b, unsigned int c );
-inline unsigned int shift ( unsigned int a );
-inline unsigned int shiftc ( unsigned int a, unsigned int x );
+inline unsigned int bitminmax ( WORD a, WORD b, WORD c );
+inline WORD shift ( WORD a );
+inline WORD shiftc ( WORD a, WORD x );
 inline unsigned int delta ( char a, char b );
-inline unsigned int popcount ( unsigned int x );
+inline unsigned int popcount ( WORD x );
 
 #ifdef _USE_MPFR
 #define ACC 200

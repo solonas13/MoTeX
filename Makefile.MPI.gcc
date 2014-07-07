@@ -2,7 +2,7 @@ MF=	Makefile.MPI.gcc
 
 CC=	mpicc
 
-CFLAGS=	-g -D_USE_MPI -D_USE_MPFR -O3 -msse3 -fomit-frame-pointer -funroll-loops
+CFLAGS=	-g -D_USE_MPI -D_USE_MPFR -O3 -msse4.2 -fomit-frame-pointer -funroll-loops
 
 LFLAGS=	-lz -lm -ldatrie -lgmp -lmpfr
 

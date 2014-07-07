@@ -113,9 +113,9 @@ int main ( int argc, char **argv )
          		return ( 1 );
        		}
 
-		if ( sw . l > sizeof( unsigned int ) * CHAR_BIT - 1 )
+		if ( sw . l > sizeof( WORD ) * CHAR_BIT - 1 )
                 {
-                        fprintf( stderr, " Error: the fixed-length of motifs k must be less or equal than %d!\n", ( unsigned int ) ( sizeof( unsigned int ) * CHAR_BIT - 1 ) );
+                        fprintf( stderr, " Error: the fixed-length of motifs k must be less or equal than %d!\n", ( unsigned int ) ( sizeof( WORD ) * CHAR_BIT - 1 ) );
                         return ( 1 );
                 }
       		else 	l = sw . l;

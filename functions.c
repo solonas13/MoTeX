@@ -230,38 +230,39 @@ the dynamic programming algorithm under the hamming distance model for one (or a
 */
 unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v, int rank, int P )
 {
-	unsigned int y; 
 	unsigned int step;
 	int first, last;
 	int first_n;
 	int last_n;
 	int x;
 
-	unsigned int *D0, *D1, *D2; 	//matrix B in anti-diagonal vectors
+	WORD y; 
+	WORD *D0, *D1, *D2; 	//matrix B in anti-diagonal vectors
 	unsigned int i;
 	unsigned int j;
 	unsigned int ul;
 
   	/* Memory Allocation */
-	if ( ( D0 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
+	if ( ( D0 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D0 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	if ( ( D1 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
+	if ( ( D1 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D1 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	if ( ( D2 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
+	if ( ( D2 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D2 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	y = ( unsigned int ) pow ( 2 , sw . l - 1 ) - 1; 
+	y = ( ( WORD ) ( 1 ) << ( sw . l - 1 ) ) - 1;
+
         step = 0;
 	allocation ( rank, P , n , m, step , &first , &last);		//Processor Allocation
 	allocation ( rank, P , n , m, step + 1 , &first_n , &last_n);   //Processor Allocation
@@ -281,7 +282,7 @@ unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const 
 				case 0 :
 
 				if ( i == 0 )
-					D0[x] = ( 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D0[x] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else
 					D0[x] = shiftc ( D1[ul], y ) | delta ( t[i - 1], p[j - 1] );
 
@@ -296,7 +297,7 @@ unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const 
 				case 1 :
 				
 				if( i == 0 )
-					D1[x] = ( 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D1[x] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else
 					D1[x] = shiftc ( D2[ul], y ) | delta ( t[i - 1], p[j - 1] );
 
@@ -311,7 +312,7 @@ unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const 
 				case 2 :
  
 				if( i == 0 )
-					D2[x] = ( 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D2[x] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else
 					D2[x] = shiftc ( D0[ul], y ) | delta ( t[i - 1], p[j - 1] );
 
@@ -370,14 +371,14 @@ the dynamic programming algorithm under the hamming distance model for one (or a
 */
 unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v, int rank, int P )
 {
-	unsigned int y; 
 	unsigned int step;
 	int first, last;
 	int first_n;
 	int last_n;
 	int x;
 
-	unsigned int *D0, *D1, *D2; 	//matrix B in anti-diagonal vectors
+	WORD y; 
+	WORD *D0, *D1, *D2; 	//matrix B in anti-diagonal vectors
 	
 	unsigned int i;
 	unsigned int j;
@@ -386,25 +387,25 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 	unsigned int lft;
 
   	// Memory Allocation 
-	if ( ( D0 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
+	if ( ( D0 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D0 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	if ( ( D1 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
+	if ( ( D1 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D1 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	if ( ( D2 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
+	if ( ( D2 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D2 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	y = ( unsigned int ) pow ( 2 , sw . l - 1 ) - 1; 
+	y = ( ( WORD ) ( 1 ) << ( sw . l - 1 ) ) - 1;
         step = 0;
 	allocation ( rank, P , n , m, step , &first , &last);		//Processor Allocation
 	allocation ( rank, P , n , m, step + 1 , &first_n , &last_n);   //Processor Allocation
@@ -425,7 +426,7 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 				case 0 :
 
 				if ( i == 0 )
-					D0[x] = ( 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D0[x] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else if ( j <= sw . l )
 					D0[x] = bitminmax ( shift ( D2[up] ) | 1, shift( D2[lft] ) | 1, shift( D1[ul] ) | delta ( t[i - 1], p[j - 1] ) );
 				else
@@ -440,7 +441,7 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 				case 1 :
 				
 				if( i == 0 )
-					D1[x] = ( 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D1[x] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else if ( j <= sw . l )
 					D1[x] = bitminmax ( shift ( D0[up] ) | 1, shift( D0[lft] ) | 1, shift( D2[ul] ) | delta ( t[i - 1], p[j - 1] ) );
 				else
@@ -455,7 +456,7 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 				case 2 :
  
 				if( i == 0 )
-					D2[x] = ( 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D2[x] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else if ( j <= sw . l )
 					D2[x] = bitminmax ( shift ( D1[up] ) | 1, shift( D1[lft] ) | 1, shift( D0[ul] ) | delta ( t[i - 1], p[j - 1] ) );
 				else
@@ -514,20 +515,20 @@ the dynamic programming algorithm under the hamming distance model
 */
 unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v )
 {
-	unsigned int y; 
-	unsigned int * D0, * D1; 		//matrix B in two rows
+	WORD y; 
+	WORD * D0, * D1; 		//matrix B in two rows
 	unsigned int * occ;
 	unsigned int i;
 	unsigned int j;
 
   	/* Memory Allocation */
-	if ( ( D0 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
+	if ( ( D0 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D0 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	if ( ( D1 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
+	if ( ( D1 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D1 could not be allocated!\n");
 		return ( 0 );
@@ -539,7 +540,7 @@ unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char *
 		return ( 0 );
 	}
 
-	y = ( unsigned int ) pow ( 2 , sw . l - 1 ) - 1; 
+	y = ( ( WORD ) ( 1 ) << ( sw . l - 1 ) ) - 1;
 
 	for ( i = 0; i < n + 1; i ++ ) 
 	{  
@@ -552,7 +553,7 @@ unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char *
 				case 0 :
 
 				if ( i == 0 )
-					D0[j] = ( 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D0[j] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else
 					D0[j] = shiftc ( D1[j - 1], y ) | delta ( t[i - 1], p[j - 1] );
 
@@ -571,7 +572,7 @@ unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char *
 				case 1 :
 				
 				if( i == 0 )
-					D1[j] = ( 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D1[j] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else
 					D1[j] = shiftc ( D0[j - 1], y ) | delta ( t[i - 1], p[j - 1] );
 
@@ -607,7 +608,7 @@ the dynamic programming algorithm under the hamming distance model for structure
 */
 unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v )
 {
-	unsigned int *** B; 		//matrices B
+	WORD *** B; 		//matrices B
 	unsigned int ** occ;
 	unsigned int i;
 	unsigned int j;
@@ -616,7 +617,7 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 	unsigned int g;
 
 	/* 3d dynamic memory allocation for matrices B*/
-   	if( ( B = ( unsigned int *** ) malloc ( ( sw . nb_boxes ) * sizeof( unsigned int ** ) ) ) == NULL )
+   	if( ( B = ( WORD *** ) malloc ( ( sw . nb_boxes ) * sizeof( WORD ** ) ) ) == NULL )
     	{
       		fprintf( stderr, " Error: B could not be allocated!\n" );
       		return 0;
@@ -624,20 +625,20 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 	
    	for ( i = 0; i < sw . nb_boxes; i ++ )
     	{
-      		if( ( B[i] = ( unsigned int ** ) malloc ( ( n + 1 ) * sizeof( unsigned int * ) ) ) == NULL )
+      		if( ( B[i] = ( WORD ** ) malloc ( ( n + 1 ) * sizeof( WORD * ) ) ) == NULL )
        		{
          		fprintf( stderr, " Error: B could not be allocated!\n" );
          		return 0;
        		}
  
-      		if( ( B[i][0] = ( unsigned int * ) calloc ( ( n + 1 ) * ( m + 1 ), sizeof( unsigned int ) ) ) == NULL )
+      		if( ( B[i][0] = ( WORD * ) calloc ( ( n + 1 ) * ( m + 1 ), sizeof( WORD ) ) ) == NULL )
        		{
 	  		fprintf( stderr, " Error: B could not be allocated!\n" );
 	  		return 0;
        		} 
 
       		for ( j = 1; j < n + 1; j++ )
-        		B[i][j] = ( void * ) B[i][0] + j * ( m + 1 ) * sizeof( unsigned int );
+        		B[i][j] = ( void * ) B[i][0] + j * ( m + 1 ) * sizeof( WORD );
     	}
 
 	if ( ( occ = ( unsigned int ** ) malloc ( sw . nb_structs * sizeof ( unsigned int * ) ) ) == NULL )
@@ -662,7 +663,7 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 		else
 			ell = sw . l;
 
-		unsigned int y = ( unsigned int ) pow ( 2 , ell - 1 ) - 1; 
+		WORD y = ( ( WORD ) ( 1 ) << ( ell - 1 ) ) - 1;
 
 		for ( i = 0; i < n + 1; i++ ) 
 		{
@@ -671,7 +672,7 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 				if( j == 0 ) continue;
 
 				if ( i == 0 )
-					B[b][i][j] = ( 2 << ( min ( j , ell ) - 1  ) ) - 1;
+					B[b][i][j] = ( ( WORD ) 2 << ( min ( j , ell ) - 1  ) ) - 1;
 				else
 					B[b][i][j] = shiftc ( B[b][i - 1][j - 1], y ) | delta ( t[i - 1], p[j - 1] );
 			}
@@ -767,20 +768,20 @@ the dynamic programming algorithm under the edit distance model
 */
 unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v )
 {
-	unsigned int y; 
-	unsigned int * D0, * D1; 	//matrix B in two rows
+	WORD y; 
+	WORD * D0, * D1; 	//matrix B in two rows
 	unsigned int * occ;	
 	unsigned int i;
 	unsigned int j;
 
   	// Memory Allocation 
-	if ( ( D0 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
+	if ( ( D0 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D0 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	if ( ( D1 = ( unsigned int* ) calloc ( ( m + 1 ) , sizeof( unsigned int ) ) ) == NULL )
+	if ( ( D1 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D1 could not be allocated!\n");
 		return ( 0 );
@@ -792,7 +793,7 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
 		return ( 0 );
 	}
 
-	y = ( unsigned int ) pow ( 2 , sw . l - 1 ) - 1; 
+	y = ( ( WORD ) ( 1 ) << ( sw . l - 1 ) ) - 1;
 
 	for ( i = 0; i < n + 1; i ++ ) 
 	{  
@@ -805,7 +806,7 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
 				case 0 :
 
 				if ( i == 0 )
-					D0[j] = ( 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D0[j] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else if ( j <= sw . l )
 					D0[j] = bitminmax ( shift ( D1[j] ) | 1, shift( D0[j - 1] ) | 1, shift( D1[j - 1] ) | delta ( t[i - 1], p[j - 1] ) );
 				else
@@ -823,7 +824,7 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
 				case 1 :
 
 				if ( i == 0 )
-					D1[j] = ( 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D1[j] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else if ( j <= sw . l )
 					D1[j] = bitminmax ( shift ( D0[j] ) | 1, shift( D1[j - 1] ) | 1, shift( D0[j - 1] ) | delta ( t[i - 1], p[j - 1] ) );
 				else
@@ -859,7 +860,7 @@ the dynamic programming algorithm under the edit distance model for structured m
 */
 unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v )
 {
-	unsigned int *** B; 		//matrices B
+	WORD *** B; 		//matrices B
 	unsigned int ** occ;
 	unsigned int i;
 	unsigned int j;
@@ -868,7 +869,7 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 	unsigned int g;
 
 	/* 3d dynamic memory allocation for matrices B*/
-   	if( ( B = ( unsigned int *** ) malloc ( ( sw . nb_boxes ) * sizeof( unsigned int ** ) ) ) == NULL )
+   	if( ( B = ( WORD *** ) malloc ( ( sw . nb_boxes ) * sizeof( WORD ** ) ) ) == NULL )
     	{
       		fprintf( stderr, " Error: B could not be allocated!\n" );
       		return 0;
@@ -876,20 +877,20 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 	
    	for ( i = 0; i < sw . nb_boxes; i ++ )
     	{
-      		if( ( B[i] = ( unsigned int ** ) malloc ( ( n + 1 ) * sizeof( unsigned int * ) ) ) == NULL )
+      		if( ( B[i] = ( WORD ** ) malloc ( ( n + 1 ) * sizeof( WORD * ) ) ) == NULL )
        		{
          		fprintf( stderr, " Error: B could not be allocated!\n" );
          		return 0;
        		}
  
-      		if( ( B[i][0] = ( unsigned int * ) calloc ( ( n + 1 ) * ( m + 1 ), sizeof( unsigned int ) ) ) == NULL )
+      		if( ( B[i][0] = ( WORD * ) calloc ( ( n + 1 ) * ( m + 1 ), sizeof( WORD ) ) ) == NULL )
        		{
 	  		fprintf( stderr, " Error: B could not be allocated!\n" );
 	  		return 0;
        		} 
 
       		for ( j = 1; j < n + 1; j++ )
-        		B[i][j] = ( void * ) B[i][0] + j * ( m + 1 ) * sizeof( unsigned int );
+        		B[i][j] = ( void * ) B[i][0] + j * ( m + 1 ) * sizeof( WORD );
     	}
 
 	if ( ( occ = ( unsigned int ** ) malloc ( sw . nb_structs * sizeof ( unsigned int * ) ) ) == NULL )
@@ -914,7 +915,7 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 		else
 			ell = sw . l;
 
-		unsigned int y = ( unsigned int ) pow ( 2 , ell - 1 ) - 1; 
+		WORD y = ( ( WORD ) ( 1 ) << ( ell - 1 ) ) - 1;
 
 		for ( i = 0; i < n + 1; i++ ) 
 		{
@@ -923,7 +924,7 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 				if( j == 0 ) continue;
 
 				if ( i == 0 )
-					B[b][i][j] = ( 2 << ( min ( j , ell ) - 1 ) ) - 1;
+					B[b][i][j] = ( ( WORD ) 2 << ( min ( j , ell ) - 1 ) ) - 1;
 				else if ( j <= ell )
 					B[b][i][j] = bitminmax ( shift ( B[b][i - 1][j] ) | 1, shift( B[b][i][j - 1] ) | 1, shift( B[b][i - 1][j - 1] ) | delta ( t[i - 1], p[j - 1] ) );
 				else
@@ -995,7 +996,7 @@ given integers a, b, c this function returns one of the integers a, b, c
 with the property that it has the least number of 1's (bits set on). If there is 
 a draw then it returns the maximum of the two when viewed as decimal integers
 */
-inline unsigned int bitminmax ( unsigned int a, unsigned int b, unsigned int c )
+inline unsigned int bitminmax ( WORD a, WORD b, WORD c )
 {
         unsigned int x , y , z , minimum, maximum;
 
@@ -1044,15 +1045,15 @@ inline unsigned int bitminmax ( unsigned int a, unsigned int b, unsigned int c )
 /*
 moves the bits one position to the left and enters zeros from the right
 */
-inline unsigned int shift ( unsigned int a ) 
+inline WORD shift ( WORD a ) 
 {
-	return ( a << 1 );
+	return ( ( WORD ) a << 1 );
 }
 
 /*
 shifts and truncates the leftmost bit
 */
-inline unsigned int shiftc( unsigned int a, unsigned int x ) 
+inline WORD shiftc( WORD a, WORD x ) 
 {
 	return shift ( a & x );
 }
@@ -1069,9 +1070,12 @@ inline unsigned int delta( char a, char b )
 /*
 returns the number of 1's in an integer x
 */
-inline unsigned int popcount ( unsigned int x )
+inline unsigned int popcount ( WORD x )
 {
-	return __builtin_popcount( x );
+	//__builtin_popcount: 32-bit
+	//__builtin_popcountll: 128-bit
+        //http://www.dalkescientific.com/writings/diary/archive/2011/11/02/faster_popcount_update.html
+	return __builtin_popcountl( x );
 }
 
 /*
@@ -2484,7 +2488,6 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
 						{
 							char      * id   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
 
-							//TODO: this should be implemented in a clearer way.
 							unsigned int ii, jj;
 							for ( ii = 0; ii < sw . l; ii++ )
 							{
@@ -2492,7 +2495,7 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
 									if ( motif[ii] == alphabet_str[jj] ) break;
 
 								char * s   = calloc ( ( sw . l ) , sizeof( char ) );
-								sprintf( s, "%d", jj); 
+								sprintf( s, "%c", ( char ) ( '0' + jj ) );
 								id[ii] = s[0] ;
 								free ( s );
 							}
@@ -2758,7 +2761,6 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
 							{
 								char      * id   = calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
 
-								//TODO: this should be implemented in a clearer way.
 								unsigned int ii, jj;
 								for ( ii = 0; ii < total_length_sm + sw . nb_gaps; ii++ )
 								{
