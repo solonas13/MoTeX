@@ -10,6 +10,8 @@ mv alphabet ./SMILE
 
 cd libdatrie-0.2.8
 ./configure --prefix="$(pwd)"/libdatrie
+aclocal
+automake
 make
 make install
 mv libdatrie ..
@@ -17,6 +19,8 @@ cd ..
 
 cd mpfr-3.1.2
 ./configure --prefix="$(pwd)"/libmpfr
+aclocal
+automake
 make
 make install
 mv libmpfr ..
