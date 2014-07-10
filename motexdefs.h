@@ -97,7 +97,7 @@ inline unsigned int left ( unsigned int step, unsigned int n, unsigned int j );
 inline unsigned int elements( unsigned int step, unsigned int n, unsigned int m );
 inline void allocation ( int rank, int P, unsigned int n, unsigned int m, unsigned int step, int* first, int* last );
 inline void vec_allocation ( int rank, int P, unsigned int m, int *first, int* last, int* count );
-inline void communication ( int P, int rank, unsigned int step, unsigned int n, unsigned int m, unsigned int* D, int first, int last, int first_n, int last_n );
+inline void communication ( int P, int rank, unsigned int step, unsigned int n, unsigned int m, WORD * D, int first, int last, int first_n, int last_n );
 unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int*  v, int rank, int P );
 unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v, int rank, int P );
 #endif

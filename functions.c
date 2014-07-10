@@ -146,7 +146,7 @@ inline void vec_allocation ( int rank, int P, unsigned int m, int *first, int* l
 /*
 handles the p2p boundary cells swaps between the processors
 */
-inline void communication ( int P, int rank, unsigned int step, unsigned int n, unsigned int m, unsigned int* D, int first, int last, int first_n, int last_n)
+inline void communication ( int P, int rank, unsigned int step, unsigned int n, unsigned int m, WORD * D, int first, int last, int first_n, int last_n)
 {
 	MPI_Status status;
 	
