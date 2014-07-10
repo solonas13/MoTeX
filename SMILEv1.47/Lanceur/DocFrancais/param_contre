@@ -1,0 +1,39 @@
+## Fichier d'exemple: evaluation contre un jeu de sequences "fausses"
+
+FASTA file              fasta
+Output file             contre
+Alphabet file           alphabet
+Quorum                  50
+Total min length        8
+Total max length        8
+Total substitutions     1
+Boxes                   2
+
+## On veut que les modeles ne contiennent pas plus de 5 A
+Composition in A        5
+
+
+BOX 1
+Min length              4
+Max length              4
+Substitutions           1
+Min spacer length       4
+Max spacer length       8
+## ...dont au plus 2 dans le premier bloc
+Composition in A        2
+
+BOX 2
+Min length              4
+Max length              4
+Substitutions           1
+
+## Dans cet exemple, on utilise la methode d'evaluation 2 contre le fichier
+## fasta 'fastawrong'.
+Against wrong sequences fastawrong
+
+## Le fichier de stats genere est du meme type que pour le shuffling, excepte
+## que les stats en sequence et totales sont sur la meme ligne.
+## Un symbole '+' ou  '-' indique pour chaque stat si le modele est sur ou
+## sous represente.
+## Seul le test du Khi2 est utilise, le Z-score n'ayant aucun sens ici
+## (un seul jeu de donnees "fausses").

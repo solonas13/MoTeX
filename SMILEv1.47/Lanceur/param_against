@@ -1,0 +1,42 @@
+## In the following parameter file, we show how to use the "against" method
+## of evaluation.
+
+FASTA file              fasta
+Output file             against
+Alphabet file           alphabet
+Quorum                  50
+Total min length        8
+Total max length        8
+Total substitutions     1
+Boxes                   2
+
+## We want models with at most 4 As in the 2 boxes...
+Composition in A        4
+## You can write here several lines of composition.
+
+BOX 1
+Min length              4
+Max length              4
+Substitutions           1
+Min spacer length       4
+Max spacer length       8
+## ...and at most 2 As in the first box.
+Composition in A        2
+
+BOX 2
+Min length              4
+Max length              4
+Substitutions           1
+
+## Now we use the second method for evaluation: we want to evaluate the
+## models found during the first step by looking for them in a "wrong" file
+## of sequences (where we do not expect to find them). These sequences are
+## in the file 'fastawrong'.
+Against wrong sequences    fastawrong
+
+## The results file is the same than after a shuffling, except that 
+## statistics for sequences and for total number of occurrences are on
+## the same line ('T' means 'statistics on total number of occurrences').
+## The only statistical measure we can apply is the Chi2. With this measure,
+## we cannot know if the model is over or under-represented (no sign).
+## So, a sign is written beside the Chi2 to indicate it.

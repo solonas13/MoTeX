@@ -1,0 +1,131 @@
+Hi beta-tester,
+The SMILE documentation is pretty short, but here is a quick guide to learn how
+to use it.
+
+WHAT DOES SMILE DO?
+SMILE allows you to extract simple or structured models in an exact
+way (it's not a heuristic algorithm). You have to indicate a few
+criteria for the extraction (see param_example). After the extraction,
+the models found can be evaluated for statistical significance with
+two different statisticsl methods.
+
+HOW TO USE IT?
+The only program you'll use is 'smile'. You have to give it just one
+parameter. which is the name of the parameter file you wrote before
+and which contains the characteristics of the models you want to
+extract.  The file 'param_example' is an example of such a parameter
+file that is annotated to let you get familiar with the required
+notions.
+
+SMILE's execution is made of two different steps:
+    - models are extracted according to the given criteria
+    - these models are evaluated for statistical significance. 
+      This can be made in two ways, depending on the data you have.
+      If you only have a 'RIGHT' set of sequences, you can use the shuffle
+      method to compare the frequencies of the models found with random
+      sequences.
+      If you have a 'RIGHT' and a 'WRONG' set of sequences, you can use the
+      'Against' method to compute the statistical significance values.
+
+The execution of 'smile param_example' (see the file to know the criteria
+used, this is an example of extraction of models with 2 boxes) gives:
+    1 - the file 'example.out' containing all the models that check
+        the given criteria. Here is a small part of this file:
+
+            AAAAAA_TGAAAA 000000-320000 44
+            Seq   433   Pos   187	18 
+            Seq   544   Pos   213	17 
+            ...
+            Seq   438   Pos    81	19 
+            Seq   931   Pos   165	18 
+            63
+
+      The model AAAAAA_TGAAAA appears in 44 sequences and 63 different
+      positions.
+      Each position is given. Sequences and positions count start at ZERO.
+      The last number for each occurrence line is the size of the spacer found
+      between the two boxes of the occurrence.
+
+[To switch off the counting and printing of positions, you have to compile
+the P_BLOCS and P_BLOCS+DELTA directories after having set the flags of
+each 'makefile' to 0. The NB_OCCS flag switches the printing of the total
+number of occurrences found. The AFF_OCCS flag switches the printing of all
+these occurrences positions.]
+
+    2 - the file 'example.out.shuffle' contains the statistical results of the
+      100-time shuffling asked in the parameter's file. It allows you to
+      know if models found in the first step are significant or not, according
+      to the composition of the sequences in k-mers.
+      Here is a small part of this file:
+
+    STATISTICS ON THE NUMBER SEQUENCES HAVING AT LEAST ONE OCCURRENCE
+    Model            %right #right  %shfl.  #shfl.  Sigma   Chi2    Z-score
+    =======================================================================
+    ATTGAC_TATAAT    4.43%	   47	0.49%	 5.24	2.17	34.22	19.28
+    AGAAAA_TTTTTC    5.18%	   55	1.30%	13.85	3.50	25.42	11.77
+    GAAAAA_TTTTTC    5.46%	   58	1.44%	15.30	3.78	25.76	11.29
+    ...
+
+    STATISTICS ON THE TOTAL NUMBER OF OCCURRENCES
+    Model             #right #shfl. Sigma   Chi2	Z-score
+    =======================================================================
+    ATTGAC_TATAAT       47	 5.28	2.18	33.30	19.14
+    AGAAAA_TTTTTC       80	16.34	4.31	42.08	14.76
+    GAAAAA_TTTTTC       89	19.05	5.03	45.30	13.90
+    ...
+
+    Models are sorted according to the Z-score value.
+    The higher the Z-score is, the more is the model over-represented in the
+    original sequences. If it's negative, the model is under-represented.
+    A MAX_INT value means that it couldn't be evaluated (which means that
+    it hasn't been found in the shuffled sequences or has been found in all
+    of them). 
+    The Chi2 indicates the statistical significance too (without sign, 
+    you have to read the corresponding Z-score to know if a model if
+    over or under-represented).
+    The "right" columns indicate percentage and number of occurrences for
+    given motif in the 'fasta' file. The "shfl" columns give the same for
+    the shuffled sequences. "Sigma" column gives the standard deviation.
+
+    In this example, ATTGAC_TATAAT appears to be really over-represented
+    in the 'fasta' file.
+
+
+SMILE requires a few criteria for the extraction. The best way to use
+it when you don't really know the objects you're looking for is to
+test different values of length of the model, quorum and maximum
+number of substitutions, to obtain a reasonable quantity of
+models. The algorithm is fast enough to allow this approach. When
+testing, you can switch off the second step of evaluation by omiting
+the evaluation lines in the parameter file.
+    Then, when the extraction gives correct results (meaning, not too
+many or zero models), you can add evaluation lines in the file and
+launch SMILE with the '-x' option to avoid the extraction step already
+done.
+
+["smile -g <nb>" prints a generic parameter file for models made of <nb> boxes.]
+
+If you need help, references or anything else: lama -AT- prism.uvsq.fr
+May this SMILE help you in your work...
+Laurent
+
+
+
+
+REFERENCES:
+** For algorithmic details about SMILE or quotations:
+[0] M.F. Sagot. "Spelling approximate repeated or common motifs using a suffix
+tree." In C.L. Lucchesi and A.V. Moura, editors, LATIN'98: Theoretical
+Informatics, Lecture Notes in Computer Sciences, 111-127. Springer-Verlag, 1998.
+
+[1] L. Marsan and M.-F. Sagot. "Extracting structured motifs using a suffix-tree
+- Algorithms and application to promoter consensus identification."
+Proceedings RECOMB'2000, Tokyo. ACM Press.
+
+** For a survey of extraction algorithms and some experiments:
+[2] A. Vanet, L. Marsan, and M.-F. Sagot. "Promoter sequences and algorithmical
+methods for identifying them." Research in Microbiology 150 (1999): 779-799.
+
+[3] A. Vanet, L. Marsan, A. Labigne, and M.-F. Sagot. "Inferring regulatory
+elements from a whole genome. An analysis of the sigma 80 family of promoter
+signals." J. Mol. Biol. 297(2) (2000): 335-353.

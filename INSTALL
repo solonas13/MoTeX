@@ -3,33 +3,17 @@ Pre-installation Instructions
 =============================
 
    This installation requires the pre-installation of the C library 
-implementation of the double-array trie data structure. It can be 
-found here:
-
-http://launchpad.net/ubuntu/+source/libdatrie
-
-For Ubuntu Linux, you may simply install the latest version by typing
-
-`sudo apt-get install libdatrie-dev' 
-
-
-   This installation requires the pre-installation of the C library 
+implementation of the double-array trie data structure and the C library 
 implementation for multiple-precision floating-point computations with 
-correct rounding. It can be found here:
-
-http://launchpad.net/ubuntu/+source/mpfr
-
-For Ubuntu Linux, you may simply install the latest version by typing
-
-`sudo apt-get install libmpfr-dev' 
+correct rounding. 
 
    In order to  assess  the  statistical  significance  of the motifs 
 extracted by MoTeX, the programme SMILE, a statistical significance 
 application, is required.
 
-   For Linux, you can install it from this directory by typing
+   For GNU/Linux, you can install the above from this directory via
  
-`sh install-SMILE.sh'
+`sh pre-install.sh'
 
 Basic Instructions
 ==================

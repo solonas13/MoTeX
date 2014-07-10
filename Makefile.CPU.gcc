@@ -2,9 +2,9 @@ MF=	Makefile.CPU.gcc
 
 CC=	gcc
 
-CFLAGS=	-g -D_USE_CPU -D_USE_MPFR -O3 -msse4.2 -fomit-frame-pointer -funroll-loops
+CFLAGS=	-g -fopenmp -D_USE_OMP -D_USE_MPFR -msse4.2 -O3 -fomit-frame-pointer -funroll-loops 
 
-LFLAGS=	-lz -lm -ldatrie -lgmp -lmpfr
+LFLAGS=	-lm -I $(HOME)/MoTeX/libdatrie/include -L $(HOME)/MoTeX/libdatrie/lib -ldatrie -I $(HOME)/MoTeX/libmpfr/include -L $(HOME)/MoTeX/libmpfr/lib -lgmp -lmpfr
 
 EXE=	motexCPU
 
@@ -22,7 +22,7 @@ HD=     motexdefs.h triedefs.h trie.h alpha-map.h typedefs.h
 OBJ=	$(SRC:.c=.o)
 
 .c.o:
-	$(CC) $(CFLAGS) -c $<
+	$(CC) $(CFLAGS)-c $(LFLAGS) $<
 
 all:	$(EXE)
 

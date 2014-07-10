@@ -1,0 +1,29 @@
+SMILE v1.47
+
+SMILE is distributed under a General Public License. You'll find more
+details about that in the COPYING file.
+
+
+** COMPILATION INSTRUCTIONS (beta-version, no 'configure'!)
+Type 'make' in the current directory.
+
+** EXECUTION INSTRUCTIONS
+There's no real documentation yet, but you can find explanations and examples
+in the 'Lanceur' directory (READ_ME file and param* files).
+
+** IMPROVEMENTS SINCE LAST VERSION 
+- The way the parameters are checked has been reinforced to avoid wrong
+  requests.
+- We can know extract palindromic motifs.
+
+** FIXED BUGS
+Several bugs have been fixed.
+
+** TO DO...
+Too many things...
+
+
+If you find a bug or have any problem, do not hesitate to contact me:
+lama -AT- prism.uvsq.fr
+Ciao,
+Laurent

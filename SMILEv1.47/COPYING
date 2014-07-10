@@ -1,0 +1,7 @@
+All the source files of this package are distributed according to the GPL
+License (see COPYING.gpl), excepted 
+    libfasta.h
+    libsysk.h
+    Gtypes.h
+    libfasta.c
+which are distributed according to the LGPL License (see COPYING.lgpl).

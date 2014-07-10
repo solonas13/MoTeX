@@ -1,0 +1,41 @@
+Since the 1.41 version, you can treat sequences with any kind of alphabet you
+don't have to define. But you have to indicate to SMILE the alphabet you want
+it to use to generate models.
+    These indications must be written in an alphabet file (see 'alphabet'
+and 'alpha').
+    This file contains:
+    - a type of data (Nucleotides, Proteins, Other) that makes SMILE able
+      to recognize known groups of symbols (for instance AGR gives R).
+    - a set of symbols groups, for instance:
+        AB
+        C
+        D
+      ...indicates that SMILE will generate models on a 3 symbols alphabet:
+      [AB], C and D.
+
+Notice that you have to give all the symbols you want to put
+together. As an example, if you're dealing with a set of DNA sequences
+containing A, C, G, T and R, and want to generate models on a R, Y
+alphabet, you have to write the following alphabet file:
+        Type: Nucleotides
+        AGR     ...that will be recognized as an R
+        CT      (or CTY, no difference) ...that will be recognized as a Y
+
+Symbols of the sequences not in the alphabet file won't match anything.
+
+If you want to deal with WILD CARDS (matching any symbols) you have to
+add '*' in the alphabet file.
+
+Finally, the name of this alphabet file is given in the parameters file.
+
+A few bugs have been fixed in the 1.42 and 1.43 versions.
+
+The 1.44 version consider valid models in another way than before. In older
+versions, if AAAA was valid but AAAAT too, AAAA didn't appear in the results.
+Now every valid model found appears in the results of the extraction.
+
+The 1.45 and 1.46 versions fix small bugs.
+
+The 1.47 version corrects an important bug and adds the 'palindrom'
+functionality. One can now extract models which has one or several boxes that
+are biological palindroms of other boxes.

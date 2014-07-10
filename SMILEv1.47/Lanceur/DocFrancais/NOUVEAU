@@ -1,0 +1,35 @@
+Depuis la version 1.41, SMILE peut traiter des sequences ayant un alphabet
+quelconque, qu'il n'est pas besoin de preciser. Il faut par contre indiquer au
+programme sur quel alphabet on va generer les modeles et quelles sont les
+correspondances entre les symboles.
+    Ces indications se trouvent dans un fichier (voir les exemples 'alphabet' et
+'alphabet_deg').
+    
+Ce fichier contient:
+    - un type (nucleotides, proteines, autres) qui permet de regrouper des
+    symboles formant un groupe connu sous un autre symbole afin de rendre
+    les resultats plus lisibles. (exemple: AG => R)
+    - une suite de groupes de symboles, par exemple:
+        AB
+        C
+        D
+        ...indique que l'on va generer des modeles sur un alphabet a 3 symboles
+        [AB], C, ou D.
+        
+    Le fichier alphabet a utiliser doit etre indique dans le fichier de
+parametres.
+
+Les versions 1.42 et 1.43 ont vus quelques bugs corriges.
+
+La version 1.44 considere les modeles valides d'une autre facon que precedemment.
+En effet, dans les versions precedentes, si un modele AAAA etait valide mais
+qu'un modele AAAAT l'etait aussi, ce modele AAAA n'apparaissait dans les
+resultats. Dorenavant tout modele valide apparait dans les resultats de 
+l'extraction.
+
+Les versions 1.45 et 1.46 fixent des bugs.
+
+La version 1.47 corrige un bug important et ajoute la fonctionnalite
+'palindrome'. En effet, on peut maintenant extraire des modeles dont on souhaite
+qu'une ou plusieurs des boites qui les composent soient des palindromes
+biologiques d'autres boites.

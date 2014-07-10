@@ -1,0 +1,33 @@
+## Dans cet exemple on utilise les "Delta", c'est a dire que les modeles trouves
+## doivent...
+
+FASTA file              fasta
+Output file             delta
+Alphabet file           alphabet
+Quorum                  70
+Total min length        5
+Total max length        6
+Total substitutions     0
+Boxes                   2
+
+BOX 1
+Min length              2
+Max length              3
+Substitutions           0
+## ...non seulement avoir un saut de 2 a 8 nucleotides entre les 2 blocs...
+Min spacer length       2
+Max spacer length       8
+## ...mais a l'interieur meme de cet intervalle on veut que les occurrences
+## soient regroupees dans un intervalle [d-delta, d+delta] ou d appartient a
+## l'intervalle 2-8. Autant de fichiers resultats seront generes qu'il
+## y a de combinaisons possibles. Ici les intervalles de saut pour un modele
+## sont donc: [2-4], [3-5], [4-6], [5-7], [6-8].
+Delta                   1
+
+BOX 2
+Min length              3
+Max length              3
+Substitutions           0
+
+## Si l'on veut evaluer les modeles de chaque fichier, on place ici
+## les lignes d'evaluation habituelles (shuffling ou contre).

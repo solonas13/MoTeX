@@ -1,0 +1,40 @@
+#Here is an example of an extraction using the new palindrom functionality.
+#We aim to extract 3 boxes models, of 4 to 6 bp length each, with one global
+#substitution allowed. The quorum is fixed to 50%. Each box is separated
+#by 2 to 8 bp.
+#We want the first and last boxes of each model to be palindroms.
+
+
+EXTRACTION (Step 1) =======================================================
+FASTA file			fasta
+Output file			fasta.out
+
+GLOBAL PARAMETERS =============
+Alphabet file			alphabet
+Quorum				    5
+Total min length		12
+Total max length		18
+Total substitutions		0
+Boxes				    3
+
+
+BOX 1 ================
+Min length			    4
+Max length			    6
+Substitutions			0
+Min spacer length		2
+Max spacer length		8
+
+BOX 2 ================
+Min length			    4
+Max length			    6
+Substitutions			0
+Min spacer length		2
+Max spacer length		8
+
+BOX 3 ================
+Min length			    4
+Max length			    6
+Substitutions			0
+Palindrom of box 1            #This line tells that the 3rd box should be
+                              #a palindrom of the first one.

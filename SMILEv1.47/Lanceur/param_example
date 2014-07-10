@@ -1,0 +1,63 @@
+## Annotated parameter file
+
+## We want here to extract models composed of two boxes. Models have the
+## following shape: XXXXXX___XXXXXX. The first box is of min length 6 and
+## the second too.
+## We want models occurrences to appear in at least 5% of the given sequences,
+## with at most 1 substitution in one of the two boxes. The jump between these
+## boxes has to be of 3 to 6 nucleotides.
+
+
+
+EXTRACTION CRITERIAS  ==========================================================
+FASTA file              fasta       ## name of the FASTA file containing the
+                                    ## sequences 
+Output file             example     ## results file for extraction
+Alphabet file           alphabet    ## file containing the alphabet to use for
+                                    ## generating the models
+
+## Characteristics of the models to extract
+
+Quorum                  4           ## minimum percentage of sequences where
+                                    ## the model must appear
+Total min length        12          ## min length of the whole model
+Total max length        0
+                                    ## (0 for infinity)
+Total substitutions     1           ## max nb of substitutions for whole model
+Boxes                   2           ## nb of boxes of the model (no limit)
+
+
+## Characteristic for Box 1
+BOX 1 ================              
+Min length              6           ## min length of box 1
+Max length              0           ## max length for box 1 (0 for infinity)
+Substitutions           1           ## max nb of subst. for box 1
+Min spacer length       17          ## min length of spacer until next box
+Max spacer length       19          ## max length of spacer until next box
+
+BOX 2 ================
+Min length              6           ## min length of box 2
+Max length              0           ## max length for box 2 (0 for infinity)
+Substitutions           1           ## max nb of subst. for box 2
+
+
+## Here is the second part of the evaluation of the models found before.
+## We can choose two different methods:
+##  1) Shuffling: generating random sequences having the same k-mer composition
+##     than original sequences, and computing statistical values with difference
+##     of frequencies observed.
+##     The file 'example.shuffle' is generated.
+##  2) Against: compare frequencies in the original sequences with frequencies
+##     in other sequences called "wrong" (where the model is known to be absent).
+##     The file 'example.against' is generated.
+EVALUATION ====================================
+## Here we choose the first method.
+Shufflings              20         ## number of shufflings to do
+Size k-mer              3           ## size of the k-mer to conserve when
+                                    ## shuffling
+
+## The following parameter files show some other options of SMILE:
+##      - param_1box shows the case of a 1-box extraction with a degenerate
+##        alphabet,
+##      - param_against shows how to use the second method of evaluation,
+##      - param_delta shows how to use the "deltas".
