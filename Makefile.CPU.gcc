@@ -2,7 +2,7 @@ MF=	Makefile.CPU.gcc
 
 CC=	gcc
 
-CFLAGS=	-g -fopenmp -D_USE_OMP -D_USE_MPFR -msse4.2 -O3 -fomit-frame-pointer -funroll-loops 
+CFLAGS=	-g -fopenmp -D_USE_CPU -D_USE_MPFR -msse4.2 -O3 -fomit-frame-pointer -funroll-loops 
 
 LFLAGS=	-lm -I $(HOME)/MoTeX/libdatrie/include -L $(HOME)/MoTeX/libdatrie/lib -ldatrie -I $(HOME)/MoTeX/libmpfr/include -L $(HOME)/MoTeX/libmpfr/lib -lgmp -lmpfr
 
