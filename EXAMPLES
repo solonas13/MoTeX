@@ -21,9 +21,9 @@ significance:
   
    bunzip2 ./data/dnc_subtilis_330-30.seq.bz2
 
-2. Extract single motifs 
+2. Extract single motifs using 8 threads
   
-   ./motexCPU -a DNA -i ./data/dnc_subtilis_330-30.seq -o single.motex -d 0 -k 6 -e 1 -q 12 -S single.smile
+   ./motexOMP -a DNA -i ./data/dnc_subtilis_330-30.seq -o single.motex -d 0 -k 6 -e 1 -q 12 -S single.smile -t 8
 
 3. Assess their statistical significance
 
@@ -41,9 +41,9 @@ significance:
   
    bunzip2 ./data/dnc_subtilis_330-30.seq.bz2
 
-2. Extract structured motifs 
+2. Extract structured motifs using 8 threads
   
-   ./motexCPU -a DNA -i ./data/dnc_subtilis_330-30.seq -o struct.motex -d 0 -k 6 -e 1 -q 12 -s ./data/boxes.txt -S struct.smile
+   ./motexCPU -a DNA -i ./data/dnc_subtilis_330-30.seq -o struct.motex -d 0 -k 6 -e 1 -q 12 -s ./data/boxes.txt -S struct.smile -t 8
 
 The first line of the file `./data/boxes.txt' is an integer number representing the total number 
 of spacers of the structured motif. Every succeeding four lines are four integer numbers representing 
@@ -64,12 +64,12 @@ Here is a series of steps which could potentially be used as a biological pipeli
 
 1. Run a background (bg) input dataset, and output it to `bg.motex'.
 
-  ./motexOMP -a DNA -i bg.dataset -o bg.motex -d 0 -q 1 -k 10 -e 1 -t 48
+  ./motexOMP -a DNA -i bg.dataset -o bg.motex -d 0 -q 1 -k 10 -e 1 -t 8
 
 2. Run a foreground (fg) input dataset, and output the fg motifs to `fg1.motex'; output the fg motifs that are not matched with any bg motif to `un.motex'.
 
-  ./motexOMP -a DNA -i fg.dataset -b bg.motex -o fg1.motex -u un.motex -d 0 -q 1 -k 10 -e 1 -t 48
+  ./motexOMP -a DNA -i fg.dataset -b bg.motex -o fg1.motex -u un.motex -d 0 -q 1 -k 10 -e 1 -t 8
 
 3. Check whether the fg motifs in `un.motex' are motifs in the bg dataset, and, if yes, output them to `fg2.motex'.
 
-  ./motexOMP -a DNA -i bg.dataset -I un.motex -o fg2.motex -d 0 -q 1 -k 10 -e 1 -t 48
+  ./motexOMP -a DNA -i bg.dataset -I un.motex -o fg2.motex -d 0 -q 1 -k 10 -e 1 -t 8
