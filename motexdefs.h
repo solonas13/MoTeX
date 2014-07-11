@@ -21,7 +21,7 @@
 #define DEL 			'$' 
 
 #define DNA			"ACGTN"				//DNA alphabet
-#define PROT			"ARNDCQEGHILKMFPSTWYV"		//Proteins alphabet
+#define PROT			"ARNDCQEGHILKMFPSTWYVOUBZJX*"	//Proteins alphabet
 #define USR			"0123456789"			//User-defined alphabet, e.g. integer alphabet
 
 #define max(a,b) ((a) > (b)) ? (a) : (b)
