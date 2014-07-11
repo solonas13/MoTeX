@@ -1,5 +1,9 @@
 #! /bin/sh
 
+tar -xvf SMILEv1.47.tgz
+tar -xvf libdatrie_0.2.8.orig.tar.xz
+tar -xvf mpfr-3.1.2.tar.gz
+
 cd SMILEv1.47/
 make
 mv ./SigStat/bin/e-smile_shuffling ../smile
