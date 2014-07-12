@@ -32,8 +32,8 @@
 #include <string.h>
 #include <getopt.h>
 #include <assert.h>
+#include <datrie/trie.h>
 #include "motexdefs.h"
-#include "trie.h"
 
 #ifdef _USE_MPI
 /*

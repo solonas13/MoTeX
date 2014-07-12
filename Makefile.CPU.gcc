@@ -10,7 +10,7 @@ EXE=	motexCPU
 
 SRC= 	motex.c functions.c binomial.c
 
-HD=     motexdefs.h triedefs.h trie.h alpha-map.h typedefs.h
+HD=     motexdefs.h
 
 #
 # No need to edit below this line
