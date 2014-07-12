@@ -4,7 +4,7 @@ CC=	mpicc
 
 CFLAGS=	-g -ipo -D_USE_MPI -D_USE_MPFR
 
-LFLAGS=	-lm -I $(HOME)/MoTeX/libdatrie/include -L $(HOME)/MoTeX/libdatrie/lib -ldatrie -I $(HOME)/MoTeX/libmpfr/include -L $(HOME)/MoTeX/libmpfr/lib -lgmp -lmpfr
+LFLAGS=	-lm -I ./libdatrie/include -L ./libdatrie/lib -ldatrie -I ./libmpfr/include -L ./libmpfr/lib -lgmp -lmpfr
 
 EXE=	motexMPI
 
