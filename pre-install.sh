@@ -1,7 +1,7 @@
 #! /bin/sh
 
 tar -xvf SMILEv1.47.tgz
-xz -d libdatrie_0.2.8.orig.tar
+xz -d libdatrie_0.2.8.orig.tar.xz
 tar -xvf libdatrie_0.2.8.orig.tar
 tar -xvf mpfr-3.1.2.tar.gz
 
