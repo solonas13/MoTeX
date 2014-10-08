@@ -72,7 +72,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw );
 void usage ( void );
 
 void recurse( unsigned int x, unsigned int xi, unsigned int * y, unsigned int ** A, unsigned int * newx, unsigned int * temp_inner, unsigned int ** B ); 
-inline unsigned int bitminmax ( WORD a, WORD b, WORD c );
+inline WORD bitminmax ( WORD a, WORD b, WORD c );
 inline WORD shift ( WORD a );
 inline WORD shiftc ( WORD a, WORD x );
 inline unsigned int delta ( char a, char b );

@@ -996,9 +996,10 @@ given integers a, b, c this function returns one of the integers a, b, c
 with the property that it has the least number of 1's (bits set on). If there is 
 a draw then it returns the maximum of the two when viewed as decimal integers
 */
-inline unsigned int bitminmax ( WORD a, WORD b, WORD c )
+inline WORD bitminmax ( WORD a, WORD b, WORD c )
 {
-        unsigned int x , y , z , minimum, maximum;
+        unsigned int x , y , z; 
+	WORD minimum, maximum;
 
         x = popcount ( a );
         y = popcount ( b );
