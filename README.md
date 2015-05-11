@@ -3,7 +3,7 @@ MoTeX: A word-based HPC tool for single and structured MoTif eXtraction
 
 Copyright (C) 2012 Solon P. Pissis.
 
-To compile MoTeX, please follow the instructions given in file INSTALL.
+To compile MoTeX-II, please follow the instructions given in file INSTALL.
 
 When publishing work that is based on the results from MoTeX-II please cite:
 
