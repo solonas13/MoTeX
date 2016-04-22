@@ -1,5 +1,5 @@
 /**
-    MoTeX: A word-based HPC tool for MoTif eXtraction
+    MoTeX: A WORD1-based HPC tool for MoTif eXtraction
     Copyright (C) 2012 Solon P. Pissis. 
 
     This program is free software: you can redistribute it and/or modify
@@ -27,7 +27,7 @@
 #define max(a,b) ((a) > (b)) ? (a) : (b)
 #define min(a,b) ((a) < (b)) ? (a) : (b)
 
-typedef unsigned long int WORD;
+typedef unsigned long int WORD1;
 
 struct TSwitch
  {
@@ -72,11 +72,11 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw );
 void usage ( void );
 
 void recurse( unsigned int x, unsigned int xi, unsigned int * y, unsigned int ** A, unsigned int * newx, unsigned int * temp_inner, unsigned int ** B ); 
-inline WORD bitminmax ( WORD a, WORD b, WORD c );
-inline WORD shift ( WORD a );
-inline WORD shiftc ( WORD a, WORD x );
-inline unsigned int delta ( char a, char b );
-inline unsigned int popcount ( WORD x );
+inline WORD1 bitminmax ( WORD1 a, WORD1 b, WORD1 c );
+inline WORD1 shift ( WORD1 a );
+inline WORD1 shiftc ( WORD1 a, WORD1 x );
+inline unsigned int delta1 ( char a, char b );
+inline unsigned int popcount ( WORD1 x );
 
 #ifdef _USE_MPFR
 #define ACC 200
@@ -97,7 +97,7 @@ inline unsigned int left ( unsigned int step, unsigned int n, unsigned int j );
 inline unsigned int elements( unsigned int step, unsigned int n, unsigned int m );
 inline void allocation ( int rank, int P, unsigned int n, unsigned int m, unsigned int step, int* first, int* last );
 inline void vec_allocation ( int rank, int P, unsigned int m, int *first, int* last, int* count );
-inline void communication ( int P, int rank, unsigned int step, unsigned int n, unsigned int m, WORD * D, int first, int last, int first_n, int last_n );
+inline void communication ( int P, int rank, unsigned int step, unsigned int n, unsigned int m, WORD1 * D, int first, int last, int first_n, int last_n );
 unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int*  v, int rank, int P );
 unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v, int rank, int P );
 #endif
