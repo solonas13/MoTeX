@@ -1,5 +1,5 @@
 /**
-    MoTeX: A WORD1-based HPC tool for MoTif eXtraction
+    MoTeX: A word-based HPC tool for MoTif eXtraction
     Copyright (C) 2012 Solon P. Pissis. 
 
     This program is free software: you can redistribute it and/or modify
@@ -40,10 +40,9 @@
 #include "libflasm.h"
 #include "motexdefs.h"
 
-
-
 using namespace std;
 
+#if 0
 #ifdef _USE_MPI
 /*
 returns the ith coordinate of element x at the diagonal step
@@ -518,6 +517,7 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 	return  ( 1 );
 }
 #endif
+#endif
 
 /*
 the dynamic programming algorithm under the hamming distance model
@@ -702,7 +702,6 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 
 	return  ( 1 );
 }
-
 
 /*
 A recursive function that creates the cartesian product of multiple (sets) arrays
@@ -914,6 +913,7 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 	return  ( 1 );
 }
 
+#if 0
 /*
 given integers a, b, c this function returns one of the integers a, b, c
 with the property that it has the least number of 1's (bits set on). If there is 
@@ -1001,6 +1001,7 @@ inline unsigned int popcount ( WORD1 x )
         //http://www.dalkescientific.com/writings/diary/archive/2011/11/02/faster_popcount_update.html
 	return __builtin_popcountl( x );
 }
+#endif
 
 /*
 write the header of the output
@@ -2844,7 +2845,7 @@ static struct option long_options[] =
    { "num-of-occ", 	        required_argument, NULL, 'n' },
    { "max-num-of-occ", 	        required_argument, NULL, 'N' },
    { "num-of-threads",     	required_argument, NULL, 't' },
-   { "long-sequences", 	  	required_argument, NULL, 'L' },
+//   { "long-sequences", 	  	required_argument, NULL, 'L' },
    { "boxes-in-file",		required_argument, NULL, 's' },
    { "unmatched-in-file",	required_argument, NULL, 'I' },
    { "unmatched-out-file",	required_argument, NULL, 'u' },
@@ -2883,11 +2884,11 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
    sw -> n       			= 1;
    sw -> N       			= 10000;
    sw -> t       			= 4;
-   sw -> L       			= 0;
+//   sw -> L       			= 0;
 
    args = 0;
 
-   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:Q:k:d:e:n:N:s:t:L:I:S:u:U:h", long_options, &oi ) ) != - 1 )
+   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:Q:k:d:e:n:N:s:t:I:S:u:U:h", long_options, &oi ) ) != - 1 )
     {
       switch ( opt )
        {
@@ -3005,6 +3006,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
            sw -> t = val;
            break;
 
+	#if 0
          case 'L':
            val = strtol ( optarg, &ep, 10 );
            if ( ! ep || ep == optarg )
@@ -3013,6 +3015,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
             }
            sw -> L = val;
            break;
+	#endif
 
          case 'e':
            val = strtol ( optarg, &ep, 10 );
@@ -3082,11 +3085,13 @@ void usage ( void )
                      "                                      evaluation passed as input.\n" );
    fprintf ( stdout, "  -t, --threads             <int>     Number of threads to be used by the OMP\n"
                      "                                      version (default: 4).\n" );
+   #if 0
    fprintf ( stdout, "  -L, --long-sequences      <int>     If the number of input sequences is less\n"
                      "                                      than  the number of  processors  used by\n" 
                      "                                      the MPI version, this should be set to 1\n"
                      "                                      (default: 0); useful  for a few (or one)\n"
                      "                                      very long sequence(s), e.g. a chromosome.\n" );
+   #endif	
    fprintf ( stdout, "  -u, --un-out-file         <str>     Output filename for foreground motifs not\n"
                      "                                      matched exactly with any background motif\n"
                      "                                      in the file passed with the `-b' option.\n" );
