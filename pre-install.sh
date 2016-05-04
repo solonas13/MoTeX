@@ -5,6 +5,7 @@ xz -d libdatrie_0.2.8.orig.tar.xz
 tar -xvf libdatrie_0.2.8.orig.tar
 tar -xvf mpfr-3.1.2.tar.gz
 unzip seqan.zip
+unzip libFLASM.zip
 
 
 cd SMILEv1.47/

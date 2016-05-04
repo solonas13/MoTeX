@@ -4,13 +4,13 @@ CC=	g++
 
 CFLAGS=	-g -fopenmp -D_USE_OMP -D_USE_MPFR -msse4.2 -O3 -fomit-frame-pointer -funroll-loops 
 
-LFLAGS=	-lm -I ./libdatrie/include -I ./include/ -L ./libdatrie/lib -ldatrie -Wl,-rpath=$(PWD)/libdatrie/lib -I ./libmpfr/include -L ./libmpfr/lib -lgmp -lmpfr -Wl,-rpath=$(PWD)/libmpfr/lib
+LFLAGS=	-lm -I ./libdatrie/include -L ./libdatrie/lib -ldatrie -Wl,-rpath=$(PWD)/libdatrie/lib -I ./libmpfr/include -L ./libmpfr/lib -lgmp -lmpfr -Wl,-rpath=$(PWD)/libmpfr/lib -I ./libFLASM/include -L ./libFLASM/lib -lflasm -Wl,-rpath=$(PWD)/libFLASM/lib -I ./include/
 
 EXE=	motexOMP
 
-SRC= 	motex.cc functions.cc binomial.cc libflasm.cc
+SRC= 	motex.cc functions.cc binomial.cc
 
-HD=     motexdefs.h libflasm.h 
+HD=     motexdefs.h
 
 #
 # No need to edit below this line
