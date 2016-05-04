@@ -37,10 +37,11 @@
 #include <getopt.h>
 #include <assert.h>
 #include <datrie/trie.h>
-#include "libflasm.h"
+#include <libflasm.h>
 #include "motexdefs.h"
 
 using namespace std;
+using namespace libflasm;
 
 #if 0
 #ifdef _USE_MPI
