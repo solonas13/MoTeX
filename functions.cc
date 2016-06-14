@@ -535,7 +535,7 @@ unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char *
 	}
 
 
-	ResultTupleSet pattern_matching_hd = flasm_hd( ( unsigned char * ) t, n, ( unsigned char * ) p, m, sw . l, sw . e );
+	ResultTupleSet pattern_matching_hd = flasm_hd( ( unsigned char * ) t, n, ( unsigned char * ) p, m, sw . l, sw . e, true);
 	
 	ResultTupleSetIterator it;
 	
@@ -630,7 +630,7 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 			err = sw . e;
 		}
 
-		ResultTupleSet pattern_matching_hd = flasm_hd( ( unsigned char * ) t, n, ( unsigned char * ) p, m, ell, err );
+		ResultTupleSet pattern_matching_hd = flasm_hd( ( unsigned char * ) t, n, ( unsigned char * ) p, m, ell, err, true );
 	
 		ResultTupleSetIterator it;
 	
@@ -743,7 +743,7 @@ unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char *
 		return ( 0 );
 	}
 
-	ResultTupleSet pattern_matching_ed = flasm_ed( ( unsigned char * ) t, n, ( unsigned char * ) p, m, sw . l, sw . e );
+	ResultTupleSet pattern_matching_ed = flasm_ed( ( unsigned char * ) t, n, ( unsigned char * ) p, m, sw . l, sw . e, true );
 	
 	ResultTupleSetIterator it;
 	
@@ -840,7 +840,7 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 			err = sw . e;
 		}
 
-		ResultTupleSet pattern_matching_ed = flasm_ed( ( unsigned char * ) t, n, ( unsigned char * ) p, m, ell, err );
+		ResultTupleSet pattern_matching_ed = flasm_ed( ( unsigned char * ) t, n, ( unsigned char * ) p, m, ell, err, true );
 	
 		ResultTupleSetIterator it;
 	
