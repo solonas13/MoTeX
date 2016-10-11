@@ -4,7 +4,7 @@ CC=	icc
 
 CFLAGS=	-g -ipo -D_USE_CPU -D_USE_MPFR
 
-LFLAGS=	-lm -I ./libdatrie/include -L ./libdatrie/lib -ldatrie -Wl,-rpath=$(PWD)/libdatrie/lib -I ./libmpfr/include -L ./libmpfr/lib -lgmp -lmpfr -Wl,-rpath=$(PWD)/libmpfr/lib
+LFLAGS=	-lm -I ./libdatrie/include -L ./libdatrie/lib -ldatrie -Wl,-rpath=$(PWD)/libdatrie/lib -I ./libmpfr/include -L ./libmpfr/lib -lgmp -lmpfr -Wl,-rpath=$(PWD)/libmpfr/lib -I ./libFLASM/include -L ./libFLASM/lib -lflasm -Wl,-rpath=$(PWD)/libFLASM/lib -I ./include/
 
 EXE=	motexCPU
 

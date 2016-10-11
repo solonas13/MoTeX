@@ -1,14 +1,14 @@
 MF=	Makefile.OMP.gcc
 
-CC=	gcc
+CC=	g++
 
 CFLAGS=	-g -fopenmp -D_USE_OMP -D_USE_MPFR -msse4.2 -O3 -fomit-frame-pointer -funroll-loops 
 
-LFLAGS=	-lm -I ./libdatrie/include -L ./libdatrie/lib -ldatrie -Wl,-rpath=$(PWD)/libdatrie/lib -I ./libmpfr/include -L ./libmpfr/lib -lgmp -lmpfr -Wl,-rpath=$(PWD)/libmpfr/lib
+LFLAGS=	-lm -I ./libdatrie/include -L ./libdatrie/lib -ldatrie -Wl,-rpath=$(PWD)/libdatrie/lib -I ./libmpfr/include -L ./libmpfr/lib -lgmp -lmpfr -Wl,-rpath=$(PWD)/libmpfr/lib -I ./libFLASM/include -L ./libFLASM/lib -lflasm -Wl,-rpath=$(PWD)/libFLASM/lib -I ./include/
 
 EXE=	motexOMP
 
-SRC= 	motex.c functions.c binomial.c
+SRC= 	motex.cc functions.cc binomial.cc
 
 HD=     motexdefs.h
 
@@ -17,11 +17,11 @@ HD=     motexdefs.h
 #
 
 .SUFFIXES:
-.SUFFIXES: .c .o
+.SUFFIXES: .cc .o
 
-OBJ=	$(SRC:.c=.o)
+OBJ=	$(SRC:.cc=.o)
 
-.c.o:
+.cc.o:
 	$(CC) $(CFLAGS)-c $(LFLAGS) $<
 
 all:	$(EXE)

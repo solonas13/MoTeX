@@ -1,11 +1,12 @@
 
 Pre-installation Instructions
 =============================
+   This installation assumes a C compiler and the GMP library have already 
+been installed. In any other case it may fail.
 
-   This installation requires the pre-installation of the C library 
-implementation of the double-array trie data structure and the C library 
-implementation for multiple-precision floating-point computations with 
-correct rounding. 
+   It then requires the pre-installation of the C library implementation 
+of the double-array trie data structure and the C library implementation 
+for multiple-precision floating-point computations with correct rounding. 
 
    In order to  assess  the  statistical  significance  of the motifs 
 extracted by MoTeX, the programme SMILE, a statistical significance 

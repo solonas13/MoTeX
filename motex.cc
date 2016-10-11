@@ -28,6 +28,7 @@
 
 #include <math.h>
 #include <stdlib.h>
+#include <cctype>
 #include <string.h>
 #include <limits.h>
 #include "motexdefs.h"
@@ -65,7 +66,7 @@ int main ( int argc, char **argv )
    	unsigned int  * bgaps_max;		//   the max gaps
    	unsigned int  * blens;			//   the lengths of boxes
    	unsigned int  * berrs;			//   the errors	in boxes
-	unsigned int ** S;			// the array that stores the motifs structs
+	unsigned int  ** S;			// the array that stores the motifs structs
 
 	unsigned int 	i, j;
 
@@ -78,7 +79,7 @@ int main ( int argc, char **argv )
 
 	#ifdef _USE_MPI
 	int rank;				// the rank of the processor
-	unsigned int long_seq;			// few and long sequences or not
+//	unsigned int long_seq;			// few and long sequences or not
 	unsigned int * l_all_occur;
 	unsigned int * l_occur;
 	unsigned int * sendv;
@@ -113,13 +114,7 @@ int main ( int argc, char **argv )
          		return ( 1 );
        		}
 
-		if ( sw . l > sizeof( WORD ) * CHAR_BIT - 1 )
-                {
-                        fprintf( stderr, " Error: the fixed-length of motifs k must be less or equal than %d!\n", ( unsigned int ) ( sizeof( WORD ) * CHAR_BIT - 1 ) );
-                        return ( 1 );
-                }
-      		else 	l = sw . l;
-
+      		l 	= sw . l;
       		e   	= sw . e;	
 
 		if ( e >= l )
@@ -136,9 +131,9 @@ int main ( int argc, char **argv )
          		return ( 1 );
        		}
 
-      		if      ( ! strcmp ( "DNA", sw . alphabet ) )	alphabet = DNA;
-      		else if ( ! strcmp ( "PROT", sw . alphabet ) ) 	alphabet = PROT;
-      		else if ( ! strcmp ( "USR", sw . alphabet ) )  	alphabet = USR;
+      		if      ( ! strcmp ( "DNA", sw . alphabet ) )	alphabet = ( char * ) DNA;
+      		else if ( ! strcmp ( "PROT", sw . alphabet ) ) 	alphabet = ( char * ) PROT;
+      		else if ( ! strcmp ( "USR", sw . alphabet ) )  	alphabet = ( char * ) USR;
       		else
        		{
          		fprintf ( stderr, " Error: alphabet argument a should be `DNA' for nucleotide sequences or `PROT' for protein sequences or `USR' for sequences over a user-defined alphabet!\n" );
@@ -215,14 +210,14 @@ int main ( int argc, char **argv )
         MPI_Init( NULL, NULL );
 	MPI_Comm_size( MPI_COMM_WORLD, &P );
 	MPI_Comm_rank( MPI_COMM_WORLD, &rank );
-	long_seq = sw . L;
-
+	//long_seq = sw . L;
+	#if 0
 	if ( long_seq && un_in_filename != NULL )
        	{
         	fprintf ( stderr, " Error: `-I' option cannot be used with `-L' option!\n" );
         	return ( 1 );
        	}
-
+	#endif
 	/* The master processor reads and broadcasts the input data as concatenated text t */
 	if ( rank == 0 )
 	{
@@ -445,7 +440,7 @@ int main ( int argc, char **argv )
 	{
 		unsigned int ** A;
 		A = ( unsigned int ** ) malloc ( ( nb_gaps ) * sizeof ( unsigned int * ) );
-		unsigned int * y = malloc( ( nb_gaps ) * sizeof ( unsigned int * ) );
+		unsigned int * y = ( unsigned int * ) malloc( ( nb_gaps ) * sizeof ( unsigned int * ) );
 
 		nb_structs = 1;	
 		for ( i = 0; i < nb_gaps; i++ )
@@ -466,12 +461,12 @@ int main ( int argc, char **argv )
 		sw . berrs = berrs;
 		sw . nb_structs = nb_structs;
 
-		S = malloc( sizeof( unsigned int * ) * nb_structs );
+		S = ( unsigned int ** ) malloc( sizeof( unsigned int * ) * nb_structs );
 		for ( i = 0 ; i < nb_structs; i++ ) 
-			S[i] = calloc( nb_gaps, sizeof( unsigned int ) );
+			S[i] = ( unsigned int * ) calloc( nb_gaps, sizeof( unsigned int ) );
 
 		unsigned int xi = 0;
-		unsigned int * tmp_prod = calloc( nb_gaps, sizeof( unsigned int ) );
+		unsigned int * tmp_prod = ( unsigned int * ) calloc( nb_gaps, sizeof( unsigned int ) );
 
 		recurse( nb_gaps, 0, y, A, &xi, tmp_prod, S );
 	
@@ -605,7 +600,7 @@ int main ( int argc, char **argv )
 		MPI_Barrier( MPI_COMM_WORLD );
 
 		if( rank == 0 )	start = MPI_Wtime();
-	 
+	 	#if 0
 		if ( long_seq )
 		{
 			/* The algorithm for motif extraction */
@@ -725,6 +720,7 @@ int main ( int argc, char **argv )
 		}
 		else
 		{
+		#endif
 			for ( i = 0; i < num_seqs; i++ )
 			{
 				unsigned int m = strlen ( seqs[i] );
@@ -819,7 +815,7 @@ int main ( int argc, char **argv )
 				free ( l_all_occur );
 				free ( l_occur );
 			}
-		}
+		//}
 
 		MPI_Barrier( MPI_COMM_WORLD );
 		#endif

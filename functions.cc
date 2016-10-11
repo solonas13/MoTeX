@@ -27,14 +27,23 @@
 #endif
 
 #include <time.h>
+#include <sys/time.h>
+#include <fstream>
+#include <iostream>
 #include <math.h>
+#include <algorithm>
 #include <stdlib.h>
 #include <string.h>
 #include <getopt.h>
 #include <assert.h>
 #include <datrie/trie.h>
+#include <libflasm.h>
 #include "motexdefs.h"
 
+using namespace std;
+using namespace libflasm;
+
+#if 0
 #ifdef _USE_MPI
 /*
 returns the ith coordinate of element x at the diagonal step
@@ -146,7 +155,7 @@ inline void vec_allocation ( int rank, int P, unsigned int m, int *first, int* l
 /*
 handles the p2p boundary cells swaps between the processors
 */
-inline void communication ( int P, int rank, unsigned int step, unsigned int n, unsigned int m, WORD * D, int first, int last, int first_n, int last_n)
+inline void communication ( int P, int rank, unsigned int step, unsigned int n, unsigned int m, WORD1 * D, int first, int last, int first_n, int last_n)
 {
 	MPI_Status status;
 	
@@ -236,32 +245,32 @@ unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const 
 	int last_n;
 	int x;
 
-	WORD y; 
-	WORD *D0, *D1, *D2; 	//matrix B in anti-diagonal vectors
+	WORD1 y; 
+	WORD1 *D0, *D1, *D2; 	//matrix B in anti-diagonal vectors
 	unsigned int i;
 	unsigned int j;
 	unsigned int ul;
 
   	/* Memory Allocation */
-	if ( ( D0 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
+	if ( ( D0 = ( WORD1 * ) calloc ( ( m + 1 ) , sizeof( WORD1 ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D0 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	if ( ( D1 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
+	if ( ( D1 = ( WORD1 * ) calloc ( ( m + 1 ) , sizeof( WORD1 ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D1 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	if ( ( D2 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
+	if ( ( D2 = ( WORD1 * ) calloc ( ( m + 1 ) , sizeof( WORD1 ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D2 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	y = ( ( WORD ) ( 1 ) << ( sw . l - 1 ) ) - 1;
+	y = ( ( WORD1 ) ( 1 ) << ( sw . l - 1 ) ) - 1;
 
         step = 0;
 	allocation ( rank, P , n , m, step , &first , &last);		//Processor Allocation
@@ -282,9 +291,9 @@ unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const 
 				case 0 :
 
 				if ( i == 0 )
-					D0[x] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D0[x] = ( ( WORD1 ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else
-					D0[x] = shiftc ( D1[ul], y ) | delta ( t[i - 1], p[j - 1] );
+					D0[x] = shiftc ( D1[ul], y ) | delta1 ( t[i - 1], p[j - 1] );
 
 				if ( popcount ( D0[x] ) <= sw . e && j >= sw . l )	
 				{
@@ -297,9 +306,9 @@ unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const 
 				case 1 :
 				
 				if( i == 0 )
-					D1[x] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D1[x] = ( ( WORD1 ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else
-					D1[x] = shiftc ( D2[ul], y ) | delta ( t[i - 1], p[j - 1] );
+					D1[x] = shiftc ( D2[ul], y ) | delta1 ( t[i - 1], p[j - 1] );
 
 				if ( popcount ( D1[x] ) <= sw . e && j >= sw . l )	
 				{
@@ -312,9 +321,9 @@ unsigned int motifs_extraction_opasm_hd ( const char * p, unsigned int m, const 
 				case 2 :
  
 				if( i == 0 )
-					D2[x] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D2[x] = ( ( WORD1 ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else
-					D2[x] = shiftc ( D0[ul], y ) | delta ( t[i - 1], p[j - 1] );
+					D2[x] = shiftc ( D0[ul], y ) | delta1 ( t[i - 1], p[j - 1] );
 
 				if ( popcount ( D2[x] ) <= sw . e && j >= sw . l )	
 				{
@@ -377,8 +386,8 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 	int last_n;
 	int x;
 
-	WORD y; 
-	WORD *D0, *D1, *D2; 	//matrix B in anti-diagonal vectors
+	WORD1 y; 
+	WORD1 *D0, *D1, *D2; 	//matrix B in anti-diagonal vectors
 	
 	unsigned int i;
 	unsigned int j;
@@ -387,25 +396,25 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 	unsigned int lft;
 
   	// Memory Allocation 
-	if ( ( D0 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
+	if ( ( D0 = ( WORD1 * ) calloc ( ( m + 1 ) , sizeof( WORD1 ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D0 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	if ( ( D1 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
+	if ( ( D1 = ( WORD1 * ) calloc ( ( m + 1 ) , sizeof( WORD1 ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D1 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	if ( ( D2 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
+	if ( ( D2 = ( WORD1 * ) calloc ( ( m + 1 ) , sizeof( WORD1 ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: D2 could not be allocated!\n");
 		return ( 0 );
 	}
 
-	y = ( ( WORD ) ( 1 ) << ( sw . l - 1 ) ) - 1;
+	y = ( ( WORD1 ) ( 1 ) << ( sw . l - 1 ) ) - 1;
         step = 0;
 	allocation ( rank, P , n , m, step , &first , &last);		//Processor Allocation
 	allocation ( rank, P , n , m, step + 1 , &first_n , &last_n);   //Processor Allocation
@@ -426,11 +435,11 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 				case 0 :
 
 				if ( i == 0 )
-					D0[x] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D0[x] = ( ( WORD1 ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else if ( j <= sw . l )
-					D0[x] = bitminmax ( shift ( D2[up] ) | 1, shift( D2[lft] ) | 1, shift( D1[ul] ) | delta ( t[i - 1], p[j - 1] ) );
+					D0[x] = bitminmax ( shift ( D2[up] ) | 1, shift( D2[lft] ) | 1, shift( D1[ul] ) | delta1 ( t[i - 1], p[j - 1] ) );
 				else
-					D0[x] = bitminmax ( shiftc( D2[lft] , y ) | 1, shift ( D2[up] ) | 1, shiftc ( D1[ul], y ) | delta ( t[i - 1], p[j - 1] ) );
+					D0[x] = bitminmax ( shiftc( D2[lft] , y ) | 1, shift ( D2[up] ) | 1, shiftc ( D1[ul], y ) | delta1 ( t[i - 1], p[j - 1] ) );
 				if ( popcount ( D0[x] ) <= sw . e && j >= sw . l )	
 				{
 					v[j - 1] = v[j - 1] + 1; 
@@ -441,11 +450,11 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 				case 1 :
 				
 				if( i == 0 )
-					D1[x] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D1[x] = ( ( WORD1 ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else if ( j <= sw . l )
-					D1[x] = bitminmax ( shift ( D0[up] ) | 1, shift( D0[lft] ) | 1, shift( D2[ul] ) | delta ( t[i - 1], p[j - 1] ) );
+					D1[x] = bitminmax ( shift ( D0[up] ) | 1, shift( D0[lft] ) | 1, shift( D2[ul] ) | delta1 ( t[i - 1], p[j - 1] ) );
 				else
-					D1[x] = bitminmax ( shiftc( D0[lft] , y ) | 1, shift ( D0[up] ) | 1, shiftc ( D2[ul], y ) | delta ( t[i - 1], p[j - 1] ) );
+					D1[x] = bitminmax ( shiftc( D0[lft] , y ) | 1, shift ( D0[up] ) | 1, shiftc ( D2[ul], y ) | delta1 ( t[i - 1], p[j - 1] ) );
 				if ( popcount ( D1[x] ) <= sw . e && j >= sw . l )	
 				{
 					v[j - 1] = v[j - 1] + 1; 
@@ -456,11 +465,11 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 				case 2 :
  
 				if( i == 0 )
-					D2[x] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
+					D2[x] = ( ( WORD1 ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
 				else if ( j <= sw . l )
-					D2[x] = bitminmax ( shift ( D1[up] ) | 1, shift( D1[lft] ) | 1, shift( D0[ul] ) | delta ( t[i - 1], p[j - 1] ) );
+					D2[x] = bitminmax ( shift ( D1[up] ) | 1, shift( D1[lft] ) | 1, shift( D0[ul] ) | delta1 ( t[i - 1], p[j - 1] ) );
 				else
-					D2[x] = bitminmax ( shiftc( D1[lft] , y ) | 1, shift ( D1[up] ) | 1, shiftc ( D0[ul], y ) | delta ( t[i - 1], p[j - 1] ) );
+					D2[x] = bitminmax ( shiftc( D1[lft] , y ) | 1, shift ( D1[up] ) | 1, shiftc ( D0[ul], y ) | delta1 ( t[i - 1], p[j - 1] ) );
 				if ( popcount ( D2[x] ) <= sw . e && j >= sw . l  )	
 				{
 					v[j - 1] = v[j - 1] + 1; 
@@ -509,97 +518,43 @@ unsigned int motifs_extraction_opasm_ed ( const char * p, unsigned int m, const 
 	return  ( 1 );
 }
 #endif
+#endif
 
 /*
 the dynamic programming algorithm under the hamming distance model
 */
 unsigned int motifs_extraction_hd ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v )
 {
-	WORD y; 
-	WORD * D0, * D1; 		//matrix B in two rows
 	unsigned int * occ;
-	unsigned int i;
-	unsigned int j;
 
   	/* Memory Allocation */
-	if ( ( D0 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
-	{
-		fprintf( stderr, " Error: D0 could not be allocated!\n");
-		return ( 0 );
-	}
-
-	if ( ( D1 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
-	{
-		fprintf( stderr, " Error: D1 could not be allocated!\n");
-		return ( 0 );
-	}
-
 	if ( ( occ = ( unsigned int* ) calloc ( ( m ) , sizeof( unsigned int ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: occ could not be allocated!\n");
 		return ( 0 );
 	}
 
-	y = ( ( WORD ) ( 1 ) << ( sw . l - 1 ) ) - 1;
 
-	for ( i = 0; i < n + 1; i ++ ) 
-	{  
-		for( j = 0; j < m + 1 ; j++ )			
+	ResultTupleSet pattern_matching_hd = flasm_hd( ( unsigned char * ) t, n, ( unsigned char * ) p, m, sw . l, sw . e, true);
+	
+	ResultTupleSetIterator it;
+	
+	for ( it = pattern_matching_hd.begin(); it != pattern_matching_hd.end(); it++ )
+	{
+		ResultTuple result = *it;
+
+		if ( result . error <= sw . e )	
 		{
-			if( j == 0 ) continue;
-
-			switch ( i % 2 )
+			if ( occ[result . pos_x] == 0 )
 			{
-				case 0 :
-
-				if ( i == 0 )
-					D0[j] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
-				else
-					D0[j] = shiftc ( D1[j - 1], y ) | delta ( t[i - 1], p[j - 1] );
-
-				if ( popcount ( D0[j] ) <= sw . e && j >= sw . l )	
-				{
-					if ( occ[j - 1] == 0 )
-					{
-						u[j - 1] = u[j - 1] + 1;
-						occ[j - 1] = 1;
-					} 
-					v[j - 1] = v[j - 1] + 1; 
-				}
-
-				break;
-				
-				case 1 :
-				
-				if( i == 0 )
-					D1[j] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
-				else
-					D1[j] = shiftc ( D0[j - 1], y ) | delta ( t[i - 1], p[j - 1] );
-
-				if ( popcount ( D1[j] ) <= sw . e && j >= sw . l )	
-				{
-					if ( occ[j - 1] == 0 )
-					{
-						u[j - 1] = u[j - 1] + 1;
-						occ[j - 1] = 1;
-					} 
-					v[j - 1] = v[j - 1] + 1; 
-				}
-
-				break;
-			
-				default:
-				fprintf ( stderr, " Error: this should never happen!\n");
-				break;		
+				u[result . pos_x] = u[result . pos_x] + 1;
+				occ[result . pos_x] = 1;
 			} 
-			
+			v[result . pos_x] = v[result . pos_x] + 1; 
 		}
 	}
-
-	free ( D0 );
-	free ( D1 );
+	
 	free ( occ );
-
 	return  ( 1 );
 }
 
@@ -608,7 +563,7 @@ the dynamic programming algorithm under the hamming distance model for structure
 */
 unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v )
 {
-	WORD *** B; 		//matrices B
+	unsigned int *** B; 		//matrices B
 	unsigned int ** occ;
 	unsigned int i;
 	unsigned int j;
@@ -617,7 +572,7 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 	unsigned int g;
 
 	/* 3d dynamic memory allocation for matrices B*/
-   	if( ( B = ( WORD *** ) malloc ( ( sw . nb_boxes ) * sizeof( WORD ** ) ) ) == NULL )
+   	if( ( B = ( unsigned int *** ) malloc ( ( sw . nb_boxes ) * sizeof( unsigned int ** ) ) ) == NULL )
     	{
       		fprintf( stderr, " Error: B could not be allocated!\n" );
       		return 0;
@@ -625,20 +580,23 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 	
    	for ( i = 0; i < sw . nb_boxes; i ++ )
     	{
-      		if( ( B[i] = ( WORD ** ) malloc ( ( n + 1 ) * sizeof( WORD * ) ) ) == NULL )
+      		if( ( B[i] = ( unsigned int ** ) malloc ( ( n + 1 ) * sizeof( unsigned int * ) ) ) == NULL )
        		{
          		fprintf( stderr, " Error: B could not be allocated!\n" );
          		return 0;
        		}
- 
-      		if( ( B[i][0] = ( WORD * ) calloc ( ( n + 1 ) * ( m + 1 ), sizeof( WORD ) ) ) == NULL )
-       		{
-	  		fprintf( stderr, " Error: B could not be allocated!\n" );
-	  		return 0;
-       		} 
 
-      		for ( j = 1; j < n + 1; j++ )
-        		B[i][j] = ( void * ) B[i][0] + j * ( m + 1 ) * sizeof( WORD );
+		for ( j = 0; j < n + 1; j++ )
+		{
+			if( ( B[i][j] = ( unsigned int * ) malloc ( ( m + 1 ) * sizeof( unsigned int ) ) ) == NULL )
+       			{
+         			fprintf( stderr, " Error: B could not be allocated!\n" );
+         			return 0;
+       			}
+			
+			for( k = 0; k< m + 1; k++ )
+				B[i][j][k] = m ;
+		}
     	}
 
 	if ( ( occ = ( unsigned int ** ) malloc ( sw . nb_structs * sizeof ( unsigned int * ) ) ) == NULL )
@@ -646,47 +604,51 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
                 fprintf( stderr, " Error: R could not be allocated!\n");
                 return ( 0 );
         }
-        if ( ( occ[0] = ( unsigned int * ) calloc ( sw . nb_structs * m, sizeof ( unsigned int ) ) ) == NULL )
-        {
-                fprintf( stderr, " Error: R could not be allocated!\n");
-                return ( 0 );
-        }
-        for ( j = 1; j < sw . nb_structs; ++ j )
-                occ[j] = ( void * ) occ[0] + j * ( m ) * sizeof ( unsigned int );
+	for ( j = 0; j < sw . nb_structs; ++ j )
+        {	
+		if ( ( occ[j] = ( unsigned int * ) calloc ( ( m + 1 ) , sizeof ( unsigned int ) ) ) == NULL )
+        	{
+                	fprintf( stderr, " Error: R could not be allocated!\n");
+                	return ( 0 );
+        	}
+	}
 
 	/* Computing the DP matrices */
 	for ( b = 0; b < sw . nb_boxes; b++ ) 
 	{
 		unsigned int ell;
-		if ( b != 0 )	
+		unsigned int err;
+
+		if ( b != 0 )
+		{	
 			ell = sw . blens[b - 1];
+			err = sw . berrs[b - 1];
+		}
 		else
-			ell = sw . l;
-
-		WORD y = ( ( WORD ) ( 1 ) << ( ell - 1 ) ) - 1;
-
-		for ( i = 0; i < n + 1; i++ ) 
 		{
-			for( j = 0; j < m + 1 ; j++ )			
-			{
-				if( j == 0 ) continue;
+			ell = sw . l;
+			err = sw . e;
+		}
 
-				if ( i == 0 )
-					B[b][i][j] = ( ( WORD ) 2 << ( min ( j , ell ) - 1  ) ) - 1;
-				else
-					B[b][i][j] = shiftc ( B[b][i - 1][j - 1], y ) | delta ( t[i - 1], p[j - 1] );
-			}
+		ResultTupleSet pattern_matching_hd = flasm_hd( ( unsigned char * ) t, n, ( unsigned char * ) p, m, ell, err, true );
+	
+		ResultTupleSetIterator it;
+	
+		for ( it = pattern_matching_hd.begin(); it != pattern_matching_hd.end(); it++ )
+		{
+			ResultTuple result = *it;
+
+			B[b][result.pos_t][result.pos_x] = result . error;
 		}
 	}
 
 	/* Merging the single-motif occurrences into structured-motif occurrences */
+	
 	for ( i = 0; i < n + 1; i++ ) 
 	{
-		if ( i < sw . l ) continue;
 		for( j = 0; j < m + 1 ; j++ )			
 		{
-			if ( j < sw . l  ) continue;
-			if ( popcount ( B[0][i][j] ) <= sw . e )
+			if ( B[0][i][j] <= sw . e )
 			{
 				for ( k = 0; k < sw . nb_structs; k ++ )
 				{
@@ -694,8 +656,8 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 					for ( l = 0; l < sw . nb_structs; l ++ )
 					{
 						unsigned int array_offset = k * m;
-						unsigned int dist_offset_j = j;
-						unsigned int dist_offset_i = i;
+						unsigned int dist_offset_j = j - 1;
+						unsigned int dist_offset_i = i - 1;
 						unsigned int r = 1;
 						for ( g = 0; g < sw . nb_gaps; g++ )
 						{
@@ -703,7 +665,8 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 							dist_offset_i += ( sw . S[l][g] + sw . blens[g] );
 							
 							if ( dist_offset_i < n + 1 && dist_offset_j < m + 1 )
-								if ( popcount ( B[g + 1][dist_offset_i][dist_offset_j] ) <= sw . berrs[g] )
+							{
+								if ( B[g + 1][dist_offset_i][dist_offset_j] <= sw . berrs[g] )
 								{
 									r++;
 									if ( r == sw . nb_boxes )
@@ -711,33 +674,35 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 										if ( occ[k][j - 1] == 0 )
 										{
 											u[ array_offset + j - 1] = u[ array_offset + j - 1] + 1;
-											occ[k][j - 1] = 1;
+											occ[k][j- 1] = 1;
 										} 
-										v[ array_offset + j - 1] = v[ array_offset + j - 1] + 1; 
+										v[ array_offset + j - 1] = v[ array_offset + j - 1] + 1;
 									}
 								}	
 								else
 									break;
+							}
 						}
 					}
-
 				}
 			}
 		}
 	}
 
 	for ( i = 0;  i < sw . nb_boxes; i++ )
-    	{
-      		free ( B[i][0] );
+	{
+		for ( j = 0; j < n + 1; j++ )
+			free( B[i][j] );
       		free ( B[i] );
-    	}
+	}
    	free ( B );
-	free ( occ[0] );
+
+	for ( j = 0; j < sw . nb_structs; ++ j )
+		free( occ[j] );
 	free ( occ );
 
 	return  ( 1 );
 }
-
 
 /*
 A recursive function that creates the cartesian product of multiple (sets) arrays
@@ -768,89 +733,36 @@ the dynamic programming algorithm under the edit distance model
 */
 unsigned int motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v )
 {
-	WORD y; 
-	WORD * D0, * D1; 	//matrix B in two rows
+
 	unsigned int * occ;	
-	unsigned int i;
-	unsigned int j;
 
   	// Memory Allocation 
-	if ( ( D0 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
-	{
-		fprintf( stderr, " Error: D0 could not be allocated!\n");
-		return ( 0 );
-	}
-
-	if ( ( D1 = ( WORD * ) calloc ( ( m + 1 ) , sizeof( WORD ) ) ) == NULL )
-	{
-		fprintf( stderr, " Error: D1 could not be allocated!\n");
-		return ( 0 );
-	}
-
 	if ( ( occ = ( unsigned int* ) calloc ( ( m ) , sizeof( unsigned int ) ) ) == NULL )
 	{
 		fprintf( stderr, " Error: occ could not be allocated!\n");
 		return ( 0 );
 	}
 
-	y = ( ( WORD ) ( 1 ) << ( sw . l - 1 ) ) - 1;
+	ResultTupleSet pattern_matching_ed = flasm_ed( ( unsigned char * ) t, n, ( unsigned char * ) p, m, sw . l, sw . e, true );
+	
+	ResultTupleSetIterator it;
+	
+	for ( it = pattern_matching_ed.begin(); it != pattern_matching_ed.end(); it++ )
+	{
+		ResultTuple result = *it;
 
-	for ( i = 0; i < n + 1; i ++ ) 
-	{  
-		for( j = 0; j < m + 1 ; j++ )			
+		if ( result . error <= sw . e )	
 		{
-			if( j == 0 ) continue;
-
-			switch ( i % 2 )
+			if ( occ[result . pos_x ] == 0 )
 			{
-				case 0 :
-
-				if ( i == 0 )
-					D0[j] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
-				else if ( j <= sw . l )
-					D0[j] = bitminmax ( shift ( D1[j] ) | 1, shift( D0[j - 1] ) | 1, shift( D1[j - 1] ) | delta ( t[i - 1], p[j - 1] ) );
-				else
-					D0[j] = bitminmax ( shiftc( D0[j - 1] , y ) | 1, shift ( D1[j] ) | 1, shiftc ( D1[j - 1], y ) | delta ( t[i - 1], p[j - 1] ) );
-				if ( popcount ( D0[j] ) <= sw . e && j >= sw . l )	
-				{
-					if ( occ[j - 1] == 0 )
-					{
-						u[j - 1] = u[j - 1] + 1;
-						occ[j - 1] = 1;
-					} 
-					v[j - 1] = v[j - 1] + 1; 
-				}
-				break;				
-				case 1 :
-
-				if ( i == 0 )
-					D1[j] = ( ( WORD ) 2 << ( min ( j , sw . l ) - 1 ) ) - 1;
-				else if ( j <= sw . l )
-					D1[j] = bitminmax ( shift ( D0[j] ) | 1, shift( D1[j - 1] ) | 1, shift( D0[j - 1] ) | delta ( t[i - 1], p[j - 1] ) );
-				else
-					D1[j] = bitminmax ( shiftc( D1[j - 1] , y ) | 1, shift ( D0[j] ) | 1, shiftc ( D0[j - 1], y ) | delta ( t[i - 1], p[j - 1] ) );
-				
-				if ( popcount ( D1[j] ) <= sw . e && j >= sw . l )	
-				{
-					if ( occ[j - 1] == 0 )
-					{
-						u[j - 1] = u[j - 1] + 1;
-						occ[j - 1] = 1;
-					} 
-					v[j - 1] = v[j - 1] + 1; 
-				}
-				break;
-			
-				default:
-				fprintf ( stderr, " Error: this should never happen!\n");
-				break;		
+				u[result . pos_x ] = u[result . pos_x ] + 1;
+				occ[result . pos_x ] = 1;
 			} 
+			v[result . pos_x ] = v[result . pos_x ] + 1; 
+	
 		}
-		
 	}
-
-	free ( D0 );
-	free ( D1 );
+	
 	free ( occ );
 	return  ( 1 );
 }
@@ -860,7 +772,7 @@ the dynamic programming algorithm under the edit distance model for structured m
 */
 unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, const char * t, unsigned int n, struct TSwitch sw, unsigned int * u, unsigned int * v )
 {
-	WORD *** B; 		//matrices B
+	unsigned int *** B; 		//matrices B
 	unsigned int ** occ;
 	unsigned int i;
 	unsigned int j;
@@ -869,7 +781,7 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 	unsigned int g;
 
 	/* 3d dynamic memory allocation for matrices B*/
-   	if( ( B = ( WORD *** ) malloc ( ( sw . nb_boxes ) * sizeof( WORD ** ) ) ) == NULL )
+		if( ( B = ( unsigned int *** ) malloc ( ( sw . nb_boxes ) * sizeof( unsigned int ** ) ) ) == NULL )
     	{
       		fprintf( stderr, " Error: B could not be allocated!\n" );
       		return 0;
@@ -877,20 +789,23 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 	
    	for ( i = 0; i < sw . nb_boxes; i ++ )
     	{
-      		if( ( B[i] = ( WORD ** ) malloc ( ( n + 1 ) * sizeof( WORD * ) ) ) == NULL )
+      		if( ( B[i] = ( unsigned int ** ) malloc ( ( n + 1 ) * sizeof( unsigned int * ) ) ) == NULL )
        		{
          		fprintf( stderr, " Error: B could not be allocated!\n" );
          		return 0;
        		}
- 
-      		if( ( B[i][0] = ( WORD * ) calloc ( ( n + 1 ) * ( m + 1 ), sizeof( WORD ) ) ) == NULL )
-       		{
-	  		fprintf( stderr, " Error: B could not be allocated!\n" );
-	  		return 0;
-       		} 
 
-      		for ( j = 1; j < n + 1; j++ )
-        		B[i][j] = ( void * ) B[i][0] + j * ( m + 1 ) * sizeof( WORD );
+		for ( j = 0; j < n + 1; j++ )
+		{
+			if( ( B[i][j] = ( unsigned int * ) malloc ( ( m + 1 ) * sizeof( unsigned int ) ) ) == NULL )
+       			{
+         			fprintf( stderr, " Error: B could not be allocated!\n" );
+         			return 0;
+       			}
+			
+			for( k = 0; k< m + 1; k++ )
+				B[i][j][k] = m;
+		}
     	}
 
 	if ( ( occ = ( unsigned int ** ) malloc ( sw . nb_structs * sizeof ( unsigned int * ) ) ) == NULL )
@@ -898,38 +813,43 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
                 fprintf( stderr, " Error: R could not be allocated!\n");
                 return ( 0 );
         }
-        if ( ( occ[0] = ( unsigned int * ) calloc ( sw . nb_structs * m, sizeof ( unsigned int ) ) ) == NULL )
-        {
-                fprintf( stderr, " Error: R could not be allocated!\n");
-                return ( 0 );
-        }
-        for ( j = 1; j < sw . nb_structs; ++ j )
-                occ[j] = ( void * ) occ[0] + j * ( m ) * sizeof ( unsigned int );
+	for ( j = 0; j < sw . nb_structs; ++ j )
+        {	
+		if ( ( occ[j] = ( unsigned int * ) calloc ( m , sizeof ( unsigned int ) ) ) == NULL )
+        	{
+                	fprintf( stderr, " Error: R could not be allocated!\n");
+                	return ( 0 );
+        	}
+	}
+
 
 	/* Computing the DP matrices */
 	for ( b = 0; b < sw . nb_boxes; b++ ) 
 	{
 		unsigned int ell;
-		if ( b != 0 )	
+		unsigned int err;
+
+		if ( b != 0 )
+		{	
 			ell = sw . blens[b - 1];
+			err = sw . berrs[b - 1];
+		}
 		else
-			ell = sw . l;
-
-		WORD y = ( ( WORD ) ( 1 ) << ( ell - 1 ) ) - 1;
-
-		for ( i = 0; i < n + 1; i++ ) 
 		{
-			for( j = 0; j < m + 1 ; j++ )			
-			{
-				if( j == 0 ) continue;
+			ell = sw . l;
+			err = sw . e;
+		}
 
-				if ( i == 0 )
-					B[b][i][j] = ( ( WORD ) 2 << ( min ( j , ell ) - 1 ) ) - 1;
-				else if ( j <= ell )
-					B[b][i][j] = bitminmax ( shift ( B[b][i - 1][j] ) | 1, shift( B[b][i][j - 1] ) | 1, shift( B[b][i - 1][j - 1] ) | delta ( t[i - 1], p[j - 1] ) );
-				else
-					B[b][i][j] = bitminmax ( shiftc( B[b][i][j - 1] , y ) | 1, shift ( B[b][i - 1][j] ) | 1, shiftc ( B[b][i - 1][j - 1], y ) | delta ( t[i - 1], p[j - 1] ) );
-			}
+		ResultTupleSet pattern_matching_ed = flasm_ed( ( unsigned char * ) t, n, ( unsigned char * ) p, m, ell, err, true );
+	
+		ResultTupleSetIterator it;
+	
+		for ( it = pattern_matching_ed.begin(); it != pattern_matching_ed.end(); it++ )
+		{
+			ResultTuple result = *it;
+
+			B[b][result.pos_t][result.pos_x] = result . error;
+
 		}
 	}
 
@@ -938,17 +858,16 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 	{
 		for( j = 0; j < m + 1 ; j++ )			
 		{
-			if ( j < sw . l  ) continue;
-			if ( popcount ( B[0][i][j] ) <= sw . e )
+			if ( B[0][i][j] <= sw . e )
 			{
 				for ( k = 0; k < sw . nb_structs; k ++ )
 				{
 					unsigned int l;
 					for ( l = 0; l < sw . nb_structs; l ++ )
-					{	
+					{
 						unsigned int array_offset = k * m;
-						unsigned int dist_offset_j = j;
-						unsigned int dist_offset_i = i;
+						unsigned int dist_offset_j = j - 1;
+						unsigned int dist_offset_i = i - 1;
 						unsigned int r = 1;
 						for ( g = 0; g < sw . nb_gaps; g++ )
 						{
@@ -956,7 +875,8 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 							dist_offset_i += ( sw . S[l][g] + sw . blens[g] );
 							
 							if ( dist_offset_i < n + 1 && dist_offset_j < m + 1 )
-								if ( popcount ( B[g + 1][dist_offset_i][dist_offset_j] ) <= sw . berrs[g] )
+							{
+								if ( B[g + 1][dist_offset_i][dist_offset_j] <= sw . berrs[g] )
 								{
 									r++;
 									if ( r == sw . nb_boxes )
@@ -964,42 +884,46 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 										if ( occ[k][j - 1] == 0 )
 										{
 											u[ array_offset + j - 1] = u[ array_offset + j - 1] + 1;
-											occ[k][j - 1] = 1;
-										}	 
-										v[ array_offset + j - 1] = v[ array_offset + j - 1] + 1; 
+											occ[k][j- 1] = 1;
+										} 
+										v[ array_offset + j - 1] = v[ array_offset + j - 1] + 1;
 									}
 								}	
 								else
 									break;
+							}
 						}
 					}
-
 				}
 			}
 		}
 	}
 
 	for ( i = 0;  i < sw . nb_boxes; i++ )
-    	{
-      		free ( B[i][0] );
+	{
+		for ( j = 0; j < n + 1; j++ )
+			free( B[i][j] );
       		free ( B[i] );
-    	}
+	}
    	free ( B );
-	free ( occ[0] );
+
+	for ( j = 0; j < sw . nb_structs; ++ j )
+		free( occ[j] );
 	free ( occ );
 
 	return  ( 1 );
 }
 
+#if 0
 /*
 given integers a, b, c this function returns one of the integers a, b, c
 with the property that it has the least number of 1's (bits set on). If there is 
 a draw then it returns the maximum of the two when viewed as decimal integers
 */
-inline WORD bitminmax ( WORD a, WORD b, WORD c )
+inline WORD1 bitminmax ( WORD1 a, WORD1 b, WORD1 c )
 {
         unsigned int x , y , z; 
-	WORD minimum, maximum;
+	WORD1 minimum, maximum;
 
         x = popcount ( a );
         y = popcount ( b );
@@ -1046,15 +970,15 @@ inline WORD bitminmax ( WORD a, WORD b, WORD c )
 /*
 moves the bits one position to the left and enters zeros from the right
 */
-inline WORD shift ( WORD a ) 
+inline WORD1 shift ( WORD1 a ) 
 {
-	return ( ( WORD ) a << 1 );
+	return ( ( WORD1 ) a << 1 );
 }
 
 /*
 shifts and truncates the leftmost bit
 */
-inline WORD shiftc( WORD a, WORD x ) 
+inline WORD1 shiftc( WORD1 a, WORD1 x ) 
 {
 	return shift ( a & x );
 }
@@ -1062,7 +986,7 @@ inline WORD shiftc( WORD a, WORD x )
 /*
 returns the hamming distance for two characters a and b 
 */
-inline unsigned int delta( char a, char b )
+inline unsigned int delta1( char a, char b )
 {
 	if	( a == b )			return 0;
 	else					return 1;
@@ -1071,13 +995,14 @@ inline unsigned int delta( char a, char b )
 /*
 returns the number of 1's in an integer x
 */
-inline unsigned int popcount ( WORD x )
+inline unsigned int popcount ( WORD1 x )
 {
 	//__builtin_popcount: 32-bit
 	//__builtin_popcountll: 128-bit
         //http://www.dalkescientific.com/writings/diary/archive/2011/11/02/faster_popcount_update.html
 	return __builtin_popcountl( x );
 }
+#endif
 
 /*
 write the header of the output
@@ -1152,7 +1077,7 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 	unsigned int valid = 0;
 
 	AlphaMap *	alphabet = NULL;
-        Trie *      	trie = NULL;
+        _Trie *      	trie = NULL;
 
 	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
 	{	 
@@ -1182,7 +1107,7 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
                         if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) >= sw . q && v[i][j] >= sw . n )
                         	if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) <= sw . Q && v[i][j] <= sw . N )
 				{
-					AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
+					AlphaChar * ACmotif = ( AlphaChar * ) calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
 					for ( k = 0; k < sw. l; k ++ )
 						ACmotif[k] = ( AlphaChar )seqs[i][k + j - ( sw . l ) + 1];
 					ACmotif [ k ] = 0;
@@ -1190,7 +1115,7 @@ unsigned int write_motifs ( struct TSwitch sw, unsigned int num_seqs, char const
 					{
 						trie_store ( trie, ACmotif, 0 );
 
-						char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+						char      * motif   = ( char * ) calloc ( ( sw . l + 1 ) , sizeof( char ) );
 						memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
 						fprintf ( out_fd, "%s %d %d %lf %d\n", motif, u[i][j], num_seqs, (  ( ( double ) u[i][j] / num_seqs ) ), v[i][j] );
 						valid ++;
@@ -1226,7 +1151,7 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
 	unsigned int valid = 0;
 
 	AlphaMap *	alphabet = NULL;
-        Trie *      	trie = NULL;
+        _Trie  *      	trie = NULL;
 
 	if ( ( out_fd = fopen( sw . output_filename, "w") ) == NULL) 
 	{	 
@@ -1263,8 +1188,8 @@ unsigned int write_structured_motifs ( struct TSwitch sw, unsigned int num_seqs,
 				if (  (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100 ) >= sw . q && v[i][k * m + j] >= sw . n )
 					if (  (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100 ) <= sw . Q && v[i][k * m + j] <= sw . N )
 					{
-						AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
-						char      * motif   = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
+						AlphaChar * ACmotif = ( AlphaChar * ) calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
+						char      * motif   = ( char * ) calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
 						unsigned int ell;
 						unsigned int offset;
 						unsigned int index = 0;
@@ -1450,11 +1375,11 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
         char * alphabet_str = NULL;
 
 	AlphaMap *	alphabet = NULL;
-        Trie *      	trie = NULL;
+        _Trie  *      	trie = NULL;
 
-	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = DNA;
-        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
-        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
+	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = ( char * ) DNA;
+        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = ( char * ) PROT;
+        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = ( char * ) USR;
 
 	if ( ( out_fd = fopen( sw . smile_out_filename, "w") ) == NULL) 
 	{	 
@@ -1482,7 +1407,7 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
                         if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) >= sw . q && v[i][j] >= sw . n )
                         	if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) <= sw . Q && v[i][j] <= sw . N )
 				{
-					AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
+					AlphaChar * ACmotif = ( AlphaChar * ) calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
 					for ( k = 0; k < sw. l; k ++ )
 						ACmotif[k] = ( AlphaChar )seqs[i][k + j - ( sw . l ) + 1];
 					ACmotif [ k ] = 0;
@@ -1490,10 +1415,10 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
 					{
 						trie_store ( trie, ACmotif, 0 );
 
-						char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+						char      * motif   = ( char * ) calloc ( ( sw . l + 1 ) , sizeof( char ) );
 						memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
 
-						char      * id   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+						char      * id   = ( char * ) calloc ( ( sw . l + 1 ) , sizeof( char ) );
 
 						unsigned int ii, jj;
 						for ( ii = 0; ii < sw . l; ii++ )
@@ -1501,7 +1426,7 @@ unsigned int write_motifs_smile ( struct TSwitch sw, unsigned int num_seqs, char
 							for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
 								if ( motif[ii] == alphabet_str[jj] ) break;
 
-							char * s   = calloc ( ( sw . l ) , sizeof( char ) );
+							char * s   = ( char * ) calloc ( ( sw . l ) , sizeof( char ) );
 							sprintf( s, "%c", ( char ) ( '0' + jj ) );
 							id[ii] = s[0] ;
 							free ( s );
@@ -1546,9 +1471,9 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 
         char * alphabet_str = NULL;
 
-	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = DNA;
-        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
-        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
+	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = ( char * ) DNA;
+        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = ( char * ) PROT;
+        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = ( char * ) USR;
 
 	if ( ( out_fd = fopen( sw . smile_out_filename, "w") ) == NULL) 
 	{	 
@@ -1559,7 +1484,7 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 	write_smile_header ( out_fd, sw, num_seqs, alphabet_str );
 
 	AlphaMap *	alphabet = NULL;
-        Trie *      	trie = NULL;
+        _Trie  *      	trie = NULL;
 
 	/* Create an empty alphabet */
 	alphabet = alpha_map_new();
@@ -1586,8 +1511,8 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 				if (  (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100 ) >= sw . q && v[i][k * m + j] >= sw . n )
 					if (  (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100 ) <= sw . Q && v[i][k * m + j] <= sw . N )
 					{
-						AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
-						char      * motif   = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
+						AlphaChar * ACmotif = ( AlphaChar * ) calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
+						char      * motif   = ( char * ) calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
 						unsigned int ell;
 						unsigned int offset;
 						unsigned int index = 0;
@@ -1633,7 +1558,7 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 						{
 							trie_store ( trie, ACmotif, 0 );
 
-							char      * id   = calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
+							char      * id   = ( char * ) calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
 
 							unsigned int ii, jj;
 							for ( ii = 0; ii < total_length_sm + sw . nb_gaps; ii++ )
@@ -1641,7 +1566,7 @@ unsigned int write_structured_motifs_smile ( struct TSwitch sw, unsigned int num
 								for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
 									if ( motif[ii] == alphabet_str[jj] ) break;
 
-								char * s   = calloc ( strlen ( alphabet_str ) , sizeof( char ) );
+								char * s   = ( char * ) calloc ( strlen ( alphabet_str ) , sizeof( char ) );
 								if ( jj < strlen ( alphabet_str ) )	
 								{
 									sprintf( s, "%c", ( char ) ( '0' + jj ) );
@@ -1699,7 +1624,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	unsigned int max_alloc;
 
 	AlphaMap *	alphabet = NULL;
-        Trie *      	trie = NULL;
+        _Trie  *      	trie = NULL;
 
         struct Tdata * bdata = NULL;
 	
@@ -1707,7 +1632,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
 	mpfr_t mpfr_bin;
 	mpfr_init2(mpfr_bin, ACC);
 
-	mpfr_t * mpfr_factLUT = malloc( ( num_seqs + 1 ) * sizeof( mpfr_t ) );
+	mpfr_t * mpfr_factLUT = ( mpfr_t * ) malloc( ( num_seqs + 1 ) * sizeof( mpfr_t ) );
 	mpfr_fillTable( mpfr_factLUT, ( unsigned long int ) num_seqs );
 	#else
 	long double bin_cdf = 0.;
@@ -1791,7 +1716,7 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
                 	bdata = ( struct Tdata * ) realloc ( bdata,   ( max_alloc + ALLOC_SIZE ) * sizeof ( struct Tdata ) );
                         max_alloc += ALLOC_SIZE;
                	}
-                AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
+                AlphaChar * ACmotif = ( AlphaChar * ) calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
 		char * pch;
 		pch = strtok ( line, " " );
 		for ( k = 0; k < sw. l; k ++ )
@@ -1831,8 +1756,8 @@ unsigned int write_motifs_back ( struct TSwitch sw, unsigned int num_seqs, char 
                         if (  ( ( double ) u[i][j] / num_seqs ) * 100  >= sw . q && v[i][j] >= sw . n )
                         	if (  ( ( double ) u[i][j] / num_seqs ) * 100  <= sw . Q && v[i][j] <= sw . N )
 				{
-					AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
-					char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+					AlphaChar * ACmotif = ( AlphaChar * ) calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
+					char      * motif   = ( char * ) calloc ( ( sw . l + 1 ) , sizeof( char ) );
 					memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
 					for ( k = 0; k < sw. l; k ++ )
 						ACmotif[k] = ( AlphaChar )seqs[i][k + j - ( sw . l ) + 1];
@@ -1992,7 +1917,7 @@ unsigned int write_structured_motifs_back ( struct TSwitch sw, unsigned int num_
 	unsigned int max_alloc;
 
 	AlphaMap *	alphabet = NULL;
-        Trie *      	trie = NULL;
+        _Trie  *      	trie = NULL;
 
         struct Tdata * bdata = NULL;
 	
@@ -2000,7 +1925,7 @@ unsigned int write_structured_motifs_back ( struct TSwitch sw, unsigned int num_
 	mpfr_t mpfr_bin;
 	mpfr_init2(mpfr_bin, ACC);
 
-	mpfr_t * mpfr_factLUT = malloc( ( num_seqs + 1 ) * sizeof( mpfr_t ) );
+	mpfr_t * mpfr_factLUT = ( mpfr_t * ) malloc( ( num_seqs + 1 ) * sizeof( mpfr_t ) );
 	mpfr_fillTable( mpfr_factLUT, ( unsigned long int ) num_seqs );
 	#else
 	long double bin_cdf = 0.;
@@ -2089,7 +2014,7 @@ unsigned int write_structured_motifs_back ( struct TSwitch sw, unsigned int num_
                 	bdata = ( struct Tdata * ) realloc ( bdata,   ( max_alloc + ALLOC_SIZE ) * sizeof ( struct Tdata ) );
                         max_alloc += ALLOC_SIZE;
                	}
-		AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
+		AlphaChar * ACmotif = ( AlphaChar * ) calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
 		char * pch;
 		pch = strtok ( line, " " );
 		for ( k = 0; k < total_length_sm + sw . nb_gaps; k ++ )
@@ -2130,8 +2055,8 @@ unsigned int write_structured_motifs_back ( struct TSwitch sw, unsigned int num_
 				if (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100  >= sw . q && v[i][k * m + j] >= sw . n )
 					if (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100  <= sw . Q && v[i][k * m + j] <= sw . N )
 					{
-						AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
-						char      * motif   = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
+						AlphaChar * ACmotif = ( AlphaChar * ) calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
+						char      * motif   = ( char * ) calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
 						unsigned int ell;
 						unsigned int offset;
 						unsigned int index = 0;
@@ -2330,13 +2255,13 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
 	unsigned int max_alloc;
 
 	AlphaMap *	alphabet = NULL;
-        Trie *      	trie = NULL;
+        _Trie  *      	trie = NULL;
 
         struct Tdata * bdata = NULL;
 	
-	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = DNA;
-        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
-        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
+	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = ( char * ) DNA;
+        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = ( char * ) PROT;
+        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = ( char * ) USR;
 
 	if ( ( un_out_fd = fopen( sw . un_smile_out_filename, "w") ) == NULL) 
 	{	 
@@ -2407,7 +2332,7 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
                 	bdata = ( struct Tdata * ) realloc ( bdata,   ( max_alloc + ALLOC_SIZE ) * sizeof ( struct Tdata ) );
                         max_alloc += ALLOC_SIZE;
                	}
-                AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
+                AlphaChar * ACmotif = ( AlphaChar * ) calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
 		char * pch;
 		pch = strtok ( line, " " );
 		for ( k = 0; k < sw. l; k ++ )
@@ -2447,8 +2372,8 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
 			if (  ( ( double ) u[i][j] / num_seqs ) * 100  >= sw . q && v[i][j] >= sw . n )
 				if (  ( ( double ) u[i][j] / num_seqs ) * 100  <= sw . Q && v[i][j] <= sw . N )
 				{
-					AlphaChar * ACmotif = calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
-					char      * motif   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+					AlphaChar * ACmotif = ( AlphaChar * ) calloc ( ( sw . l + 1 ) , sizeof( AlphaChar ) );
+					char      * motif   = ( char * ) calloc ( ( sw . l + 1 ) , sizeof( char ) );
 					memcpy ( motif, &seqs[i][j - ( sw . l ) + 1 ], sw . l );
 
 					for ( k = 0; k < sw. l; k ++ )
@@ -2463,7 +2388,7 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
 
 						trie_store ( trie, ACmotif, data );
 
-						char      * id   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+						char      * id   = ( char * ) calloc ( ( sw . l + 1 ) , sizeof( char ) );
 
 						unsigned int ii, jj;
 						for ( ii = 0; ii < sw . l; ii++ )
@@ -2471,7 +2396,7 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
 							for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
 								if ( motif[ii] == alphabet_str[jj] ) break;
 
-							char * s   = calloc ( ( sw . l ) , sizeof( char ) );
+							char * s   = ( char * ) calloc ( ( sw . l ) , sizeof( char ) );
 							sprintf( s, "%c", ( char ) ( '0' + jj ) );
 							id[ii] = s[0] ;
 							free ( s );
@@ -2487,7 +2412,7 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
 					{
 						if ( data != -1 )				// as a bg motif; add it as a fg motif matching this bg motif
 						{
-							char      * id   = calloc ( ( sw . l + 1 ) , sizeof( char ) );
+							char      * id   = ( char * ) calloc ( ( sw . l + 1 ) , sizeof( char ) );
 
 							unsigned int ii, jj;
 							for ( ii = 0; ii < sw . l; ii++ )
@@ -2495,7 +2420,7 @@ unsigned int write_motifs_back_smile ( struct TSwitch sw, unsigned int num_seqs,
 								for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
 									if ( motif[ii] == alphabet_str[jj] ) break;
 
-								char * s   = calloc ( ( sw . l ) , sizeof( char ) );
+								char * s   = ( char * ) calloc ( ( sw . l ) , sizeof( char ) );
 								sprintf( s, "%c", ( char ) ( '0' + jj ) );
 								id[ii] = s[0] ;
 								free ( s );
@@ -2558,13 +2483,13 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
 	unsigned int max_alloc;
 
 	AlphaMap *	alphabet = NULL;
-        Trie *      	trie = NULL;
+        _Trie  *      	trie = NULL;
 
         struct Tdata * bdata = NULL;
 	
-	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = DNA;
-        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = PROT;
-        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = USR;
+	if      ( ! strcmp ( "DNA", sw . alphabet ) )   alphabet_str = ( char * ) DNA;
+        else if ( ! strcmp ( "PROT", sw . alphabet ) )  alphabet_str = ( char * ) PROT;
+        else if ( ! strcmp ( "USR", sw . alphabet ) )   alphabet_str = ( char * ) USR;
 
 	if ( ( un_out_fd = fopen( sw . un_smile_out_filename, "w") ) == NULL) 
 	{	 
@@ -2641,7 +2566,7 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
                 	bdata = ( struct Tdata * ) realloc ( bdata,   ( max_alloc + ALLOC_SIZE ) * sizeof ( struct Tdata ) );
                         max_alloc += ALLOC_SIZE;
                	}
-		AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
+		AlphaChar * ACmotif = ( AlphaChar * ) calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
 		char * pch;
 		pch = strtok ( line, " " );
 		for ( k = 0; k < total_length_sm + sw . nb_gaps; k ++ )
@@ -2683,8 +2608,8 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
 				if (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100  >= sw . q && v[i][k * m + j] >= sw . n )
 					if (  ( ( double ) u[i][k * m + j] / num_seqs ) * 100  <= sw . Q && v[i][k * m + j] <= sw . N )
 					{
-						AlphaChar * ACmotif = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
-						char      * motif   = calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
+						AlphaChar * ACmotif = ( AlphaChar * ) calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( AlphaChar ) );  //AAAA_ATAT_TATTT
+						char      * motif   = ( char * ) calloc ( ( total_length_sm + sw . nb_gaps + 1 ) , sizeof( char ) );
 						unsigned int ell;
 						unsigned int offset;
 						unsigned int index = 0;
@@ -2731,7 +2656,7 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
 						{
 							data = -1;
 							trie_store ( trie, ACmotif, data );
-							char      * id   = calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
+							char      * id   = ( char * ) calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
 
 							unsigned int ii, jj;
 							for ( ii = 0; ii < total_length_sm + sw . nb_gaps; ii++ )
@@ -2739,7 +2664,7 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
 								for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
 									if ( motif[ii] == alphabet_str[jj] ) break;
 
-								char * s   = calloc ( strlen ( alphabet_str ) , sizeof( char ) );
+								char * s   = ( char * ) calloc ( strlen ( alphabet_str ) , sizeof( char ) );
 								if ( jj < strlen ( alphabet_str ) )	
 								{
 									sprintf( s, "%c", ( char ) ( '0' + jj ) );
@@ -2760,7 +2685,7 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
 						{
 							if ( data != -1 )				// as a bg motif; add it as a fg motif matching this bg motif
 							{
-								char      * id   = calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
+								char      * id   = ( char * ) calloc ( ( total_length_sm + sw . nb_boxes ) , sizeof( char ) );
 
 								unsigned int ii, jj;
 								for ( ii = 0; ii < total_length_sm + sw . nb_gaps; ii++ )
@@ -2768,7 +2693,7 @@ unsigned int write_structuted_motifs_back_smile ( struct TSwitch sw, unsigned in
 									for ( jj = 0; jj < strlen ( alphabet_str ); jj++ )
 										if ( motif[ii] == alphabet_str[jj] ) break;
 
-									char * s   = calloc ( strlen ( alphabet_str ) , sizeof( char ) );
+									char * s   = ( char * ) calloc ( strlen ( alphabet_str ) , sizeof( char ) );
 									if ( jj < strlen ( alphabet_str ) )	
 									{
 										sprintf( s, "%c", ( char ) ( '0' + jj ) );
@@ -2832,7 +2757,7 @@ unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char
 	mpfr_t mpfr_bin;
 	mpfr_init2(mpfr_bin, ACC);
 
-	mpfr_t * mpfr_factLUT = malloc( (num_seqs +1) * sizeof(mpfr_t));
+	mpfr_t * mpfr_factLUT = ( mpfr_t * ) malloc( (num_seqs +1) * sizeof(mpfr_t));
 	mpfr_fillTable(mpfr_factLUT, (unsigned long int)num_seqs);
 #else
 	long double *log_factLUT = calloc( (num_seqs + 1), sizeof(long double) );
@@ -2856,7 +2781,7 @@ unsigned int write_motifs_fore ( struct TSwitch sw, unsigned int num_fseqs, char
                         if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) >= sw . q && v[i][j] >= sw . n )
                         	if (  (  ( ( double ) u[i][j] / num_seqs ) * 100 ) <= sw . Q && v[i][j] <= sw . N )
 				{
-					char      * motif   = calloc ( ( m + 1 ) , sizeof( char ) );
+					char      * motif   = ( char * ) calloc ( ( m + 1 ) , sizeof( char ) );
 					memcpy ( motif, &fseqs[i][j - ( m ) + 1 ], m );
 					
 	#ifdef _USE_MPFR
@@ -2921,7 +2846,7 @@ static struct option long_options[] =
    { "num-of-occ", 	        required_argument, NULL, 'n' },
    { "max-num-of-occ", 	        required_argument, NULL, 'N' },
    { "num-of-threads",     	required_argument, NULL, 't' },
-   { "long-sequences", 	  	required_argument, NULL, 'L' },
+//   { "long-sequences", 	  	required_argument, NULL, 'L' },
    { "boxes-in-file",		required_argument, NULL, 's' },
    { "unmatched-in-file",	required_argument, NULL, 'I' },
    { "unmatched-out-file",	required_argument, NULL, 'u' },
@@ -2960,11 +2885,11 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
    sw -> n       			= 1;
    sw -> N       			= 10000;
    sw -> t       			= 4;
-   sw -> L       			= 0;
+//   sw -> L       			= 0;
 
    args = 0;
 
-   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:Q:k:d:e:n:N:s:t:L:I:S:u:U:h", long_options, &oi ) ) != - 1 )
+   while ( ( opt = getopt_long ( argc, argv, "a:b:i:o:q:Q:k:d:e:n:N:s:t:I:S:u:U:h", long_options, &oi ) ) != - 1 )
     {
       switch ( opt )
        {
@@ -3082,6 +3007,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
            sw -> t = val;
            break;
 
+	#if 0
          case 'L':
            val = strtol ( optarg, &ep, 10 );
            if ( ! ep || ep == optarg )
@@ -3090,6 +3016,7 @@ int decode_switches ( int argc, char * argv [], struct TSwitch * sw )
             }
            sw -> L = val;
            break;
+	#endif
 
          case 'e':
            val = strtol ( optarg, &ep, 10 );
@@ -3159,11 +3086,13 @@ void usage ( void )
                      "                                      evaluation passed as input.\n" );
    fprintf ( stdout, "  -t, --threads             <int>     Number of threads to be used by the OMP\n"
                      "                                      version (default: 4).\n" );
+   #if 0
    fprintf ( stdout, "  -L, --long-sequences      <int>     If the number of input sequences is less\n"
                      "                                      than  the number of  processors  used by\n" 
                      "                                      the MPI version, this should be set to 1\n"
                      "                                      (default: 0); useful  for a few (or one)\n"
                      "                                      very long sequence(s), e.g. a chromosome.\n" );
+   #endif	
    fprintf ( stdout, "  -u, --un-out-file         <str>     Output filename for foreground motifs not\n"
                      "                                      matched exactly with any background motif\n"
                      "                                      in the file passed with the `-b' option.\n" );
