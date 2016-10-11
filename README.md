@@ -63,11 +63,12 @@ m    m       mmmmmmm        m    m
                                       background motif in the file passed with
                                       the `-b' option.
 ```
+<b>Example</b>: For typical runs, see file EXAMPLES.
 
-
-When publishing work that is based on the results from MoTeX-II please cite:
+<b>Citation</b>:
 
 ```
 S. P. Pissis, "MoTeX-II: structured MoTif eXtraction from large-scale datasets", BMC Bioinformatics, vol. 15, 2014, pp. 235.
 ```
-Copyright (C) 2012 Solon P. Pissis.
+
+<b>License</b>: GNU GPLv3 License; Copyright (C) 2012 Solon P. Pissis.
