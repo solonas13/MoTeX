@@ -1,7 +1,7 @@
 MoTeX: A word-based HPC tool for single and structured MoTif eXtraction
 =====
 
-MoTeX is an accurate and efficient tool for single and structured MoTif eXtraction. It comes in three flavors: the standard CPU version; the OpenMP-based version; and the MPI-based version. It includes a tool that implements measures for assesing the statistical significance of the reported motifs. 
+<b>Description</b>: MoTeX is an accurate and efficient tool for single and structured MoTif eXtraction. It comes in three flavors: the standard CPU version; the OpenMP-based version; and the MPI-based version. It includes a tool that implements measures for assesing the statistical significance of the reported motifs. 
 
 <b>Installation</b>: To compile MoTeX-II, please follow the instructions given in file INSTALL.
 
