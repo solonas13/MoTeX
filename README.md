@@ -69,8 +69,8 @@ m    m       mmmmmmm        m    m
 <b>Citation</b>:
 
 ```
-S. P. Pissis, 
-"MoTeX-II: structured MoTif eXtraction from large-scale datasets", 
+S. P. Pissis: 
+MoTeX-II: structured MoTif eXtraction from large-scale datasets. 
 BMC Bioinformatics, vol. 15, 2014, pp. 235.
 ```
 
