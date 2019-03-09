@@ -638,7 +638,7 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 		{
 			ResultTuple result = *it;
 
-			B[b][result.pos_t][result.pos_x] = result . error;
+			B[b][result.pos_t+1][result.pos_x+1] = result . error;
 		}
 	}
 
@@ -656,8 +656,8 @@ unsigned int structured_motifs_extraction_hd ( const char * p, unsigned int m, c
 					for ( l = 0; l < sw . nb_structs; l ++ )
 					{
 						unsigned int array_offset = k * m;
-						unsigned int dist_offset_j = j - 1;
-						unsigned int dist_offset_i = i - 1;
+						unsigned int dist_offset_j = j;
+						unsigned int dist_offset_i = i;
 						unsigned int r = 1;
 						for ( g = 0; g < sw . nb_gaps; g++ )
 						{
@@ -848,7 +848,7 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 		{
 			ResultTuple result = *it;
 
-			B[b][result.pos_t][result.pos_x] = result . error;
+			B[b][result.pos_t+1][result.pos_x+1] = result . error;
 
 		}
 	}
@@ -866,8 +866,8 @@ unsigned int structured_motifs_extraction_ed ( const char * p, unsigned int m, c
 					for ( l = 0; l < sw . nb_structs; l ++ )
 					{
 						unsigned int array_offset = k * m;
-						unsigned int dist_offset_j = j - 1;
-						unsigned int dist_offset_i = i - 1;
+						unsigned int dist_offset_j = j;
+						unsigned int dist_offset_i = i;
 						unsigned int r = 1;
 						for ( g = 0; g < sw . nb_gaps; g++ )
 						{
