@@ -46,8 +46,8 @@ significance:
    ./motexOMP -a DNA -i ./data/dnc_subtilis_330-30.seq -o struct.motex -d 0 -k 6 -e 1 -q 1 -s ./data/boxes.txt -S struct.smile -t 8
 
 The first line of the file `./data/boxes.txt' is an integer number representing the total number 
-of spacers of the structured motif. Every succeeding four lines are four integer numbers representing 
-the min and the max length of the corresponding spacer, the length of the succeedingbox, and the maximum 
+of spacers (gaps) of the structured motif. Every succeeding four lines are four integer numbers representing 
+the min and the max length of the corresponding spacer, the length of the succeeding box (motif), and the maximum 
 number of errors allowed in the box, respectively.
 
 
